@@ -46,10 +46,12 @@ This command handles the full BA lifecycle:
 2. Gap analysis and clarifying questions
 3. Work plan generation
 4. FRD production
-5. User story generation (stories + AC become input for SRS)
-6. SRS production (parallel delegation, driven by user stories)
-7. Wireframe generation for SRS screens
-8. Quality review and packaging
+5. User story generation
+6. Use case specification production
+7. Screen Contract Lite production
+8. Wireframe generation from the use cases and screen contract
+9. Final screen description production
+10. Unified browser-editable HTML packaging
 
 ### Claude Example
 
@@ -63,7 +65,7 @@ When prompted, provide the file path or paste your requirements text. The skill 
 2. Identify gaps (missing stakeholders, unclear scope, no success criteria)
 3. Ask 3-8 clarifying questions
 4. Generate a scoped work plan
-5. Produce FRD, user stories, SRS, and wireframes
+5. Produce FRD, user stories, use cases, Screen Contract Lite, wireframes, final screen descriptions, and browser-editable HTML output
 
 ## 5. Use BA-kit In Codex
 
@@ -74,15 +76,23 @@ Instead:
 2. Make sure the root `AGENTS.md` is visible in the repo
 3. Tell Codex to use `skills/ba-start/SKILL.md` as the playbook
 4. Point Codex to the correct template under `templates/`
+5. If you have the Codex-converted bundle, run `bash scripts/install-codex-ba-kit.sh` once to copy the skill and agents into `~/.codex`
 
 ### Codex Example
 
 ```text
 Use AGENTS.md and skills/ba-start/SKILL.md.
 Parse the requirements in docs/raw/warehouse-rfp.pdf.
-Produce an intake form, FRD, user stories, SRS, and wireframes.
-Include use cases, screen descriptions, linked requirements, and test cases.
+Include use cases, Screen Contract Lite, final screen descriptions, linked requirements, test cases, and wireframes.
 Reference Pencil artifacts under designs/customer-portal/ and map each SRS screen to its target frame.
+```
+
+If the Codex conversion is installed, you can point Codex directly at the bundled skill:
+
+```text
+Use ~/.codex/skills/ba-start/SKILL.md and the registered BA agents under ~/.codex/agents.
+Parse the requirements in docs/raw/warehouse-rfp.pdf.
+Produce an intake form, FRD, user stories, use case specifications, Screen Contract Lite, wireframes, final screen descriptions, and a browser-editable HTML output.
 ```
 
 See [codex-setup.md](./codex-setup.md) for more prompt patterns.
@@ -111,7 +121,9 @@ Rules:
 - keep screen IDs aligned between the SRS and Pencil frame names
 - link each SRS screen to both the `.pen` artifact and the specific frame it uses
 - use the `.pen` file as the wireframe source of truth
+- use Shadcn UI as the default design system baseline unless you explicitly request another system
 - keep the SRS focused on behavior, validation, states, navigation, and traceability
+- treat the final HTML as the editable stakeholder copy: update text, swap images, and add or remove blocks directly in the browser without editing the source HTML
 
 ## 7. Deliverables
 
@@ -124,6 +136,7 @@ A full `/ba-start` engagement produces:
 | SRS | `srs-template.md` | `plans/reports/srs-{date}-{slug}.md` |
 | User stories | `user-story-template.md` | `plans/reports/user-stories-{date}-{slug}.md` |
 | Wireframes | Pencil MCP | `designs/{slug}/{artifact-name}.pen` plus `designs/{slug}/exports/{artifact-name}/SCR-xx-{name}.png` |
+| Final HTML | `scripts/md-to-html.py` | `plans/reports/srs-{date}-{slug}.html` as the browser-editable stakeholder copy |
 
 ## 8. Know Where To Look
 

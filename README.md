@@ -48,6 +48,14 @@ BA-kit supports Codex through the root [AGENTS.md](./AGENTS.md) file and repo-lo
 
 Codex does not require `./install.sh` or installation into `~/.claude`. Open the repository with `AGENTS.md` present, then explicitly direct Codex to use the relevant BA playbook from `skills/`.
 
+If you are using the Codex-converted bundle, install it into the local Codex runtime with:
+
+```bash
+bash scripts/install-codex-ba-kit.sh
+```
+
+That script copies the converted assets from `codex/skills/**` and `codex/agents/**` into `~/.codex/skills` and `~/.codex/agents`, then appends any missing agent registrations into `~/.codex/config.toml` without duplicating existing entries.
+
 See [docs/codex-setup.md](./docs/codex-setup.md) for prompt patterns and setup guidance.
 
 ## Quick Start
@@ -63,16 +71,18 @@ This single command handles:
 2. Gap analysis and clarifying questions
 3. Work plan generation
 4. FRD production
-5. SRS production (parallel delegation)
-6. User story generation
-7. Wireframe generation for SRS screens
-8. Quality review and packaging
+5. User story generation
+6. Use case specification production
+7. Screen Contract Lite production
+8. Wireframe generation from use cases and screen contract
+9. Final screen description production
+10. Unified browser-editable HTML packaging
 
 ## Skill
 
 | Skill | Purpose |
 | --- | --- |
-| `ba-start` | End-to-end BA engagement: intake, FRD, user stories, SRS, wireframes, and quality review |
+| `ba-start` | End-to-end BA engagement: intake, FRD, user stories, use cases, Screen Contract Lite, wireframes, final screen descriptions, and browser-editable HTML review |
 
 ## Agent Roles
 
@@ -92,6 +102,10 @@ Templates live in `./templates/` and cover:
 - Intake form
 
 Wireframe artifacts for SRS screen sections live under `./designs/` as Pencil `.pen` files. See [designs/README.md](./designs/README.md) for the naming convention.
+
+For UI-backed work, BA-kit now defaults to the Shadcn UI design system for wireframes and UI-oriented handoff unless you explicitly request another system.
+
+The final HTML deliverable is the editable stakeholder copy. Open it in a browser to update text, replace images, and add or remove blocks without hand-editing the source HTML.
 
 ## Configuration
 

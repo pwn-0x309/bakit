@@ -12,6 +12,26 @@ BA-kit can work with Codex as a repo-native BA operating guide. The root [AGENTS
 - `templates/` as deliverable structures
 - `designs/` for Pencil wireframe artifacts referenced by SRS screen sections
 
+## Codex Conversion Install
+
+If you have the Codex-converted bundle for `ba-start`, install it from the repository root with:
+
+```bash
+bash scripts/install-codex-ba-kit.sh
+```
+
+The installer expects the converted source tree under:
+
+- `codex/skills/**`
+- `codex/agents/**`
+
+It copies those files into:
+
+- `~/.codex/skills`
+- `~/.codex/agents`
+
+It also appends any missing Codex agent registrations into `~/.codex/config.toml` in an idempotent way, so rerunning the script is safe.
+
 ## Recommended Codex Workflow
 
 1. Start with the business outcome or artifact you need.
@@ -19,6 +39,8 @@ BA-kit can work with Codex as a repo-native BA operating guide. The root [AGENTS
 3. Point it at the target template.
 4. If UI is involved, point it at the relevant Pencil `.pen` artifacts and frame mappings in `designs/`.
 5. Ask for assumptions, open questions, and a draft output.
+6. If you installed the Codex conversion, ask Codex to use `ba-start` from `~/.codex/skills/ba-start/SKILL.md` and the registered BA agents from `~/.codex/agents`.
+7. Unless you explicitly override it, BA-kit should use Shadcn UI as the default design system for wireframes and UI handoff.
 
 ## Prompt Patterns
 
@@ -27,7 +49,16 @@ BA-kit can work with Codex as a repo-native BA operating guide. The root [AGENTS
 ```text
 Use AGENTS.md and skills/ba-start/SKILL.md.
 Parse the requirements in docs/raw/warehouse-rfp.pdf.
-Produce an intake form, FRD, SRS, and user stories.
+Produce an intake form, FRD, user stories, use case specifications, Screen Contract Lite, wireframes, final screen descriptions, and a browser-editable HTML SRS.
+```
+
+### Codex Conversion
+
+```text
+Use the installed ba-start skill from ~/.codex/skills/ba-start/SKILL.md.
+Use the registered Codex BA agents from ~/.codex/agents when the skill delegates work.
+Parse the requirements in docs/raw/warehouse-rfp.pdf.
+Produce an intake form, FRD, user stories, use case specifications, Screen Contract Lite, wireframes, final screen descriptions, and a browser-editable HTML SRS.
 ```
 
 ### Formal Requirements Only
@@ -61,6 +92,10 @@ Use Pencil only for wireframes in SRS-backed work:
 - allow one `.pen` file to contain multiple frames
 - reference both the artifact path and the target frame directly from the SRS
 - keep screen IDs aligned across the SRS and Pencil frame names
+
+## HTML Deliverable
+
+The generated HTML is the editable stakeholder deliverable. Open it in a browser to update text, replace images, and add or remove blocks without editing the source HTML manually.
 
 ## Good Outcomes
 

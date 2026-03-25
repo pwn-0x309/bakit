@@ -8,7 +8,7 @@ This catalog explains the single BA-kit skill, what it produces, and which agent
 
 | Skill | When to Use | Related Templates | Related Agents | Typical Output |
 | --- | --- | --- | --- | --- |
-| `ba-start` | End-to-end BA engagement from raw input to packaged deliverables | `intake-form-template.md`, `frd-template.md`, `user-story-template.md`, `srs-template.md` | `requirements-engineer`, `ui-ux-designer`, `ba-documentation-manager`, `ba-researcher` | Intake form, FRD, user stories, SRS, wireframes, quality review |
+| `ba-start` | End-to-end BA engagement from raw input to packaged deliverables | `intake-form-template.md`, `frd-template.md`, `user-story-template.md`, `srs-template.md` | `requirements-engineer`, `ui-ux-designer`, `ba-documentation-manager`, `ba-researcher` | Intake form, FRD, user stories, use cases, Screen Contract Lite, wireframes, final browser-editable SRS HTML, quality review |
 
 ## Workflow
 
@@ -19,10 +19,12 @@ This catalog explains the single BA-kit skill, what it produces, and which agent
 3. Gap analysis and clarifying questions
 4. Work plan generation
 5. FRD production
-6. User story generation (stories + AC feed into SRS and downstream)
-7. SRS production (parallel delegation across 5 groups, driven by user stories)
-8. Wireframe generation for SRS screens, grouped into `.pen` artifacts with frame-level mapping
-9. Quality review and packaging
+6. User story generation
+7. Use case specification production
+8. Screen Contract Lite production
+9. Wireframe generation from use cases and screen contract
+10. Final screen description production
+11. Unified browser-editable HTML packaging and quality review
 
 ## Invocation
 
@@ -34,10 +36,14 @@ This catalog explains the single BA-kit skill, what it produces, and which agent
 
 | Agent | Role in Workflow |
 | --- | --- |
-| `requirements-engineer` | FRD, user stories, SRS groups A-E |
-| `ui-ux-designer` | Pencil wireframe generation from SRS screens |
+| `requirements-engineer` | FRD, user stories, use cases, Screen Contract Lite, final screen descriptions, validation |
+| `ui-ux-designer` | Pencil wireframe generation from use cases and screen contract |
 | `ba-documentation-manager` | Quality review, consistency, packaging |
 | `ba-researcher` | Domain research when external context is needed |
+
+## HTML Editing
+
+The final HTML deliverable is meant to be edited in the browser. Update copy, swap images, and add or remove blocks directly in the rendered HTML instead of hand-editing source HTML.
 
 ## Expected Quality Bar
 

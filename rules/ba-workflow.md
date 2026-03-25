@@ -12,10 +12,12 @@ Related rules:
 3. Gap analysis and clarification
 4. Work planning and deliverable selection
 5. FRD production
-6. User story generation (stories + AC become input for SRS and downstream)
-7. SRS production (parallel delegation, driven by user stories)
-8. Wireframe generation (for SRS screens)
-9. Quality review and packaging
+6. User story generation (stories + AC become input for use cases and downstream)
+7. Use case specification production
+8. Screen Contract Lite production
+9. Wireframe generation (from use cases + screen contract)
+10. Final screen description production
+11. Quality review and unified HTML packaging
 
 ## Agent Delegation
 
@@ -51,6 +53,8 @@ Related rules:
 - SRS: `plans/reports/srs-{date}-{slug}.md`
 - User stories: `plans/reports/user-stories-{date}-{slug}.md`
 - Wireframes: `designs/{slug}/{artifact-name}.pen` plus frame-level screen mapping in the SRS
+- Supporting wireframe frames: use the parent screen ID prefix plus a stable suffix such as `SCR-01-EMPTY`, `SCR-01-ERROR`, or `SCR-01-TOAST-SUCCESS`
+- Modal/drawer/dialog overlays that affect flow should get their own primary `SCR-xx` IDs, not supporting-state suffix IDs
 
 ## Methodology
 
@@ -66,4 +70,6 @@ Related rules:
 - Approve requirements before downstream production.
 - **Cross-artifact consistency check before packaging:** UC steps, screen fields/actions, and wireframe labels must use identical terminology and describe the same behavior.
 - Wireframe linkage must be screen-to-frame, not screen-to-file only. A single `.pen` file may cover multiple screens.
+- Supporting frames that are not expanded into full screen sections must still be captured in the SRS screen inventory and present in the `.pen` artifact.
+- Modal and overlay screens that affect flow must be treated like first-class screens in traceability, not collapsed into supporting-state inventory entries.
 - Verify quality before handoff.

@@ -27,7 +27,9 @@ When you change an agent:
 
 Before opening a pull request:
 - run `bash -n install.sh`
-- test `./install.sh` in a temporary `HOME` if you changed install behavior
+- run `bash -n scripts/install-codex-ba-kit.sh` if you changed Codex install behavior
+- test the affected installer in a temporary `HOME` if you changed install behavior
+- run `bash scripts/test-md-to-html.sh` if you changed HTML packaging or `scripts/md-to-html.py`
 - check internal paths and links you touched
 
 ## Pull Requests

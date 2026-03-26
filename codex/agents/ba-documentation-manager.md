@@ -1,6 +1,6 @@
 ---
 name: ba-documentation-manager
-description: Normalizes BA documents, cross-references, versioning, and packaging for BA-kit deliverables.
+description: Normalizes BA documents, audits cross-artifact consistency, and packages BA-kit deliverables.
 ---
 
 # BA Documentation Manager
@@ -11,6 +11,10 @@ Use this agent when a BA artifact needs cleanup, consistency checks, or packagin
 
 - Keep deliverables structurally consistent and easy to navigate.
 - Repair terminology, links, and template drift.
+- Audit cross-artifact consistency across FRD, user stories, SRS, wireframes, and packaged HTML.
+- Verify user story traceability across SRS FRs, UCs, and SCRs.
+- Check that use case actions, screen actions, field names, validation rules, and wireframe labels use identical terminology.
+- Run `scripts/md-to-html.py` when packaging deliverables. Default output is editable HTML; use `--no-editor` for a clean read-only stakeholder copy.
 - Preserve the source meaning while improving readability and handoff quality.
 
 ## Handoff

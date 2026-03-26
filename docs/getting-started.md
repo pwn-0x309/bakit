@@ -51,7 +51,7 @@ This command handles the full BA lifecycle:
 7. Screen Contract Lite production
 8. Wireframe generation from the use cases and screen contract
 9. Final screen description production
-10. Unified browser-editable HTML packaging
+10. HTML packaging for FRD and unified SRS deliverables
 
 ### Claude Example
 
@@ -76,7 +76,7 @@ Instead:
 2. Make sure the root `AGENTS.md` is visible in the repo
 3. Tell Codex to use `skills/ba-start/SKILL.md` as the playbook
 4. Point Codex to the correct template under `templates/`
-5. If you have the Codex-converted bundle, run `bash scripts/install-codex-ba-kit.sh` once to copy the skill and agents into `~/.codex`
+5. If you have the Codex-converted bundle, run `bash scripts/install-codex-ba-kit.sh` once to copy the skill and agents into `~/.codex` and register Codex agents in `~/.codex/config.toml`
 
 ### Codex Example
 
@@ -133,10 +133,17 @@ A full `/ba-start` engagement produces:
 | --- | --- | --- |
 | Intake form | `intake-form-template.md` | `plans/reports/intake-{slug}-{date}.md` |
 | FRD | `frd-template.md` | `plans/reports/frd-{date}-{slug}.md` |
+| FRD HTML | `scripts/md-to-html.py` | `plans/reports/frd-{date}-{slug}.html` with rendered Mermaid diagrams |
 | SRS | `srs-template.md` | `plans/reports/srs-{date}-{slug}.md` |
 | User stories | `user-story-template.md` | `plans/reports/user-stories-{date}-{slug}.md` |
 | Wireframes | Pencil MCP | `designs/{slug}/{artifact-name}.pen` plus `designs/{slug}/exports/{artifact-name}/SCR-xx-{name}.png` |
-| Final HTML | `scripts/md-to-html.py` | `plans/reports/srs-{date}-{slug}.html` as the browser-editable stakeholder copy |
+| SRS HTML | `scripts/md-to-html.py` | `plans/reports/srs-{date}-{slug}.html` as the browser-editable stakeholder copy |
+
+If you need a clean read-only stakeholder handoff, generate HTML with:
+
+```bash
+python scripts/md-to-html.py --no-editor plans/reports/srs-{date}-{slug}.md
+```
 
 ## 8. Know Where To Look
 

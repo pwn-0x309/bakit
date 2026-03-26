@@ -20,22 +20,28 @@ import argparse
 import base64
 import re
 import sys
+from html import escape
 from pathlib import Path
+from typing import Optional
 
 # Minimal markdown-to-html without external deps.
-# Handles: headings, tables, bold, italic, code blocks, lists, blockquotes, links, images.
+# Handles: headings, tables, bold, italic, code blocks, nested lists, blockquotes, links, images.
+
+LIST_ITEM_RE = re.compile(r"^(?P<indent>[ \t]*)(?P<marker>[-*]|\d+\.)\s+(?P<content>.+)$")
 
 
 def embed_image(img_path: str, base_dir: Path) -> str:
     """Convert image path to base64 data URI."""
-    full_path = base_dir / img_path
+    full_path = Path(img_path)
+    if not full_path.is_absolute():
+        full_path = base_dir / full_path
     if not full_path.exists():
-        return f'<span class="missing-image">[Missing image: {img_path}]</span>'
+        return f'<span class="missing-image">[Missing image: {escape(img_path)}]</span>'
     suffix = full_path.suffix.lower()
     mime = {"png": "image/png", "jpg": "image/jpeg", "jpeg": "image/jpeg",
             "webp": "image/webp"}.get(suffix.lstrip("."), "image/png")
     data = base64.b64encode(full_path.read_bytes()).decode()
-    return f'<img src="data:{mime};base64,{data}" alt="{full_path.stem}" class="wireframe">'
+    return f'<img src="data:{mime};base64,{data}" alt="{escape(full_path.stem)}" class="wireframe">'
 
 
 def md_to_html(md: str, base_dir: Path) -> str:
@@ -45,9 +51,9 @@ def md_to_html(md: str, base_dir: Path) -> str:
     toc = []
     in_code = False
     in_table = False
-    in_list = False
     code_lang = ""
     table_rows = []
+    list_stack = []
 
     def flush_table():
         nonlocal table_rows, in_table
@@ -70,13 +76,23 @@ def md_to_html(md: str, base_dir: Path) -> str:
         in_table = False
         return out
 
-    def flush_list():
-        nonlocal in_list
-        in_list = False
-        return "</ul>\n"
+    def close_list_item():
+        if list_stack and list_stack[-1]["item_open"]:
+            html_parts.append("</li>\n")
+            list_stack[-1]["item_open"] = False
+
+    def close_list():
+        close_list_item()
+        current = list_stack.pop()
+        html_parts.append(f"</{current['tag']}>\n")
+
+    def flush_lists():
+        while list_stack:
+            close_list()
 
     def inline(text: str) -> str:
         """Process inline markdown: bold, italic, code, links, images."""
+        text = escape(text)
         # Images: ![alt](path)
         text = re.sub(
             r"!\[([^\]]*)\]\(([^)]+)\)",
@@ -97,7 +113,10 @@ def md_to_html(md: str, base_dir: Path) -> str:
         # Code blocks
         if line.startswith("```"):
             if in_code:
-                html_parts.append("</code></pre>\n")
+                if code_lang == "mermaid":
+                    html_parts.append("</pre>\n")
+                else:
+                    html_parts.append("</code></pre>\n")
                 in_code = False
             else:
                 code_lang = line[3:].strip()
@@ -112,15 +131,13 @@ def md_to_html(md: str, base_dir: Path) -> str:
             if code_lang == "mermaid":
                 html_parts.append(line + "\n")
             else:
-                from html import escape
                 html_parts.append(escape(line) + "\n")
             continue
 
         # Table detection
         if "|" in line and line.strip().startswith("|"):
             if not in_table:
-                if in_list:
-                    html_parts.append(flush_list())
+                flush_lists()
                 in_table = True
                 table_rows = []
             table_rows.append(line)
@@ -129,22 +146,36 @@ def md_to_html(md: str, base_dir: Path) -> str:
             html_parts.append(flush_table())
 
         # List items
-        if re.match(r"^[-*]\s", line.strip()):
-            if not in_list:
-                in_list = True
-                html_parts.append("<ul>\n")
-            item = re.sub(r"^[-*]\s", "", line.strip())
-            html_parts.append(f"<li>{inline(item)}</li>\n")
+        list_match = LIST_ITEM_RE.match(line)
+        if list_match:
+            indent = len(list_match.group("indent").expandtabs(4))
+            marker = list_match.group("marker")
+            tag = "ol" if marker[0].isdigit() else "ul"
+            item = list_match.group("content")
+
+            while list_stack and indent < list_stack[-1]["indent"]:
+                close_list()
+
+            if list_stack and indent == list_stack[-1]["indent"] and tag != list_stack[-1]["tag"]:
+                close_list()
+
+            if not list_stack or indent > list_stack[-1]["indent"]:
+                html_parts.append(f"<{tag}>\n")
+                list_stack.append({"tag": tag, "indent": indent, "item_open": False})
+            else:
+                close_list_item()
+
+            html_parts.append(f"<li>{inline(item)}")
+            list_stack[-1]["item_open"] = True
             continue
-        elif in_list and line.strip():
-            html_parts.append(flush_list())
 
         # Empty line
         if not line.strip():
-            if in_list:
-                html_parts.append(flush_list())
+            flush_lists()
             html_parts.append("\n")
             continue
+
+        flush_lists()
 
         # Headings
         m = re.match(r"^(#{1,6})\s+(.+)", line)
@@ -176,14 +207,14 @@ def md_to_html(md: str, base_dir: Path) -> str:
     # Flush remaining
     if in_table:
         html_parts.append(flush_table())
-    if in_list:
-        html_parts.append(flush_list())
+    if list_stack:
+        flush_lists()
 
     # Build TOC
     toc_html = '<nav class="toc"><h2>Table of Contents</h2>\n<ul>\n'
     for level, text, slug in toc:
         indent = "  " * (level - 1)
-        toc_html += f'{indent}<li class="toc-{level}"><a href="#{slug}">{text}</a></li>\n'
+        toc_html += f'{indent}<li class="toc-{level}"><a href="#{slug}">{escape(text)}</a></li>\n'
     toc_html += "</ul>\n</nav>\n"
 
     body = "".join(html_parts)
@@ -290,7 +321,7 @@ tr:nth-child(even) { background: #f9f9f9; }
 pre { background: var(--code-bg); padding: 16px; border-radius: 6px; overflow-x: auto; margin: 1em 0; }
 code { font-family: 'SF Mono', Consolas, monospace; font-size: 0.9em; }
 blockquote { border-left: 4px solid var(--accent); padding: 0.5em 1em; margin: 1em 0; background: #f0f4ff; font-style: italic; }
-ul { margin: 0.5em 0 0.5em 1.5em; }
+ul, ol { margin: 0.5em 0 0.5em 1.5em; }
 li { margin: 0.2em 0; }
 img.wireframe { max-width: 100%; border: 1px solid var(--border); border-radius: 8px; margin: 1em 0; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
 .missing-image { color: #d32f2f; font-style: italic; padding: 1em; background: #fff3f3; border: 1px dashed #d32f2f; border-radius: 4px; }
@@ -581,9 +612,15 @@ window.addEventListener('DOMContentLoaded', EditorApp.init);
 """
 
 
-def convert(md_path: Path) -> Path:
+def default_base_dir(md_path: Path) -> Path:
+    """Preserve the original relative image lookup behavior."""
+    return md_path.parent.parent.parent
+
+
+def convert(md_path: Path, *, base_dir: Optional[Path] = None, editor_enabled: bool = True) -> Path:
     """Convert any BA markdown to HTML with embedded images and Mermaid support."""
-    base_dir = md_path.parent.parent.parent  # plans/reports/srs.md → project root
+    if base_dir is None:
+        base_dir = default_base_dir(md_path)
     md = md_path.read_text(encoding="utf-8")
 
     # Convert wireframe file references to embedded images
@@ -596,20 +633,8 @@ def convert(md_path: Path) -> Path:
 
     body = md_to_html(md, base_dir)
 
-    html = f"""<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>{md_path.stem}</title>
-<style>{CSS}</style>
-<script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
-<script>mermaid.initialize({{startOnLoad:true}});</script>
-<script>{EDITOR_JS}</script>
-</head>
-<body>
-<div class="editor-shell">
-  <div id="editor-toolbar" class="editor-toolbar">
+    editor_script = f"<script>{EDITOR_JS}</script>" if editor_enabled else ""
+    editor_toolbar = """  <div id="editor-toolbar" class="editor-toolbar">
     <div class="editor-toolbar__group">
       <button class="editor-button is-primary" data-action="toggle-edit" type="button">Disable Editing</button>
       <button class="editor-button" data-action="add-paragraph" type="button">Add Paragraph</button>
@@ -624,8 +649,23 @@ def convert(md_path: Path) -> Path:
     <div id="editor-status" class="editor-toolbar__status">Editing enabled. Click a block to select it, then edit text or use the toolbar.</div>
     <div class="editor-help">You can edit text directly, replace wireframe images from local files, add new headings or paragraphs, remove blocks, then download a clean HTML copy without touching source code.</div>
   </div>
-  <input id="editor-image-input" class="editor-hidden" type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml">
-  <main id="document-surface" class="document-surface">
+""" if editor_enabled else ""
+    editor_input = '  <input id="editor-image-input" class="editor-hidden" type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml">\n' if editor_enabled else ""
+
+    html = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{md_path.stem}</title>
+<style>{CSS}</style>
+<script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+<script>mermaid.initialize({{startOnLoad:true}});</script>
+{editor_script}
+</head>
+<body>
+<div class="editor-shell">
+{editor_toolbar}{editor_input}  <main id="document-surface" class="document-surface">
 {body}
   </main>
 </div>
@@ -640,6 +680,15 @@ def convert(md_path: Path) -> Path:
 def main():
     parser = argparse.ArgumentParser(description="Convert BA markdown to HTML with Mermaid diagrams and embedded images")
     parser.add_argument("input", help="Path to markdown file (FRD, SRS, or any BA document)")
+    parser.add_argument(
+        "--base-dir",
+        help="Project root used to resolve relative image references",
+    )
+    parser.add_argument(
+        "--no-editor",
+        action="store_true",
+        help="Generate read-only HTML without the in-browser editing toolbar",
+    )
     args = parser.parse_args()
 
     md_path = Path(args.input)
@@ -647,7 +696,11 @@ def main():
         print(f"Error: {md_path} not found", file=sys.stderr)
         sys.exit(1)
 
-    out = convert(md_path)
+    out = convert(
+        md_path,
+        base_dir=Path(args.base_dir).resolve() if args.base_dir else None,
+        editor_enabled=not args.no_editor,
+    )
     print(f"Generated: {out}")
 
 

@@ -161,6 +161,14 @@ Keep additions aligned with BA-kit principles:
 
 When changing the skill, also update templates or rules if the workflow contract changes. See [CONTRIBUTING.md](./CONTRIBUTING.md) for contribution expectations and validation steps.
 
+## Compatibility And Disclaimer
+
+BA-kit is an independent toolkit for use with Claude Code and Codex.
+
+Claude, Claude Code, OpenAI, and Codex are trademarks or product names of their respective owners. Their use in this repository describes compatibility only and does not imply affiliation, endorsement, or sponsorship.
+
+BA-kit provides workflow guidance, templates, and automation helpers only. It does not constitute legal, regulatory, compliance, or other professional advice. Users remain responsible for validating generated outputs before business, technical, contractual, or governance use.
+
 ## License
 
 This project is licensed under the [MIT License](./LICENSE).

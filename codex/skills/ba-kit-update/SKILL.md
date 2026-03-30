@@ -34,6 +34,10 @@ ba-kit update
    - source repo path
    - previous and current commit
    - which runtimes were reinstalled
+6. Run the update command exactly as a single shell command:
+   - `ba-kit update`
+   - or `~/.local/bin/ba-kit update`
+7. Do not wrap the command in extra quotes, subshell templates, heredocs, or generated shell helper functions. If the command itself fails, report the stderr instead of improvising a different shell wrapper.
 
 ## Expected Result
 

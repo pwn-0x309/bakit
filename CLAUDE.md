@@ -51,6 +51,9 @@ For rerun commands, resolve the project by explicit `--slug` first. If multiple 
 - Treat the artifact-set `{date}` token as `YYMMDD-HHmm` consistently across `plans/reports/*` artifacts and `plans/{date}-{slug}/plan.md`.
 - Use exact artifact matching and exact slug/date resolution. Do not silently choose the newest file by mtime when multiple slugs or dated sets exist.
 - When UI scope exists, default wireframes and UI-oriented handoff to Shadcn UI unless the user explicitly requests another design system.
+- For `srs`, run a narrow preflight: resolve the exact FRD and user-stories artifacts first, then begin authoring without scanning the full `plans/reports/` suite.
+- If a previous report set uses legacy names like `002-intake-form.md`, treat it as a legacy suite and stop for explicit migration or rerun; do not silently infer the current slug/date from it.
+- If context gets truncated after the user already confirmed the target workflow, recover from the resolved command, slug/date, and exact artifacts on disk instead of asking the user to restate the original request.
 
 ## Documentation Expectations
 

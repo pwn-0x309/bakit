@@ -93,6 +93,8 @@ For rerun commands:
 - pass `--slug <slug>` when more than one project exists
 - if one slug has multiple dated artifact sets, BA-kit should stop and ask which set to use
 - use `/ba-start status --slug <slug>` to inspect completion before rerunning a downstream step
+- for `srs`, start from the exact resolved FRD and user-stories artifacts instead of rereading the whole `plans/reports/` directory
+- if you only have old reports named like `002-intake-form.md`, treat them as a legacy suite and rerun or migrate them before expecting the current `/ba-start` contract to resume from them
 
 ## 5. Use BA-kit In Codex
 

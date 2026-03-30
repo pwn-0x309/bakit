@@ -55,6 +55,7 @@ Related rules:
 - Preserve traceability links between source, analysis, and final outputs.
 - Broken links and stale references must be corrected before handoff.
 - For UI-backed SRS work, persist a `wireframe-input-{date}-{slug}.md` artifact before Step 9 and a `wireframe-map-{date}-{slug}.md` artifact after successful wireframe generation.
+- Do not infer current-playbook state from legacy report filenames such as `002-intake-form.md`; legacy suites must be migrated or rerun explicitly before they enter the current exact-pattern lifecycle.
 
 ## Naming Convention
 
@@ -85,3 +86,5 @@ Related rules:
 - Supporting frames that are not expanded into full screen sections must still be captured in the SRS screen inventory and present in the `.pen` artifact.
 - Modal and overlay screens that affect flow must be treated like first-class screens in traceability, not collapsed into supporting-state inventory entries.
 - Verify quality before handoff.
+- **SRS preflight gate:** once slug/date and prerequisites are resolved, start from the exact FRD and user-stories artifacts instead of rereading the entire `plans/reports/` suite.
+- **Context-loss recovery gate:** if exploration causes context pressure, recover from resolved command + slug/date + exact artifacts on disk; do not ask the user to restate the task unless the target really became ambiguous.

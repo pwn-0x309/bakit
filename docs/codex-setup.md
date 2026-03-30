@@ -65,6 +65,9 @@ Or ask Codex to run:
 13. When delegating, pass only narrow artifact slices and exact excerpts, not full upstream documents.
 14. If a delegated worker reports missing context or `NEEDS_REPARTITION`, split the scope and rerun only that slice.
 15. For non-trivial delegation, use the packet structure from `templates/sub-agent-handoff-template.md` or the equivalent snippet embedded in `ba-start`.
+16. For `srs`, resolve the exact FRD and user-stories artifacts first and begin authoring from those files instead of scanning every report in `plans/reports/`.
+17. If only legacy report names like `002-intake-form.md` exist, stop and migrate or rerun them explicitly; do not infer the current slug/date from legacy filenames.
+18. If context truncation happens after the target workflow was already confirmed, recover from the resolved command and exact artifacts on disk instead of asking the user to restate the original task.
 
 ## Prompt Patterns
 

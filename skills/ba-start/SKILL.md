@@ -138,6 +138,20 @@ After resolving the slug, resolve the target dated artifact set.
 
 Use exact filename patterns, not broad `*-{slug}*` matching. Print the specific missing artifact path when a prerequisite check fails.
 
+### Legacy artifact detection
+
+Before mutating `frd`, `stories`, `srs`, `wireframes`, `package`, or `status`:
+
+1. Check whether `plans/reports/` contains legacy BA-kit report names such as:
+   - `plans/reports/002-intake-form.md`
+   - `plans/reports/002-gap-analysis.md`
+   - `plans/reports/002-*.md`
+2. If legacy reports are present but the current exact-pattern artifacts for the selected slug/date are missing, stop and report:
+   - that a legacy artifact suite was detected
+   - that the current playbook will not infer slug/date or prerequisite state from legacy filenames
+   - the exact next action: rerun `intake`, migrate the old reports manually, or point the agent at the current-contract artifacts
+3. Do not mix legacy-named reports with the current exact-pattern lifecycle in one silent pass.
+
 ### Prerequisite reference
 
 | Command | Requires | Produces |
@@ -165,6 +179,25 @@ Before mutating `frd`, `stories`, `srs`, `wireframes`, or `package`:
 1. Check whether the target artifact already exists.
 2. If it exists, print the path and ask whether to overwrite or stop.
 3. If the user declines or does not approve, stop without mutating anything.
+
+### Context-loss recovery
+
+If exploration consumed too much context or the host truncates part of the conversation:
+
+1. Reconstruct the current target from the already-resolved subcommand, slug, dated set, and on-disk prerequisite artifacts.
+2. Continue from the next unresolved step when those values are still unambiguous.
+3. Do not ask the user to restate the original request just because intermediate exploration consumed context.
+4. Ask the user again only when one of these is genuinely unknown:
+   - the target subcommand
+   - the slug
+   - the dated set
+   - overwrite approval for an existing target artifact
+5. When recovering, print a short status line with:
+   - current command
+   - resolved slug
+   - resolved date
+   - next exact step
+6. Do not restart broad artifact discovery after the target scope has already been accepted.
 
 ### Wireframe state model
 
@@ -413,6 +446,10 @@ Run Steps 8-11 only. This path includes wireframes by default.
   - `plans/reports/frd-{date}-{slug}.md`
   - `plans/reports/user-stories-{date}-{slug}.md`
 - If a required artifact is missing, print the exact missing path, tell the user which subcommand to run first, and stop.
+- Run an SRS preflight before reading content:
+  - read only the resolved intake, FRD, user stories, and `plans/{date}-{slug}/plan.md` when it exists
+  - do not scan unrelated files in `plans/reports/` once the target slug/date is resolved
+  - if only legacy-named report suites exist for the apparent project, stop with the legacy artifact detection message instead of inferring from them
 
 ### Output
 
@@ -429,6 +466,13 @@ Run Steps 8-11 only. This path includes wireframes by default.
 ### Step 8 - Produce SRS core, use cases, and Screen Contract Lite
 
 SRS is the largest artifact. Produce it in dependency order so wireframes are generated before final screen descriptions are expanded.
+
+SRS preflight execution rules:
+
+- Start from the exact prerequisite set only. Do not read every report in `plans/reports/` to "understand the full picture".
+- Trust the accepted scope. If the user has already confirmed that SRS authoring should proceed, continue from the resolved FRD and user stories instead of reopening discovery.
+- Pull in extra analysis artifacts only when the exact SRS slice needs them and cite the exact path or section.
+- If an extra artifact is useful but non-essential, note it as optional context instead of blocking the run.
 
 Provide the relevant upstream context to the SRS production owner:
 

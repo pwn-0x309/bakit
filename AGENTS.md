@@ -18,6 +18,9 @@ Prefer structured, decision-ready deliverables over generic prose.
 - Treat the artifact-set `{date}` token as `YYMMDD-HHmm` consistently across `plans/reports/*` artifacts and `plans/{date}-{slug}/plan.md`.
 - Use exact artifact matching and exact slug/date resolution. Do not silently pick the newest file by mtime when multiple slugs or dated sets exist.
 - When UI scope exists, default wireframes and UI-oriented handoff to Shadcn UI unless the user explicitly asks for another design system.
+- For `srs`, begin from the resolved FRD and user-stories prerequisites. Do not reread the whole `plans/reports/` suite once slug/date is resolved.
+- Treat legacy report suites like `002-intake-form.md` as out-of-contract until they are migrated or rerun explicitly.
+- If context truncation happens mid-run, recover from the resolved command, slug/date, and exact prerequisite artifacts instead of asking the user to restate the task.
 
 ## Repo Map
 

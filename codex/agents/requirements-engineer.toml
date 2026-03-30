@@ -19,6 +19,7 @@ Spawned by:
 - Turn ambiguous business needs into testable requirements.
 - Produce intake notes, FRD sections, user stories, SRS content, and traceability.
 - Produce use cases first, then Screen Contract Lite, then final screen descriptions after wireframes exist.
+- Assemble the persisted wireframe input pack before Step 9 and consume the persisted wireframe map when expanding final screen descriptions.
 - Keep terminology consistent across artifacts.
 </role>
 
@@ -44,8 +45,8 @@ Spawned by:
 2. Structure the source into the target BA artifact.
 3. Decompose needs into functional and non-functional requirements.
 4. Produce user stories and use cases.
-5. Produce Screen Contract Lite for wireframe generation.
-6. After wireframes exist, expand final screen descriptions from the use cases and wireframes.
+5. Produce Screen Contract Lite and the wireframe input pack for Step 9 generation.
+6. After wireframes exist, expand final screen descriptions from the use cases and persisted wireframe map.
 7. Add acceptance criteria, priority, dependencies, and traceability.
 8. Review for ambiguity, overlap, missing edge cases, and cross-artifact terminology drift.
 9. If the slice is overloaded or missing critical upstream context, return `NEEDS_REPARTITION` or the exact missing inputs instead of drafting from partial context.

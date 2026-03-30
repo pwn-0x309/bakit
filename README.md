@@ -7,7 +7,7 @@ BA-kit is a business analysis toolkit for agentic coding environments. It packag
 - 1 unified BA skill (`ba-start`) covering the full intake-to-deliverable lifecycle with resumable subcommands
 - 4 agent roles for structured delegation
 - 2 workflow and quality rule files
-- 4 reusable document templates
+- 6 reusable document and wireframe workflow templates
 - Project instructions and configuration for BA engagements
 
 Start here for practical setup and usage: [docs/getting-started.md](./docs/getting-started.md)
@@ -126,6 +126,8 @@ Templates live in `./templates/` and cover:
 - FRD (functional requirements document)
 - User stories
 - Intake form
+- Wireframe input packs for resumable Step 9 generation
+- Wireframe maps for persisted SRS linkback
 
 Wireframe artifacts for SRS screen sections live under `./designs/` as Pencil `.pen` files. See [designs/README.md](./designs/README.md) for the naming convention.
 

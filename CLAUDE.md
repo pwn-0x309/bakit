@@ -16,10 +16,12 @@ Always anchor work in the BA lifecycle:
 2. Gap analysis and clarification
 3. Work planning and deliverable selection
 4. FRD production
-5. SRS production (parallel delegation)
-6. User story generation
-7. Wireframe generation
-8. Quality review and packaging
+5. User story generation
+6. SRS production (grouped generation for use cases, Screen Contract Lite, and technical sections)
+7. Build the persisted wireframe input pack
+8. Wireframe generation from the persisted input pack
+9. Final screen description production using the persisted wireframe map when wireframes are completed
+10. Quality review and packaging
 
 Use these rule files as the source of truth:
 - `./rules/ba-workflow.md`
@@ -53,6 +55,11 @@ For rerun commands, resolve the project by explicit `--slug` first. If multiple 
 ## Documentation Expectations
 
 Use `./templates/` for structured outputs whenever a matching template exists. Working artifacts belong in `plans/reports/`.
+
+For UI-backed SRS work:
+- persist `wireframe-input-{date}-{slug}.md` before Step 9
+- persist `wireframe-map-{date}-{slug}.md` after successful wireframe generation
+- use the wireframe map for final screen expansion when wireframes are completed
 
 Minimum quality bar:
 - every requirement has acceptance criteria

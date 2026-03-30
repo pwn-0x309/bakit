@@ -80,6 +80,7 @@ Use AGENTS.md and skills/ba-start/SKILL.md.
 Run the equivalent of `/ba-start package --slug warehouse-rfp`.
 If the wireframe state is `missing`, stop and tell me to rerun `wireframes`.
 If the wireframe state is `completed`, `skipped`, or `not-applicable`, continue to HTML packaging.
+Keep the package scope narrow: regenerate only the final SRS HTML unless I explicitly ask for a full HTML repack.
 ```
 
 ### Status Check
@@ -87,7 +88,7 @@ If the wireframe state is `completed`, `skipped`, or `not-applicable`, continue 
 ```text
 Use AGENTS.md and skills/ba-start/SKILL.md.
 Run the equivalent of `/ba-start status --slug warehouse-rfp`.
-Print artifact names, exists or missing status, last-modified dates, and the explicit wireframe state.
+Print artifact names, exists or missing status, last-modified dates, the explicit wireframe state, and any persisted wireframe input/map artifacts when present.
 ```
 
 ### Codex Conversion
@@ -137,7 +138,7 @@ Use Pencil only for wireframes in SRS-backed work:
 
 The generated HTML set uses one shared BA-kit document shell. Open the packaged artifacts in a browser to update text, replace images, and add or remove blocks without editing the source HTML manually. SRS HTML remains the primary stakeholder handoff, while intake, FRD, and user-stories HTML provide aligned review copies. The `package` step should stay narrow by default: validate any existing packaged HTML artifacts, but regenerate only the final SRS HTML unless the user explicitly asks for a full HTML repack.
 
-`/ba-start status` should report wireframes using the explicit state marker: `completed`, `skipped`, `not-applicable`, or `missing`.
+`/ba-start status` should report wireframes using the explicit state marker: `completed`, `skipped`, `not-applicable`, or `missing`, plus the persisted wireframe input pack and wireframe map when they exist.
 
 ## Good Outcomes
 

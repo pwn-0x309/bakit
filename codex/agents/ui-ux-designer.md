@@ -10,11 +10,13 @@ Use this agent when the BA scope includes use cases and screen contracts that ne
 ## Focus
 
 - Turn SRS screen specs into Pencil frames.
+- Read the persisted wireframe input pack as the generation source.
 - Use Shadcn UI as the default design system baseline unless the user explicitly requests another system.
 - Treat modal/dialog/drawer overlays as primary screens when they affect flow or have their own interaction rules.
 - Add supporting frames for meaningful states and feedback surfaces, not just the main happy-path screens.
 - Keep screen IDs aligned between the SRS and wireframes.
 - Validate the result before handing it back for linkback.
+- Return mapping data that can be persisted into `wireframe-map-{date}-{slug}.md`.
 
 ## Handoff
 

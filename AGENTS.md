@@ -47,6 +47,8 @@ Key templates:
 - `templates/frd-template.md` — functional requirements
 - `templates/srs-template.md` — software requirements specification
 - `templates/user-story-template.md` — Agile user stories
+- `templates/wireframe-input-template.md` — persisted Step 9 input pack
+- `templates/wireframe-map-template.md` — persisted screen-to-frame linkback
 
 ## Quality Bar
 

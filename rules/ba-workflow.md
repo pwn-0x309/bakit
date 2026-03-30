@@ -15,8 +15,8 @@ Related rules:
 6. User story generation (stories + AC become input for use cases and downstream)
 7. Use case specification production
 8. Screen Contract Lite production
-9. Wireframe generation (from use cases + screen contract)
-10. Final screen description production
+9. Wireframe generation (from a persisted wireframe input pack built from use cases + screen contract)
+10. Final screen description production using the persisted wireframe map when wireframes are completed
 11. Quality review and unified HTML packaging
 
 ## Agent Delegation
@@ -54,6 +54,7 @@ Related rules:
 - Final artifacts go in `plans/reports/`. Work plans go in `plans/{date}-{slug}/`.
 - Preserve traceability links between source, analysis, and final outputs.
 - Broken links and stale references must be corrected before handoff.
+- For UI-backed SRS work, persist a `wireframe-input-{date}-{slug}.md` artifact before Step 9 and a `wireframe-map-{date}-{slug}.md` artifact after successful wireframe generation.
 
 ## Naming Convention
 

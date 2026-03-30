@@ -51,8 +51,8 @@ Read this section first. Only continue to the detailed step sections when you ne
 | `intake` | Steps 1-5 | raw input | intake + intake HTML + plan |
 | `frd` | Step 6 | intake | FRD + FRD HTML |
 | `stories` | Step 7 | FRD | user stories + user stories HTML |
-| `srs` | Steps 8-11 | FRD + user stories | grouped SRS + merged SRS + wireframes |
-| `wireframes` | Step 9 only | group-c SRS or merged SRS with Screen Contract Lite | `.pen`, exports, wireframe-state |
+| `srs` | Steps 8-11 | FRD + user stories | grouped SRS + wireframe-input + merged SRS + wireframes |
+| `wireframes` | Step 9 only | wireframe-input or exact wireframe source set | `.pen`, exports, wireframe-map, wireframe-state |
 | `package` | Step 12 only | merged SRS + non-missing wireframe-state | SRS HTML + delivery summary |
 | `status` | inspection only | none | checklist output |
 
@@ -60,7 +60,7 @@ Read this section first. Only continue to the detailed step sections when you ne
 
 - Never silently choose a slug or dated set by mtime.
 - Never use broad `*-{slug}*` matching when exact artifact patterns are available.
-- `wireframes` is read-only on upstream BA artifacts. It may regenerate only design outputs and the wireframe-state marker.
+- `wireframes` is read-only on upstream BA artifacts. It may regenerate only design outputs, `wireframe-map`, and the wireframe-state marker.
 - `package` must block only when wireframe state is `missing`.
 - If no wireframe-state marker exists, treat it as `not-applicable` only when the SRS set has no UI-backed screens or Screen Contract Lite section. Otherwise treat it as `missing`.
 
@@ -100,7 +100,7 @@ Parse `ARGUMENTS` before doing any work.
 - `frd` runs Step 6 only.
 - `stories` runs Step 7 only.
 - `srs` runs Steps 8-11 and includes wireframes by default.
-- `wireframes` runs Step 9 only as a re-run path from existing screen-contract artifacts.
+- `wireframes` runs Step 9 only as a re-run path from the persisted wireframe input pack or exact fallback sources.
 - `package` runs Step 12 only.
 - `status` inspects current artifacts and prints a checklist with dates.
 
@@ -125,6 +125,8 @@ After resolving the slug, resolve the target dated artifact set.
    - `plans/reports/user-stories-{date}-{slug}.md`
    - `plans/reports/srs-{date}-{slug}.md`
    - `plans/reports/srs-{date}-{slug}-group-c.md`
+   - `plans/reports/wireframe-input-{date}-{slug}.md`
+   - `plans/reports/wireframe-map-{date}-{slug}.md`
    - `plans/reports/wireframe-state-{date}-{slug}.md`
    - `plans/{date}-{slug}/plan.md`
 2. Build candidate `{date}` sets from exact filename matches only.
@@ -143,8 +145,8 @@ Use exact filename patterns, not broad `*-{slug}*` matching. Print the specific 
 | `intake` | Raw input (file or pasted text) | `plans/reports/intake-{slug}-{date}.md`, `plans/reports/intake-{slug}-{date}.html`, `plans/{date}-{slug}/plan.md` |
 | `frd` | `plans/reports/intake-{slug}-{date}.md` | `plans/reports/frd-{date}-{slug}.md`, `plans/reports/frd-{date}-{slug}.html` |
 | `stories` | `plans/reports/frd-{date}-{slug}.md` | `plans/reports/user-stories-{date}-{slug}.md`, `plans/reports/user-stories-{date}-{slug}.html` |
-| `srs` | `plans/reports/frd-{date}-{slug}.md`, `plans/reports/user-stories-{date}-{slug}.md` | `plans/reports/srs-{date}-{slug}.md` and any supporting `srs-{date}-{slug}-group-*.md` files |
-| `wireframes` | `plans/reports/srs-{date}-{slug}-group-c.md` or merged `plans/reports/srs-{date}-{slug}.md` with Screen Contract Lite already assembled | `designs/{slug}/*.pen`, `designs/{slug}/exports/**`, `plans/reports/wireframe-state-{date}-{slug}.md` |
+| `srs` | `plans/reports/frd-{date}-{slug}.md`, `plans/reports/user-stories-{date}-{slug}.md` | `plans/reports/srs-{date}-{slug}.md`, `plans/reports/wireframe-input-{date}-{slug}.md`, and any supporting `srs-{date}-{slug}-group-*.md` files |
+| `wireframes` | `plans/reports/wireframe-input-{date}-{slug}.md` or exact fallback sources for pack generation | `designs/{slug}/*.pen`, `designs/{slug}/exports/**`, `plans/reports/wireframe-map-{date}-{slug}.md`, `plans/reports/wireframe-state-{date}-{slug}.md` |
 | `package` | `plans/reports/srs-{date}-{slug}.md`; wireframes may be completed, skipped, or not-applicable | `plans/reports/srs-{date}-{slug}.html`, delivery summary |
 | `status` | None | Checklist output only |
 
@@ -178,7 +180,9 @@ Use this structure:
 - Slug: {slug}
 - Date: {date}
 - State: completed | skipped | not-applicable | missing
-- Source: plans/reports/srs-{date}-{slug}-group-c.md OR plans/reports/srs-{date}-{slug}.md
+- Source: plans/reports/wireframe-input-{date}-{slug}.md OR exact fallback source set
+- Input Pack: plans/reports/wireframe-input-{date}-{slug}.md
+- Mapping: plans/reports/wireframe-map-{date}-{slug}.md
 - Artifacts:
   - designs/{slug}/{artifact-name}.pen
 - Exports:
@@ -419,6 +423,7 @@ Run Steps 8-11 only. This path includes wireframes by default.
 - `plans/reports/srs-{date}-{slug}-group-e.md`
 - `plans/reports/srs-{date}-{slug}-group-f.md`
 - `plans/reports/srs-{date}-{slug}.md`
+- `plans/reports/wireframe-input-{date}-{slug}.md`
 - Any wireframe artifacts and the wireframe-state marker produced during Step 9
 
 ### Step 8 - Produce SRS core, use cases, and Screen Contract Lite
@@ -543,6 +548,27 @@ Consistency rules:
 - Screen Contract Lite must define screen IDs, entry and exit conditions, key actions, and required states.
 - Modal, dialog, drawer, and overlay screens with their own interaction logic are primary screens, not supporting states.
 
+#### Step 8.1 - Build wireframe input pack
+
+After Group B and Group C are complete, assemble a persisted wireframe input artifact before any design work starts.
+
+Source inputs:
+
+- `plans/reports/srs-{date}-{slug}-group-b.md`
+- `plans/reports/srs-{date}-{slug}-group-c.md`
+- relevant FRD and user-story excerpts needed for traceability
+
+Save to `plans/reports/wireframe-input-{date}-{slug}.md`.
+
+The wireframe input pack must contain:
+
+- artifact set information and app type
+- exact use case excerpts needed for each primary screen
+- Screen Contract Lite
+- Screen Inventory
+- proposed artifact grouping plan
+- stop conditions for missing context or overloaded screen sets
+
 #### Group D - Technical
 
 Sections:
@@ -561,12 +587,16 @@ Run the Step 9 workflow exactly as defined in the `wireframes` subcommand below,
 
 ### Step 10 - Produce final screen descriptions
 
-After wireframes are generated, expand the full Screen Descriptions from:
+After Step 9 resolves, expand the full Screen Descriptions from:
 
 - Use Case Specifications
 - Screen Contract Lite
-- Wireframe artifact and frame mapping
+- `plans/reports/wireframe-map-{date}-{slug}.md` when wireframe state is `completed`
 - Supporting frame inventory
+
+If wireframes are `skipped` or `not-applicable`, expand the screen descriptions from use cases and Screen Contract Lite only, and keep Pencil references explicitly absent.
+
+If wireframe state is `completed` but `plans/reports/wireframe-map-{date}-{slug}.md` is missing, stop and rerun `/ba-start wireframes --slug {slug}` before expanding final screen descriptions.
 
 Output: `plans/reports/srs-{date}-{slug}-group-e.md`
 
@@ -630,33 +660,47 @@ Failure handling: if a grouped pass fails, retry once. If it still fails, comple
 
 ## Subcommand: wireframes
 
-Run Step 9 only. This path must be read-only on upstream artifacts and regenerate only design outputs plus the explicit wireframe-state marker.
+Run Step 9 only. This path must be read-only on upstream artifacts and regenerate only design outputs, `wireframe-map`, and the explicit wireframe-state marker.
 
 ### Prerequisites
 
 - Resolve the slug and dated set using the shared rules.
 - Resolve the wireframe source in this order:
-  1. `plans/reports/srs-{date}-{slug}-group-c.md`
-  2. `plans/reports/srs-{date}-{slug}.md` only when Screen Contract Lite is already assembled there
-- If neither source exists, print both expected paths, tell the user to run `/ba-start srs --slug {slug}`, and stop.
+  1. `plans/reports/wireframe-input-{date}-{slug}.md`
+  2. exact pair `plans/reports/srs-{date}-{slug}-group-b.md` + `plans/reports/srs-{date}-{slug}-group-c.md`
+  3. `plans/reports/srs-{date}-{slug}.md` only when Use Case Specifications, Screen Contract Lite, and Screen Inventory are already assembled there
+- If source 2 or 3 is used, build or refresh `plans/reports/wireframe-input-{date}-{slug}.md` before generating wireframes.
+- If none of the sources exist, print all expected paths, tell the user to run `/ba-start srs --slug {slug}`, and stop.
 
 ### Output
 
 - `designs/{slug}/{artifact-name}.pen`
 - `designs/{slug}/exports/{artifact-name}/SCR-xx-name.png`
+- `plans/reports/wireframe-map-{date}-{slug}.md`
 - `plans/reports/wireframe-state-{date}-{slug}.md`
 
-### Step 9.1 - Extract screen contract
+### Step 9.1 - Resolve wireframe input pack
 
-Parse the Use Case Specifications, Screen Contract Lite, and Screen Inventory to build a generation plan.
+Use `plans/reports/wireframe-input-{date}-{slug}.md` as the primary wireframe generation source.
 
-- Group related screens into one or more Pencil artifacts by flow, module, or journey.
-- Treat modal, dialog, and drawer overlays with flow impact as primary screens.
-- For each primary screen, derive required supporting frames from the documented states, validation rules, table or list behavior, and feedback surfaces.
+If the pack is missing but fallback sources exist:
+
+- assemble the pack first from exact use case excerpts, Screen Contract Lite, and Screen Inventory
+- save it before continuing
+
+Parse the input pack to build the generation plan:
+
+- group related screens into one or more Pencil artifacts by flow, module, or journey
+- treat modal, dialog, and drawer overlays with flow impact as primary screens
+- for each primary screen, derive required supporting frames from the documented states, validation rules, table or list behavior, and feedback surfaces
 
 ### Step 9.2 - Ask for wireframe preference
 
-Ask:
+If Step 9 runs as part of the full `/ba-start` or `/ba-start srs` pipeline and the user has not explicitly asked to skip or manually choose screens, default to:
+
+- Generate all wireframes automatically
+
+If Step 9 runs through the standalone `wireframes` subcommand without an explicit preference, ask:
 
 ```text
 The screen contract defines {N} primary screens. How should I generate wireframes?
@@ -680,18 +724,19 @@ If wireframes are expected but generation fails before completion:
 - persist the marker with `State: missing`
 - stop and report the failure
 
-### Step 9.3 - Generate Pencil wireframes
+### Step 9.3 - Generate Pencil wireframes and mapping
 
 For each approved screen group:
 
-1. Read the linked use cases and Screen Contract Lite entries.
+1. Read the linked use case excerpts, Screen Contract Lite entries, and Screen Inventory rows from the wireframe input pack.
 2. Verify that the wireframe intent matches the same actions, flow steps, and required states.
 3. Use `web-app` or `mobile-app` guidelines as appropriate.
 4. Use Shadcn UI as the default design-system baseline unless the user explicitly overrides it.
 5. Create or update one `.pen` artifact per approved screen group.
 6. Create one frame per primary screen and one frame per required supporting state or view.
 7. Validate screenshots against the Use Cases and Screen Contract Lite.
-8. Save each artifact to `designs/{slug}/{artifact-name}.pen`.
+8. Record screen-to-artifact-to-frame mapping, including supporting frames and export targets, for every generated artifact.
+9. Save each artifact to `designs/{slug}/{artifact-name}.pen`.
 
 ### Step 9.4 - Export wireframes to PNG
 
@@ -703,8 +748,9 @@ designs/{slug}/exports/{artifact-name}/SCR-xx-name.png
 
 After successful export:
 
+- persist `plans/reports/wireframe-map-{date}-{slug}.md` with the final artifact, frame, and export mapping
 - persist `plans/reports/wireframe-state-{date}-{slug}.md` with `State: completed`
-- list the artifact and export paths in the marker
+- list the input-pack, mapping, artifact, and export paths in the marker
 
 ## Subcommand: package
 
@@ -736,6 +782,7 @@ Run a final packaging and quality pass:
 - Run a cross-artifact consistency audit:
   - UC actor actions match screen User Actions.
   - Screen Contract Lite entries match both the wireframes and the final screen descriptions.
+  - When wireframes are completed, wireframe-map entries match the final Pencil artifact paths, frame names, and exported PNG references used by the SRS.
   - UC system responses match screen Behaviour Rules.
   - Field names are identical across UC steps, screen field tables, and wireframes.
   - User story acceptance criteria are covered by UC postconditions and screen Validation Rules.
@@ -775,6 +822,8 @@ plans/
     user-stories-{date}-{slug}.html
     srs-{date}-{slug}.md
     srs-{date}-{slug}.html
+    wireframe-input-{date}-{slug}.md
+    wireframe-map-{date}-{slug}.md
     wireframe-state-{date}-{slug}.md
   {date}-{slug}/
     plan.md
@@ -817,6 +866,8 @@ Date set: {date}
 - [ ] user-stories-{date}-{slug}.md — missing
 - [ ] user-stories-{date}-{slug}.html — missing
 - [ ] srs-{date}-{slug}.md — missing
+- [ ] wireframe-input-{date}-{slug}.md — missing
+- [ ] wireframe-map-{date}-{slug}.md — missing
 - [!] wireframes — skipped — 2026-03-26
 ```
 
@@ -824,7 +875,7 @@ Status rules:
 
 - For regular artifacts, print `exists` or `missing` with the last-modified date when present.
 - For wireframes, print the explicit wireframe state (`completed`, `skipped`, `not-applicable`, or `missing`) plus the marker date.
-- When wireframes are `completed`, also list the detected `.pen` artifact paths and export folders under `designs/{slug}/`.
+- When wireframes are `completed`, also list the detected input pack, wireframe map, `.pen` artifact paths, and export folders under `designs/{slug}/`.
 
 ## Deliverables
 
@@ -835,9 +886,11 @@ Status rules:
 - FRD in Markdown and HTML
 - User stories in Markdown and HTML
 - SRS working fragments for grouped production
+- Wireframe input pack for resumable Step 9 generation
 - Unified SRS with use cases, wireframe-backed screen descriptions, NFRs, and test cases
 - SRS HTML with embedded wireframes and rendered diagrams
 - Pencil wireframes in `.pen` plus selected `.png` exports
+- Wireframe map with persisted screen-to-frame linkback
 - Wireframe-state marker for reruns, status, and packaging decisions
 - Quality review summary
 
@@ -847,6 +900,8 @@ Status rules:
 - [frd-template.md](../../templates/frd-template.md)
 - [user-story-template.md](../../templates/user-story-template.md)
 - [srs-template.md](../../templates/srs-template.md)
+- [wireframe-input-template.md](../../templates/wireframe-input-template.md)
+- [wireframe-map-template.md](../../templates/wireframe-map-template.md)
 - [sub-agent-handoff-template.md](../../templates/sub-agent-handoff-template.md)
 
 ## Agent Delegation

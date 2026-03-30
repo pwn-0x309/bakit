@@ -8,7 +8,7 @@ This catalog explains the single BA-kit skill, what it produces, and which agent
 
 | Skill | When to Use | Related Templates | Related Agents | Typical Output |
 | --- | --- | --- | --- | --- |
-| `ba-start` | Full BA engagement or resumable step-level reruns from raw input to packaged deliverables | `intake-form-template.md`, `frd-template.md`, `user-story-template.md`, `srs-template.md` | `requirements-engineer`, `ui-ux-designer`, `ba-documentation-manager`, `ba-researcher` | Intake form + HTML, FRD + HTML, user stories + HTML, grouped SRS artifacts, wireframes, final browser-editable SRS HTML, quality review, artifact status |
+| `ba-start` | Full BA engagement or resumable step-level reruns from raw input to packaged deliverables | `intake-form-template.md`, `frd-template.md`, `user-story-template.md`, `srs-template.md`, `wireframe-input-template.md`, `wireframe-map-template.md` | `requirements-engineer`, `ui-ux-designer`, `ba-documentation-manager`, `ba-researcher` | Intake form + HTML, FRD + HTML, user stories + HTML, grouped SRS artifacts, wireframe input pack, wireframes, wireframe map, final browser-editable SRS HTML, quality review, artifact status |
 
 ## Workflow
 
@@ -22,8 +22,8 @@ This catalog explains the single BA-kit skill, what it produces, and which agent
 6. User story generation
 7. Use case specification production
 8. Screen Contract Lite production
-9. Wireframe generation from use cases and screen contract
-10. Final screen description production
+9. Wireframe generation from the persisted wireframe input pack
+10. Final screen description production with the persisted wireframe map when wireframes are completed
 11. Unified browser-editable HTML packaging and quality review across all major BA artifacts
 
 ## Invocation
@@ -46,8 +46,8 @@ This catalog explains the single BA-kit skill, what it produces, and which agent
 | `intake` | Parse input, normalize intake, package intake HTML, and save the work plan | Raw file or pasted text |
 | `frd` | Produce the FRD and FRD HTML only | Matching intake artifact |
 | `stories` | Produce user stories and user-stories HTML only | Matching FRD artifact |
-| `srs` | Produce grouped SRS artifacts, wireframes, and merged SRS | Matching FRD and user stories |
-| `wireframes` | Re-run Step 9 from Screen Contract Lite only | Group C SRS fragment or merged SRS with Screen Contract Lite |
+| `srs` | Produce grouped SRS artifacts, wireframe input pack, wireframes, wireframe map, and merged SRS | Matching FRD and user stories |
+| `wireframes` | Re-run Step 9 from the persisted wireframe input pack or exact fallback sources | Wireframe input pack, or exact Group B + Group C / merged SRS fallback |
 | `package` | Run quality review, validate existing packaged HTML artifacts, and regenerate unified SRS HTML | Merged SRS and non-missing wireframe state |
 | `status` | Print artifact checklist with dates | Resolved slug and dated set |
 
@@ -75,7 +75,7 @@ Use [`templates/sub-agent-handoff-template.md`](../templates/sub-agent-handoff-t
 
 Packaged HTML artifacts are meant to be edited in the browser. Update copy, swap images, and add or remove blocks directly in the rendered HTML instead of hand-editing source HTML.
 
-`/ba-start status` reports regular artifacts as exists or missing with last-modified dates. Wireframes are reported as `completed`, `skipped`, `not-applicable`, or `missing` from the explicit wireframe-state marker.
+`/ba-start status` reports regular artifacts as exists or missing with last-modified dates. Wireframes are reported as `completed`, `skipped`, `not-applicable`, or `missing` from the explicit wireframe-state marker, and completed runs should expose both the persisted wireframe input pack and wireframe map.
 
 ## Expected Quality Bar
 

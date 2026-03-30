@@ -120,7 +120,8 @@ For partial reruns in Codex, be explicit about the target slug and dated set whe
 Use AGENTS.md and skills/ba-start/SKILL.md.
 Run only the wireframe rerun path for slug warehouse-rfp.
 If multiple dated sets exist for that slug, stop and ask me which date to use.
-Then report `/ba-start status` semantics with artifact dates and the wireframe state.
+Use the persisted `wireframe-input-{date}-{slug}.md` when it exists, or rebuild it from exact fallback sources before generating wireframes.
+Then report `/ba-start status` semantics with artifact dates, wireframe state, and any wireframe input/map artifacts.
 ```
 
 See [codex-setup.md](./codex-setup.md) for more prompt patterns.
@@ -173,7 +174,9 @@ A full `/ba-start` engagement produces:
 | SRS | `srs-template.md` | `plans/reports/srs-{date}-{slug}.md` |
 | User stories | `user-story-template.md` | `plans/reports/user-stories-{date}-{slug}.md` |
 | User stories HTML | `scripts/md-to-html.py` | `plans/reports/user-stories-{date}-{slug}.html` in the shared BA-kit document shell |
+| Wireframe input pack | `wireframe-input-template.md` | `plans/reports/wireframe-input-{date}-{slug}.md` |
 | Wireframes | Pencil MCP | `designs/{slug}/{artifact-name}.pen` plus `designs/{slug}/exports/{artifact-name}/SCR-xx-{name}.png` |
+| Wireframe map | `wireframe-map-template.md` | `plans/reports/wireframe-map-{date}-{slug}.md` |
 | Wireframe state | BA-kit routing metadata | `plans/reports/wireframe-state-{date}-{slug}.md` |
 | SRS HTML | `scripts/md-to-html.py` | `plans/reports/srs-{date}-{slug}.html` as the primary browser-editable stakeholder copy |
 
@@ -199,6 +202,6 @@ python scripts/md-to-html.py --no-editor plans/reports/srs-{date}-{slug}.md
 - Always provide raw input (file or text) when starting an engagement
 - For UI scope, provide the `.pen` artifact path and target frames explicitly, or let the skill generate and map them
 - Use `--slug` for rerun commands whenever more than one project may exist
-- Treat `/ba-start status` as the checkpoint view: it prints artifact dates plus wireframe state (`completed`, `skipped`, `not-applicable`, `missing`)
+- Treat `/ba-start status` as the checkpoint view: it prints artifact dates plus wireframe state (`completed`, `skipped`, `not-applicable`, `missing`) and any persisted wireframe input/map artifacts
 - Ask for assumptions and open questions before asking for finalization
 - Use Mermaid diagrams for process or data views

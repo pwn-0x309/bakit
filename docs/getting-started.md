@@ -37,12 +37,15 @@ Then restart Claude Code if it is already open.
 To update later, run one command:
 
 ```bash
+ba-kit doctor
 ba-kit update
 ba-kit status --slug warehouse-rfp
 ```
 
 This checks the registered BA-kit source repo, blocks when the repo has local changes or unfinished merge/rebase state, runs `git pull --ff-only`, then reruns the installers for any previously installed runtimes.
 `ba-kit status` reads the registered source repo, prints the current artifact set, and flags likely stalled delegated slices from stale tracker heartbeats.
+`ba-kit doctor` checks runtime readiness: install manifests, registered repo health, required local tools, and optional MCP hints for Pencil and Notion.
+Both commands also surface update availability when the registered upstream has newer commits.
 
 ## 4. Use BA-kit In Claude Code
 
@@ -65,6 +68,7 @@ Step-level reruns:
 /ba-start wireframes --slug warehouse-rfp
 /ba-start package --slug warehouse-rfp
 /ba-start status --slug warehouse-rfp
+/ba-notion srs --slug warehouse-rfp --page https://www.notion.so/... --mode overwrite
 ```
 
 Default `/ba-start` handles the full BA lifecycle:
@@ -157,6 +161,7 @@ Runtime defaults for both Claude Code and Codex:
 Once you have installed BA-kit for Claude Code, Codex, or both, update it with:
 
 ```bash
+ba-kit doctor
 ba-kit update
 ```
 
@@ -164,6 +169,7 @@ Or from inside the agents:
 
 ```text
 /ba-kit-update
+/ba-notion frd --slug warehouse-rfp --parent https://www.notion.so/... --mode create
 ```
 
 Expected behavior:
@@ -226,6 +232,8 @@ If you need a clean read-only stakeholder handoff, generate HTML with:
 python scripts/md-to-html.py --no-editor plans/reports/srs-{date}-{slug}.md
 ```
 
+Packaged HTML keeps Mermaid diagrams visualized in-browser and constrains embedded wireframe images to a fit-to-document viewport by default. Click or double-click a wireframe image to open a larger preview when you need detail review.
+
 ## 8. Know Where To Look
 
 - Runtime instructions for Codex: [AGENTS.md](../AGENTS.md)
@@ -245,3 +253,4 @@ python scripts/md-to-html.py --no-editor plans/reports/srs-{date}-{slug}.md
 - Treat `/ba-start status` as the checkpoint view: it prints artifact dates plus wireframe state (`completed`, `skipped`, `not-applicable`, `missing`) and any persisted wireframe input/map artifacts
 - Ask for assumptions and open questions before asking for finalization
 - Use Mermaid diagrams for process or data views
+- Use `/ba-notion` when the deliverable needs to be published into Notion rather than only packaged as local HTML

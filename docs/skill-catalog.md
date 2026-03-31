@@ -2,13 +2,15 @@
 
 ## Purpose
 
-This catalog explains the single BA-kit skill, what it produces, and which agents support it.
+This catalog explains the BA-kit workflow skill plus the maintenance skills that support packaging, publishing, and runtime upkeep.
 
 ## Skill
 
 | Skill | When to Use | Related Templates | Related Agents | Typical Output |
 | --- | --- | --- | --- | --- |
 | `ba-start` | Full BA engagement or resumable step-level reruns from raw input to packaged deliverables | `intake-form-template.md`, `requirements-backbone-template.md`, `frd-template.md`, `user-story-template.md`, `srs-template.md`, `wireframe-input-template.md`, `wireframe-map-template.md` | `requirements-engineer`, `ui-ux-designer`, `ba-documentation-manager`, `ba-researcher` | Intake form + HTML, requirements backbone, gated FRD/stories/SRS artifacts, wireframe input pack, wireframes, wireframe map, packaged HTML, quality review, artifact status |
+| `ba-kit-update` | Update the installed BA-kit runtime assets from the registered source repo | None | None | One-command fast-forward update and reinstall |
+| `ba-notion` | Publish an exact BA markdown artifact into Notion via MCP | None | None | Notion page created or updated from BA source content |
 
 ## Workflow
 
@@ -37,6 +39,7 @@ This catalog explains the single BA-kit skill, what it produces, and which agent
 /ba-start wireframes --slug <slug>
 /ba-start package --slug <slug>
 /ba-start status --slug <slug>
+/ba-notion srs --slug <slug> --page <url|id> --mode overwrite
 ```
 
 ## Subcommands
@@ -76,6 +79,8 @@ For non-trivial delegated work, also create a tracker under `plans/{date}-{slug}
 ## HTML Editing
 
 Packaged HTML artifacts are meant to be edited in the browser. Update copy, swap images, and add or remove blocks directly in the rendered HTML instead of hand-editing source HTML.
+
+Wireframe images are constrained to a fit-to-document viewport by default so large exported screens do not overwhelm the page. Clicking or double-clicking a wireframe opens a larger preview. Mermaid diagrams are rendered explicitly after the DOM is ready for more reliable visualization in stakeholder copies.
 
 `/ba-start status` reports regular artifacts as exists or missing with last-modified dates, including the persisted backbone. Wireframes are reported as `completed`, `skipped`, `not-applicable`, or `missing` from the explicit wireframe-state marker, and completed runs should expose both the persisted wireframe input pack and wireframe map. Delegated slices should also appear from their trackers, with likely stalled slices flagged when heartbeats go stale.
 

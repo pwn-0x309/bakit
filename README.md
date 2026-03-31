@@ -4,7 +4,7 @@ BA-kit is a business analysis toolkit for agentic coding environments. It packag
 
 ## What It Includes
 
-- 1 unified BA workflow skill (`ba-start`) plus 1 maintenance skill (`ba-kit-update`)
+- 1 unified BA workflow skill (`ba-start`) plus 2 maintenance skills (`ba-kit-update`, `ba-notion`)
 - 4 agent roles for structured delegation
 - 2 workflow and quality rule files
 - reusable document and wireframe workflow templates, including a requirements backbone
@@ -77,12 +77,14 @@ Use this as the practical dependency checklist.
 | Python 3 | HTML packaging via `scripts/md-to-html.py` | Required for packaging |
 | Node.js | Running `scripts/install-codex-ba-kit.sh` and Codex agent registration | Required only for Codex converted install |
 | Pencil / Pencil MCP runtime | Generating `.pen` wireframes and PNG exports in the `wireframes` step | Required only for wireframes |
+| Notion MCP runtime | Publishing BA artifacts into Notion via `/ba-notion` | Required only for Notion publishing |
 
 Notes:
 
 - If you do not need wireframes, BA-kit can still run intake, backbone, stories, FRD, and non-wireframe SRS work without Pencil.
 - If your BA workflow includes UI-backed screens and you want BA-kit to generate wireframes, your agent runtime must expose Pencil tooling. In practice this means a Pencil MCP or equivalent Pencil-backed runtime, not just the `designs/` folder.
 - If you skip packaging, Python 3 is not required for the analysis steps themselves.
+- If you do not publish into Notion, a Notion MCP runtime is not required.
 
 ## Prerequisites
 
@@ -110,11 +112,13 @@ Notes:
 The installer also installs a shared update command:
 
 ```bash
+ba-kit doctor
 ba-kit update
 ba-kit status --slug warehouse-rfp
 ```
 
 It checks the registered BA-kit source repo for dirty state or unfinished merge/rebase work, runs `git pull --ff-only`, then reinstalls Claude and Codex assets that were previously installed from that repo.
+`ba-kit doctor` and `ba-kit status` also surface update availability when the registered upstream has newer commits.
 
 The installer copies:
 - the BA skill directory under `skills/` to `~/.claude/skills/`
@@ -143,6 +147,7 @@ That script copies the converted assets from `codex/skills/**` and `codex/agents
 The Codex installer also refreshes the shared `ba-kit` update command and records the source repo so future updates can be done with:
 
 ```bash
+ba-kit doctor
 ba-kit update
 ```
 
@@ -201,6 +206,7 @@ If one slug has multiple dated artifact sets, `/ba-start` should stop and ask wh
 | --- | --- |
 | `ba-start` | Single BA entry point with full workflow plus `intake`, `backbone`, `frd`, `stories`, `srs`, `wireframes`, `package`, and `status` subcommands |
 | `ba-kit-update` | Maintenance entry point that runs `ba-kit update` to pull and reinstall BA-kit |
+| `ba-notion` | Maintenance entry point that publishes BA markdown artifacts into Notion via MCP with create, append, overwrite, or fill-gaps behavior |
 
 ## Agent Roles
 
@@ -227,6 +233,8 @@ Wireframe artifacts for SRS screen sections live under `./designs/` as Pencil `.
 For UI-backed work, BA-kit now defaults to the Shadcn UI design system for wireframes and UI-oriented handoff unless you explicitly request another system.
 
 BA-kit packages intake, FRD, user stories, and SRS into one shared HTML shell with consistent metadata, visual chrome, and in-browser editing controls. The SRS HTML remains the primary stakeholder handoff, while the other HTML artifacts provide aligned review copies for the same engagement.
+
+Wireframe images in packaged HTML now default to a fit-to-document viewport instead of rendering at full page width, and clicking or double-clicking an image opens a larger preview so tall screens remain readable. Mermaid diagrams are bootstrapped explicitly after `DOMContentLoaded` so packaged documents render diagrams more reliably in browser review copies.
 
 `/ba-start status` reports regular artifacts as exists or missing with last-modified dates, including the persisted backbone. Wireframes use explicit states: `completed`, `skipped`, `not-applicable`, or `missing`. Non-trivial delegated slices should also surface from trackers under `plans/{date}-{slug}/delegation/`, including likely stalled runs when heartbeats go stale.
 

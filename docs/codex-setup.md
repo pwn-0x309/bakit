@@ -39,14 +39,18 @@ Prerequisite:
 After installation, update BA-kit with:
 
 ```bash
+ba-kit doctor
 ba-kit update
 ba-kit status --slug warehouse-rfp
 ```
+
+`ba-kit doctor` and `ba-kit status` also surface update availability when the registered upstream branch is ahead of the local install.
 
 Or ask Codex to run:
 
 ```text
 /ba-kit-update
+/ba-notion srs --slug warehouse-rfp --page https://www.notion.so/... --mode overwrite
 ```
 
 ## Recommended Codex Workflow
@@ -114,6 +118,17 @@ Print artifact names, exists or missing status, last-modified dates, the persist
 Also print any delegation trackers under `plans/{date}-{slug}/delegation/`, including `running`, `blocked`, `needs-repartition`, or likely stalled slices.
 ```
 
+### Publish To Notion
+
+```text
+Use AGENTS.md and skills/ba-notion/SKILL.md.
+Publish the exact `srs` artifact for slug warehouse-rfp to Notion.
+If I provided a page URL, update that page.
+If I provided only a parent page, create a new child page.
+Choose `overwrite`, `append`, or `fill-gaps` based on my request.
+Do not silently choose a slug or dated set by mtime.
+```
+
 ### Codex Conversion
 
 ```text
@@ -160,6 +175,8 @@ Use Pencil only for wireframes in SRS-backed work:
 ## HTML Deliverable
 
 The generated HTML set uses one shared BA-kit document shell. Open the packaged artifacts in a browser to update text, replace images, and add or remove blocks without editing the source HTML manually. SRS HTML remains the primary stakeholder handoff, while intake, FRD, and user-stories HTML provide aligned review copies. The `package` step should stay narrow by default: validate any existing packaged HTML artifacts, but regenerate only the final SRS HTML unless the user explicitly asks for a full HTML repack.
+
+Wireframe images are constrained to a fit-to-document viewport by default so large screen exports remain readable inside the document, and clicking or double-clicking a wireframe opens a larger preview. Mermaid diagrams are bootstrapped explicitly after `DOMContentLoaded` so browser-opened stakeholder copies render them more reliably.
 
 `/ba-start status` should report wireframes using the explicit state marker: `completed`, `skipped`, `not-applicable`, or `missing`, plus the persisted wireframe input pack and wireframe map when they exist. It should also surface delegated slice trackers and flag likely stalls from stale heartbeats.
 

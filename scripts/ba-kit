@@ -6,14 +6,18 @@ CLI_NAME="ba-kit"
 DATA_HOME="${XDG_DATA_HOME:-${HOME}/.local/share}"
 STATE_DIR="${DATA_HOME}/ba-kit"
 MANIFEST_DIR="${STATE_DIR}/installations"
+UPDATE_CACHE_DIR="${STATE_DIR}/update-check"
+UPDATE_CHECK_TTL_SECONDS="${BA_KIT_UPDATE_CHECK_TTL_SECONDS:-21600}"
 
 usage() {
   cat <<'EOF'
 Usage:
+  ba-kit doctor
   ba-kit update
   ba-kit status [--slug <slug>] [--date <YYMMDD-HHmm>]
 
 Commands:
+  doctor    Check BA-kit runtime readiness, installed manifests, and optional MCP/tool dependencies.
   update    Fast-forward pull the installed BA-kit source repo and rerun installed runtime installers.
   status    Inspect BA-kit artifacts and delegated worker trackers from the registered source repo.
 EOF
@@ -109,6 +113,125 @@ read_md_field() {
       exit
     }
   ' "${path}"
+}
+
+doctor_ok() {
+  printf -- "- [ok] %s\n" "$1"
+}
+
+doctor_warn() {
+  printf -- "- [warn] %s\n" "$1"
+}
+
+doctor_fail() {
+  printf -- "- [fail] %s\n" "$1"
+}
+
+command_path() {
+  local name="$1"
+  command -v "${name}" 2>/dev/null || true
+}
+
+scan_file_for_token() {
+  local path="$1"
+  local pattern="$2"
+  [[ -f "${path}" ]] || return 1
+  rg -qi -- "${pattern}" "${path}"
+}
+
+sanitize_cache_key() {
+  printf '%s' "$1" | sed 's/[^A-Za-z0-9._-]/_/g'
+}
+
+update_cache_path() {
+  local repo="$1"
+  local upstream_ref="$2"
+  mkdir -p "${UPDATE_CACHE_DIR}"
+  printf '%s/%s.env\n' "${UPDATE_CACHE_DIR}" "$(sanitize_cache_key "${repo}__${upstream_ref}")"
+}
+
+write_update_cache() {
+  local path="$1"
+  local repo="$2"
+  local upstream_ref="$3"
+  local local_head="$4"
+  local remote_head="$5"
+  local status="$6"
+  local checked_at="$7"
+
+  cat > "${path}" <<EOF
+repo=${repo}
+upstream_ref=${upstream_ref}
+local_head=${local_head}
+remote_head=${remote_head}
+status=${status}
+checked_at=${checked_at}
+EOF
+}
+
+resolve_update_status() {
+  local repo="$1"
+  local local_head upstream_ref remote_name remote_branch cache_path
+  local cached_checked_at cached_local_head cached_status cached_remote_head now age remote_head
+
+  git -C "${repo}" rev-parse --is-inside-work-tree >/dev/null 2>&1 || return 1
+  upstream_ref="$(git -C "${repo}" rev-parse --abbrev-ref --symbolic-full-name '@{upstream}' 2>/dev/null || true)"
+  [[ -n "${upstream_ref}" ]] || return 1
+
+  local_head="$(git -C "${repo}" rev-parse HEAD 2>/dev/null || true)"
+  [[ -n "${local_head}" ]] || return 1
+
+  cache_path="$(update_cache_path "${repo}" "${upstream_ref}")"
+  now="$(date +%s)"
+  if [[ -f "${cache_path}" ]]; then
+    cached_checked_at="$(read_manifest_value "${cache_path}" "checked_at")"
+    cached_local_head="$(read_manifest_value "${cache_path}" "local_head")"
+    cached_status="$(read_manifest_value "${cache_path}" "status")"
+    cached_remote_head="$(read_manifest_value "${cache_path}" "remote_head")"
+    if [[ "${cached_checked_at}" =~ ^[0-9]+$ ]] && [[ "${cached_local_head}" == "${local_head}" ]]; then
+      age="$((now - cached_checked_at))"
+      if [[ "${age}" -lt "${UPDATE_CHECK_TTL_SECONDS}" ]]; then
+        printf '%s\t%s\t%s\t%s\n' "${cached_status}" "${local_head}" "${cached_remote_head}" "${upstream_ref}"
+        return 0
+      fi
+    fi
+  fi
+
+  remote_name="${upstream_ref%%/*}"
+  remote_branch="${upstream_ref#*/}"
+  remote_head="$(git -C "${repo}" ls-remote "${remote_name}" "refs/heads/${remote_branch}" 2>/dev/null | awk 'NR==1 {print $1}')"
+  [[ -n "${remote_head}" ]] || return 1
+
+  if [[ "${remote_head}" == "${local_head}" ]]; then
+    write_update_cache "${cache_path}" "${repo}" "${upstream_ref}" "${local_head}" "${remote_head}" "up_to_date" "${now}"
+    printf 'up_to_date\t%s\t%s\t%s\n' "${local_head}" "${remote_head}" "${upstream_ref}"
+    return 0
+  fi
+
+  if git -C "${repo}" merge-base --is-ancestor "${local_head}" "${remote_head}" >/dev/null 2>&1; then
+    write_update_cache "${cache_path}" "${repo}" "${upstream_ref}" "${local_head}" "${remote_head}" "update_available" "${now}"
+    printf 'update_available\t%s\t%s\t%s\n' "${local_head}" "${remote_head}" "${upstream_ref}"
+    return 0
+  fi
+
+  write_update_cache "${cache_path}" "${repo}" "${upstream_ref}" "${local_head}" "${remote_head}" "diverged" "${now}"
+  printf 'diverged\t%s\t%s\t%s\n' "${local_head}" "${remote_head}" "${upstream_ref}"
+}
+
+print_update_notice_if_available() {
+  local repo="$1"
+  local result status local_head remote_head upstream_ref
+
+  result="$(resolve_update_status "${repo}" 2>/dev/null || true)"
+  [[ -n "${result}" ]] || return 0
+
+  IFS=$'\t' read -r status local_head remote_head upstream_ref <<<"${result}"
+  if [[ "${status}" == "update_available" ]]; then
+    printf 'Update available for BA-kit:\n'
+    printf '  local  %s\n' "${local_head:0:7}"
+    printf '  remote %s (%s)\n' "${remote_head:0:7}" "${upstream_ref}"
+    printf '  run    ba-kit update\n\n'
+  fi
 }
 
 collect_candidate_slugs() {
@@ -318,6 +441,70 @@ print_installations() {
   done <<<"${installations}"
 }
 
+doctor_command_check() {
+  local label="$1"
+  local command_name="$2"
+  local required="$3"
+  local resolved
+
+  resolved="$(command_path "${command_name}")"
+  if [[ -n "${resolved}" ]]; then
+    doctor_ok "${label} available at ${resolved}"
+    return 0
+  fi
+
+  if [[ "${required}" == "required" ]]; then
+    doctor_fail "${label} not found on PATH"
+    return 1
+  fi
+
+  doctor_warn "${label} not found on PATH"
+  return 0
+}
+
+doctor_file_check() {
+  local label="$1"
+  local path="$2"
+  local required="$3"
+
+  if [[ -e "${path}" ]]; then
+    doctor_ok "${label} present at ${path}"
+    return 0
+  fi
+
+  if [[ "${required}" == "required" ]]; then
+    doctor_fail "${label} missing at ${path}"
+    return 1
+  fi
+
+  doctor_warn "${label} missing at ${path}"
+  return 0
+}
+
+doctor_mcp_check() {
+  local label="$1"
+  local token="$2"
+  local codex_config="${HOME}/.codex/config.toml"
+  local claude_settings="${HOME}/.claude/settings.json"
+  local claude_config="${HOME}/.claude.json"
+
+  if scan_file_for_token "${codex_config}" "${token}"; then
+    doctor_ok "${label} detected in ${codex_config}"
+    return 0
+  fi
+  if scan_file_for_token "${claude_settings}" "${token}"; then
+    doctor_ok "${label} detected in ${claude_settings}"
+    return 0
+  fi
+  if scan_file_for_token "${claude_config}" "${token}"; then
+    doctor_ok "${label} detected in ${claude_config}"
+    return 0
+  fi
+
+  doctor_warn "${label} not detected in local Codex/Claude config files"
+  return 1
+}
+
 git_path_exists() {
   local repo="$1"
   local git_path_name="$2"
@@ -423,6 +610,142 @@ update_command() {
   printf 'Update complete. Before: %s | After: %s\n' "${before}" "${after}"
 }
 
+doctor_command() {
+  [[ "$#" -eq 0 ]] || fail "Unsupported arguments for 'doctor'"
+
+  local failures=0
+  local warnings=0
+  local installations installation_count unique_repos repo_count repo runtime manifest_path source_state
+  local local_bin_cli="${HOME}/.local/bin/ba-kit"
+  local repo_resolved=0
+  local update_result update_status update_local_head update_remote_head update_upstream_ref
+
+  printf 'BA-kit Doctor\n\n'
+
+  doctor_command_check "bash" "bash" "required" || failures=$((failures + 1))
+  doctor_command_check "python3" "python3" "required" || failures=$((failures + 1))
+  doctor_command_check "rg" "rg" "required" || failures=$((failures + 1))
+  if doctor_command_check "node" "node" "optional"; then :; else failures=$((failures + 1)); fi
+  printf '\n'
+
+  doctor_file_check "shared CLI" "${local_bin_cli}" "optional" || failures=$((failures + 1))
+  doctor_file_check "installation manifest dir" "${MANIFEST_DIR}" "optional" || failures=$((failures + 1))
+  doctor_file_check "Claude installer" "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/install.sh" "required" || failures=$((failures + 1))
+  doctor_file_check "Codex installer" "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/scripts/install-codex-ba-kit.sh" "required" || failures=$((failures + 1))
+  doctor_file_check "HTML renderer" "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/scripts/md-to-html.py" "required" || failures=$((failures + 1))
+  printf '\n'
+
+  installations="$(collect_installations)"
+  installation_count="$(printf '%s\n' "${installations}" | sed '/^$/d' | wc -l | tr -d ' ')"
+  if [[ "${installation_count}" -eq 0 ]]; then
+    doctor_warn "no BA-kit installation manifests found under ${MANIFEST_DIR}"
+    warnings=$((warnings + 1))
+  else
+    doctor_ok "${installation_count} installation manifest(s) found"
+    while IFS=$'\t' read -r runtime repo manifest_path; do
+      [[ -n "${runtime:-}" ]] || continue
+      if [[ -d "${repo}" ]]; then
+        doctor_ok "runtime=${runtime} registered to repo ${repo} via ${manifest_path}"
+      else
+        doctor_fail "runtime=${runtime} manifest points to missing repo ${repo}"
+        failures=$((failures + 1))
+      fi
+    done <<<"${installations}"
+  fi
+
+  if [[ -n "${installations}" ]]; then
+    unique_repos="$(
+      while IFS=$'\t' read -r runtime repo _; do
+        [[ -n "${repo:-}" ]] || continue
+        printf '%s\n' "${repo}"
+      done <<<"${installations}" | sed '/^$/d' | sort -u
+    )"
+    repo_count="$(printf '%s\n' "${unique_repos}" | sed '/^$/d' | wc -l | tr -d ' ')"
+    if [[ "${repo_count}" -eq 1 ]]; then
+      repo="$(printf '%s\n' "${unique_repos}" | sed '/^$/d' | head -n 1)"
+      repo_resolved=1
+      if git -C "${repo}" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+        doctor_ok "registered source repo is a git worktree: ${repo}"
+        source_state="$(git -C "${repo}" status --short || true)"
+        if [[ -n "${source_state}" ]]; then
+          doctor_warn "registered source repo has local changes"
+          warnings=$((warnings + 1))
+        else
+          doctor_ok "registered source repo is clean"
+        fi
+      else
+        doctor_fail "registered source repo is not a git worktree: ${repo}"
+        failures=$((failures + 1))
+      fi
+    elif [[ "${repo_count}" -gt 1 ]]; then
+      doctor_fail "multiple registered BA-kit source repos detected"
+      failures=$((failures + 1))
+      print_installations "${installations}"
+    fi
+  fi
+
+  if [[ "${repo_resolved}" -eq 1 ]]; then
+    update_result="$(resolve_update_status "${repo}" 2>/dev/null || true)"
+    if [[ -n "${update_result}" ]]; then
+      IFS=$'\t' read -r update_status update_local_head update_remote_head update_upstream_ref <<<"${update_result}"
+      case "${update_status}" in
+        up_to_date)
+          doctor_ok "BA-kit is up to date with ${update_upstream_ref} (${update_local_head:0:7})"
+          ;;
+        update_available)
+          doctor_warn "BA-kit update available: ${update_local_head:0:7} -> ${update_remote_head:0:7} (${update_upstream_ref})"
+          warnings=$((warnings + 1))
+          ;;
+        diverged)
+          doctor_warn "BA-kit local branch diverged from ${update_upstream_ref}: local ${update_local_head:0:7}, remote ${update_remote_head:0:7}"
+          warnings=$((warnings + 1))
+          ;;
+      esac
+    else
+      doctor_warn "could not verify BA-kit update status from upstream"
+      warnings=$((warnings + 1))
+    fi
+  fi
+  printf '\n'
+
+  doctor_mcp_check "Pencil MCP" "pencil" || warnings=$((warnings + 1))
+  doctor_mcp_check "Notion MCP" "notion" || warnings=$((warnings + 1))
+  printf '\n'
+
+  if [[ -d "${HOME}/.codex" ]]; then
+    doctor_ok "Codex home detected at ${HOME}/.codex"
+  else
+    doctor_warn "Codex home not detected at ${HOME}/.codex"
+    warnings=$((warnings + 1))
+  fi
+  if [[ -d "${HOME}/.claude" ]]; then
+    doctor_ok "Claude home detected at ${HOME}/.claude"
+  else
+    doctor_warn "Claude home not detected at ${HOME}/.claude"
+    warnings=$((warnings + 1))
+  fi
+  printf '\n'
+
+  if [[ "${repo_resolved}" -eq 1 && -d "${repo}/skills/ba-notion" ]]; then
+    doctor_ok "ba-notion skill source present in registered repo"
+  elif [[ "${repo_resolved}" -eq 1 ]]; then
+    doctor_warn "ba-notion skill source not found in registered repo"
+    warnings=$((warnings + 1))
+  fi
+
+  if [[ -d "${HOME}/.codex/skills/ba-notion" || -d "${HOME}/.claude/skills/ba-notion" ]]; then
+    doctor_ok "ba-notion installed in at least one runtime"
+  else
+    doctor_warn "ba-notion not installed into ~/.codex/skills or ~/.claude/skills"
+    warnings=$((warnings + 1))
+  fi
+
+  printf '\nSummary: %s failure(s), %s warning(s)\n' "${failures}" "${warnings}"
+  if [[ "${failures}" -gt 0 ]]; then
+    exit 1
+  fi
+}
+
 status_command() {
   local slug="" date_token="" repo slugs slug_count dates date_count
 
@@ -445,6 +768,7 @@ status_command() {
   done
 
   repo="$(resolve_registered_repo)"
+  print_update_notice_if_available "${repo}"
 
   if [[ -z "${slug}" ]]; then
     slugs="$(collect_candidate_slugs "${repo}")"
@@ -494,6 +818,9 @@ main() {
   shift || true
 
   case "${command}" in
+    doctor)
+      doctor_command "$@"
+      ;;
     update)
       [[ "$#" -eq 0 ]] || fail "Unsupported arguments for 'update'"
       update_command

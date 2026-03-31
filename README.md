@@ -1,24 +1,98 @@
 # BA-kit
 
-BA-kit is a business analysis toolkit for agentic coding environments. It packages a single end-to-end BA skill, focused agent roles, workflow rules, and reusable templates so discovery, requirements, and handoff work follow a consistent operating model in Claude Code and Codex.
+BA-kit is a business analysis toolkit for agentic coding environments. It packages a single end-to-end BA skill, focused agent roles, workflow rules, and reusable templates so discovery, requirements, and handoff work follow a consistent solo-IT-BA-friendly operating model in Claude Code and Codex.
 
 ## What It Includes
 
 - 1 unified BA workflow skill (`ba-start`) plus 1 maintenance skill (`ba-kit-update`)
 - 4 agent roles for structured delegation
 - 2 workflow and quality rule files
-- 6 reusable document and wireframe workflow templates
+- reusable document and wireframe workflow templates, including a requirements backbone
 - Project instructions and configuration for BA engagements
 
 Start here for practical setup and usage: [docs/getting-started.md](./docs/getting-started.md)
 
+## How A BA Uses BA-kit
+
+BA-kit is meant to be used as a BA workstation, not just a template repo.
+
+A solo BA typically uses it like this:
+
+1. Start with raw input: BRD draft, RFP, meeting notes, process notes, screenshots, or pasted requirements.
+2. Run `/ba-start` or `/ba-start intake ...` to normalize the input and surface gaps.
+3. Lock scope and build the `backbone` as the single source of truth for the engagement.
+4. Emit only the artifacts the engagement actually needs:
+   - `lite`: intake + backbone + stories
+   - `hybrid` default: backbone + stories + selective FRD/SRS + critical wireframes
+   - `formal`: full FRD + SRS + wireframes + packaged handoff
+5. Use rerun commands like `frd`, `stories`, `srs`, `wireframes`, and `package` only when that slice needs to be refreshed.
+6. Use `status` to see what exists, what is missing, and whether any delegated slice is stalled.
+
+The intended working style is:
+
+- write once in the backbone, then derive downstream artifacts
+- avoid producing full SRS and full wireframes unless the project really needs them
+- keep outputs traceable enough for product, dev, QA, vendor, or stakeholder handoff
+
+### Typical BA Scenarios
+
+| Scenario | Recommended Mode | Typical Output |
+| --- | --- | --- |
+| Discovery / backlog shaping | `lite` | intake, backbone, user stories |
+| Solo IT BA on product or internal system | `hybrid` | backbone, stories, targeted FRD/SRS, critical wireframes |
+| Vendor handoff / regulated change / formal approval | `formal` | full FRD, full SRS, wireframes, packaged HTML |
+
+### Core Commands For A BA
+
+```text
+/ba-start
+/ba-start intake docs/raw/warehouse-rfp.pdf
+/ba-start backbone --slug warehouse-rfp
+/ba-start stories --slug warehouse-rfp
+/ba-start srs --slug warehouse-rfp
+/ba-start wireframes --slug warehouse-rfp
+/ba-start package --slug warehouse-rfp
+/ba-start status --slug warehouse-rfp
+```
+
+### What You Get Back
+
+- normalized intake
+- scoped work plan
+- requirements backbone
+- FRD and user stories when needed
+- selective or full SRS depending on mode
+- Pencil wireframes for critical or approved screens
+- packaged HTML deliverables for stakeholder review
+
+## Dependencies
+
+Use this as the practical dependency checklist.
+
+| Dependency | Needed For | Required |
+| --- | --- | --- |
+| Claude Code CLI | Running BA-kit as an installed Claude workflow | Core for Claude runtime |
+| Codex with repo-level `AGENTS.md` support | Running BA-kit directly inside Codex | Core for Codex runtime |
+| Bash-compatible shell | Running `install.sh`, `ba-kit update`, and helper scripts | Yes |
+| Python 3 | HTML packaging via `scripts/md-to-html.py` | Required for packaging |
+| Node.js | Running `scripts/install-codex-ba-kit.sh` and Codex agent registration | Required only for Codex converted install |
+| Pencil / Pencil MCP runtime | Generating `.pen` wireframes and PNG exports in the `wireframes` step | Required only for wireframes |
+
+Notes:
+
+- If you do not need wireframes, BA-kit can still run intake, backbone, stories, FRD, and non-wireframe SRS work without Pencil.
+- If your BA workflow includes UI-backed screens and you want BA-kit to generate wireframes, your agent runtime must expose Pencil tooling. In practice this means a Pencil MCP or equivalent Pencil-backed runtime, not just the `designs/` folder.
+- If you skip packaging, Python 3 is not required for the analysis steps themselves.
+
 ## Prerequisites
 
-- Claude Code CLI
-- Codex with repo-level `AGENTS.md` support
-- A local Claude workspace with access to `~/.claude/`
-- Bash-compatible shell for running `install.sh`
+- A supported runtime:
+  - Claude Code CLI with access to `~/.claude/`
+  - or Codex with repo-level `AGENTS.md` support
+- Bash-compatible shell for running installers and helper commands
+- Python 3 if you want HTML packaging
 - Node.js if you want to run `scripts/install-codex-ba-kit.sh`
+- Pencil / Pencil MCP if you want generated wireframes
 
 ## Installation
 
@@ -77,11 +151,12 @@ See [docs/codex-setup.md](./docs/codex-setup.md) for prompt patterns and setup g
 Core defaults across Claude Code and Codex:
 - BA deliverables are written in Vietnamese by default unless the user explicitly requests English.
 - The dated artifact-set token uses `YYMMDD-HHmm` consistently across `plans/reports/*` and `plans/{date}-{slug}/plan.md`.
+- The default engagement mode is `hybrid`: build the backbone first, then emit only the downstream artifacts the engagement actually needs.
 - When UI scope exists, wireframes default to Shadcn UI unless the user explicitly overrides it.
 
 `plans/` is a local BA workspace, not shipped example content. Keep generated `plans/reports/*` artifacts and `plans/{date}-{slug}/plan.md` local to your engagement and out of version control.
 
-## Quick Start
+## Workflow And Commands
 
 Full workflow:
 
@@ -93,6 +168,7 @@ Resumable subcommands:
 
 ```text
 /ba-start intake docs/raw/warehouse-rfp.pdf
+/ba-start backbone --slug warehouse-rfp
 /ba-start frd --slug warehouse-rfp
 /ba-start stories --slug warehouse-rfp
 /ba-start srs --slug warehouse-rfp
@@ -104,13 +180,13 @@ Resumable subcommands:
 Default `/ba-start` still runs the full lifecycle:
 1. Parsing raw input into a structured intake form
 2. Gap analysis and clarifying questions
-3. Work plan generation
-4. FRD production
-5. User story generation
-6. SRS production
-7. Wireframe generation from use cases and screen contract
+3. Scope lock and mode selection
+4. Requirements backbone production
+5. Gated FRD and user story generation
+6. Selective SRS production
+7. Wireframe generation from use cases and screen contract when justified
 8. Final screen description production
-9. Unified browser-editable HTML packaging for intake, FRD, user stories, and SRS
+9. Unified browser-editable HTML packaging for the emitted artifacts
 
 For rerun commands, resolution order is:
 1. Explicit `--slug <slug>`
@@ -123,7 +199,7 @@ If one slug has multiple dated artifact sets, `/ba-start` should stop and ask wh
 
 | Skill | Purpose |
 | --- | --- |
-| `ba-start` | Single BA entry point with full workflow plus `intake`, `frd`, `stories`, `srs`, `wireframes`, `package`, and `status` subcommands |
+| `ba-start` | Single BA entry point with full workflow plus `intake`, `backbone`, `frd`, `stories`, `srs`, `wireframes`, `package`, and `status` subcommands |
 | `ba-kit-update` | Maintenance entry point that runs `ba-kit update` to pull and reinstall BA-kit |
 
 ## Agent Roles
@@ -138,6 +214,7 @@ If one slug has multiple dated artifact sets, `/ba-start` should stop and ask wh
 ## Template Library
 
 Templates live in `./templates/` and cover:
+- Requirements backbone
 - SRS (software requirements specification)
 - FRD (functional requirements document)
 - User stories
@@ -151,7 +228,7 @@ For UI-backed work, BA-kit now defaults to the Shadcn UI design system for wiref
 
 BA-kit packages intake, FRD, user stories, and SRS into one shared HTML shell with consistent metadata, visual chrome, and in-browser editing controls. The SRS HTML remains the primary stakeholder handoff, while the other HTML artifacts provide aligned review copies for the same engagement.
 
-`/ba-start status` reports regular artifacts as exists or missing with last-modified dates. Wireframes use explicit states: `completed`, `skipped`, `not-applicable`, or `missing`. Non-trivial delegated slices should also surface from trackers under `plans/{date}-{slug}/delegation/`, including likely stalled runs when heartbeats go stale.
+`/ba-start status` reports regular artifacts as exists or missing with last-modified dates, including the persisted backbone. Wireframes use explicit states: `completed`, `skipped`, `not-applicable`, or `missing`. Non-trivial delegated slices should also surface from trackers under `plans/{date}-{slug}/delegation/`, including likely stalled runs when heartbeats go stale.
 
 ## Configuration
 
@@ -161,7 +238,7 @@ BA-kit uses [`.ck.json`](./.ck.json) to define project paths, plan naming, metho
 
 ### New Product Discovery
 
-Use `/ba-start` with a raw requirements document to produce an intake form, FRD, user stories with AC, SRS with screen descriptions, and wireframes. Use `/ba-start status --slug <slug>` to inspect progress after an interrupted session.
+Use `/ba-start` with a raw requirements document to produce an intake form, a requirements backbone, user stories with AC, selective FRD/SRS slices, and wireframes only where they help review or handoff. Use `/ba-start status --slug <slug>` to inspect progress after an interrupted session.
 
 ### ERP Process Improvement
 

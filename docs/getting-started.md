@@ -58,6 +58,7 @@ Step-level reruns:
 
 ```text
 /ba-start intake docs/raw/warehouse-rfp.pdf
+/ba-start backbone --slug warehouse-rfp
 /ba-start frd --slug warehouse-rfp
 /ba-start stories --slug warehouse-rfp
 /ba-start srs --slug warehouse-rfp
@@ -69,13 +70,13 @@ Step-level reruns:
 Default `/ba-start` handles the full BA lifecycle:
 1. Parse raw input into an intake form
 2. Gap analysis and clarifying questions
-3. Work plan generation
-4. FRD production
-5. User story generation
-6. SRS production
-7. Wireframe generation from the use cases and screen contract
+3. Scope lock and mode selection
+4. Requirements backbone production
+5. Gated FRD and user story generation
+6. Selective SRS production
+7. Wireframe generation from the use cases and screen contract when justified
 8. Final screen description production
-9. HTML packaging for intake, FRD, user stories, and unified SRS deliverables
+9. HTML packaging for the emitted artifact set
 
 ### Claude Example
 
@@ -89,14 +90,14 @@ When prompted, provide the file path or paste your requirements text. The skill 
 2. Identify gaps (missing stakeholders, unclear scope, no success criteria)
 3. Ask 3-8 clarifying questions
 4. Generate a scoped work plan
-5. Produce FRD, user stories, use cases, Screen Contract Lite, wireframes, final screen descriptions, and browser-editable HTML output
+5. Produce a requirements backbone, then emit FRD, user stories, use cases, Screen Contract Lite, wireframes, final screen descriptions, and browser-editable HTML output only when their gates are open
 
 For rerun commands:
 - pass `--slug <slug>` when more than one project exists
 - if one slug has multiple dated artifact sets, BA-kit should stop and ask which set to use
 - use `/ba-start status --slug <slug>` to inspect completion before rerunning a downstream step
-- for `srs`, start from the exact resolved FRD and user-stories artifacts instead of rereading the whole `plans/reports/` directory
-- for `frd` and `stories`, start from the exact resolved intake or FRD artifact instead of rereading the whole `plans/reports/` directory
+- for `srs`, start from the exact resolved backbone and user-stories artifacts, and pull the FRD only when it exists or is required, instead of rereading the whole `plans/reports/` directory
+- for `frd` and `stories`, start from the exact resolved backbone artifact instead of rereading the whole `plans/reports/` directory
 - if you only have old reports named like `002-intake-form.md`, treat them as a legacy suite and rerun or migrate them before expecting the current `/ba-start` contract to resume from them
 - for non-trivial delegated work, expect BA-kit to create trackers under `plans/{date}-{slug}/delegation/`
 - treat a delegation tracker with no heartbeat for more than 10 minutes as likely stalled and inspect or rerun that slice instead of waiting blindly
@@ -129,7 +130,7 @@ If the Codex conversion is installed, you can point Codex directly at the bundle
 ```text
 Use ~/.codex/skills/ba-start/SKILL.md and the registered BA agents under ~/.codex/agents.
 Parse the requirements in docs/raw/warehouse-rfp.pdf.
-Produce an intake form, FRD, user stories, use case specifications, Screen Contract Lite, wireframes, final screen descriptions, and a browser-editable HTML output.
+Produce an intake form, a requirements backbone, gated FRD/stories/SRS artifacts, wireframes when justified, final screen descriptions, and a browser-editable HTML output.
 ```
 
 For partial reruns in Codex, be explicit about the target slug and dated set when ambiguity exists. Example:
@@ -207,6 +208,7 @@ A full `/ba-start` engagement produces:
 | --- | --- | --- |
 | Intake form | `intake-form-template.md` | `plans/reports/intake-{slug}-{date}.md` |
 | Intake HTML | `scripts/md-to-html.py` | `plans/reports/intake-{slug}-{date}.html` in the shared BA-kit document shell |
+| Requirements backbone | `requirements-backbone-template.md` | `plans/reports/backbone-{date}-{slug}.md` |
 | FRD | `frd-template.md` | `plans/reports/frd-{date}-{slug}.md` |
 | FRD HTML | `scripts/md-to-html.py` | `plans/reports/frd-{date}-{slug}.html` with rendered Mermaid diagrams |
 | SRS | `srs-template.md` | `plans/reports/srs-{date}-{slug}.md` |

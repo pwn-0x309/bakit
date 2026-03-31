@@ -8,7 +8,7 @@ This catalog explains the single BA-kit skill, what it produces, and which agent
 
 | Skill | When to Use | Related Templates | Related Agents | Typical Output |
 | --- | --- | --- | --- | --- |
-| `ba-start` | Full BA engagement or resumable step-level reruns from raw input to packaged deliverables | `intake-form-template.md`, `frd-template.md`, `user-story-template.md`, `srs-template.md`, `wireframe-input-template.md`, `wireframe-map-template.md` | `requirements-engineer`, `ui-ux-designer`, `ba-documentation-manager`, `ba-researcher` | Intake form + HTML, FRD + HTML, user stories + HTML, grouped SRS artifacts, wireframe input pack, wireframes, wireframe map, final browser-editable SRS HTML, quality review, artifact status |
+| `ba-start` | Full BA engagement or resumable step-level reruns from raw input to packaged deliverables | `intake-form-template.md`, `requirements-backbone-template.md`, `frd-template.md`, `user-story-template.md`, `srs-template.md`, `wireframe-input-template.md`, `wireframe-map-template.md` | `requirements-engineer`, `ui-ux-designer`, `ba-documentation-manager`, `ba-researcher` | Intake form + HTML, requirements backbone, gated FRD/stories/SRS artifacts, wireframe input pack, wireframes, wireframe map, packaged HTML, quality review, artifact status |
 
 ## Workflow
 
@@ -17,20 +17,20 @@ This catalog explains the single BA-kit skill, what it produces, and which agent
 1. Accept raw input (file or text)
 2. Parse and normalize into intake form
 3. Gap analysis and clarifying questions
-4. Work plan generation
-5. FRD production
-6. User story generation
-7. Use case specification production
-8. Screen Contract Lite production
-9. Wireframe generation from the persisted wireframe input pack
-10. Final screen description production with the persisted wireframe map when wireframes are completed
-11. Unified browser-editable HTML packaging and quality review across all major BA artifacts
+4. Scope lock and engagement-mode selection (`lite`, `hybrid`, `formal`)
+5. Requirements backbone production
+6. Gated FRD and user story generation
+7. Selective use case and Screen Contract Lite production when needed
+8. Wireframe generation from the persisted wireframe input pack when justified
+9. Final screen description production with the persisted wireframe map when wireframes are completed
+10. Unified browser-editable HTML packaging and quality review across the emitted artifacts
 
 ## Invocation
 
 ```text
 /ba-start
 /ba-start intake <file>
+/ba-start backbone --slug <slug>
 /ba-start frd --slug <slug>
 /ba-start stories --slug <slug>
 /ba-start srs --slug <slug>
@@ -44,11 +44,12 @@ This catalog explains the single BA-kit skill, what it produces, and which agent
 | Command | Purpose | Prerequisite |
 | --- | --- | --- |
 | `intake` | Parse input, normalize intake, package intake HTML, and save the work plan | Raw file or pasted text |
-| `frd` | Produce the FRD and FRD HTML only | Matching intake artifact |
-| `stories` | Produce user stories and user-stories HTML only | Matching FRD artifact |
-| `srs` | Produce grouped SRS artifacts, wireframe input pack, wireframes, wireframe map, and merged SRS | Matching FRD and user stories |
+| `backbone` | Build the persisted source-of-truth artifact after scope lock | Matching intake artifact |
+| `frd` | Produce the FRD and FRD HTML only when the gate is open | Matching backbone artifact |
+| `stories` | Produce user stories and user-stories HTML only | Matching backbone artifact |
+| `srs` | Produce grouped SRS artifacts, wireframe input pack, gated wireframes, wireframe map, and merged SRS | Matching backbone and user stories |
 | `wireframes` | Re-run Step 9 from the persisted wireframe input pack or exact fallback sources | Wireframe input pack, or exact Group B + Group C / merged SRS fallback |
-| `package` | Run quality review, validate existing packaged HTML artifacts, and regenerate unified SRS HTML | Merged SRS and non-missing wireframe state |
+| `package` | Run quality review, validate existing packaged HTML artifacts, and regenerate only the needed packaged outputs | Emitted artifact set and non-missing wireframe state |
 | `status` | Print artifact checklist with dates | Resolved slug and dated set |
 
 Subcommand targeting rules:
@@ -62,9 +63,9 @@ Subcommand targeting rules:
 
 | Agent | Role in Workflow |
 | --- | --- |
-| `requirements-engineer` | FRD, user stories, use cases, Screen Contract Lite, final screen descriptions, validation |
+| `requirements-engineer` | Backbone, FRD, user stories, use cases, Screen Contract Lite, final screen descriptions |
 | `ui-ux-designer` | Pencil wireframe generation from use cases and screen contract |
-| `ba-documentation-manager` | Quality review, consistency, packaging |
+| `ba-documentation-manager` | Validation pack, quality review, consistency, packaging |
 | `ba-researcher` | Domain research when external context is needed |
 
 Delegation is intentionally partitioned. Large SRS work should be split into grouped slices and passed downstream as narrow handoff packets with exact excerpts and trace IDs, not as full merged artifacts. If one delegated slice becomes too large to keep consistent, repartition and rerun only that slice.
@@ -76,11 +77,12 @@ For non-trivial delegated work, also create a tracker under `plans/{date}-{slug}
 
 Packaged HTML artifacts are meant to be edited in the browser. Update copy, swap images, and add or remove blocks directly in the rendered HTML instead of hand-editing source HTML.
 
-`/ba-start status` reports regular artifacts as exists or missing with last-modified dates. Wireframes are reported as `completed`, `skipped`, `not-applicable`, or `missing` from the explicit wireframe-state marker, and completed runs should expose both the persisted wireframe input pack and wireframe map. Delegated slices should also appear from their trackers, with likely stalled slices flagged when heartbeats go stale.
+`/ba-start status` reports regular artifacts as exists or missing with last-modified dates, including the persisted backbone. Wireframes are reported as `completed`, `skipped`, `not-applicable`, or `missing` from the explicit wireframe-state marker, and completed runs should expose both the persisted wireframe input pack and wireframe map. Delegated slices should also appear from their trackers, with likely stalled slices flagged when heartbeats go stale.
 
 ## Expected Quality Bar
 
 - Outputs reference business goals
+- Backbone decisions explain why downstream artifacts were emitted or skipped
 - Every requirement has acceptance criteria
 - Use cases cover primary and alternate flows
 - Screen descriptions use field tables with Display/Behaviour/Validation rules

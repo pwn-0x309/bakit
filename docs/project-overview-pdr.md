@@ -2,13 +2,13 @@
 
 ## Summary
 
-BA-kit is a reusable toolkit that equips Claude Code and Codex for professional business analysis work. It standardizes the full BA lifecycle from raw input to packaged deliverables through a single unified skill, focused agent roles, reusable templates, and workflow rules.
+BA-kit is a reusable toolkit that equips Claude Code and Codex for professional business analysis work. It standardizes a solo-IT-BA-friendly lifecycle from raw input to packaged deliverables through a single unified skill, focused agent roles, reusable templates, and workflow rules.
 
 ## Problem Statement
 
 Agent coding environments are usually optimized for software implementation. Business analysis work needs different defaults:
 - structured elicitation and intake normalization
-- formal and Agile requirement artifacts (FRD, user stories, SRS)
+- a single persisted source of truth before formal and Agile requirement artifacts are emitted
 - traceability from business goals to test cases
 - reusable templates for recurring deliverables
 - wireframe generation for UI-backed scope
@@ -18,6 +18,7 @@ BA-kit closes that gap with a BA-first operating model.
 ## Objectives
 
 - Make BA workflows repeatable across projects
+- Reduce duplicated writing for solo analysts
 - Reduce time spent rebuilding templates and checklists
 - Improve consistency of requirement quality and acceptance criteria
 - Support Agile, Traditional, and Hybrid delivery styles
@@ -27,10 +28,10 @@ BA-kit closes that gap with a BA-first operating model.
 
 | Component | Purpose |
 | --- | --- |
-| `skills/ba-start/` | Single unified BA skill covering intake through packaging |
+| `skills/ba-start/` | Single unified BA skill covering intake, backbone-first analysis, gated artifact emission, and packaging |
 | `agents/` | 4 specialized delegation roles for parallel execution |
 | `rules/` | Workflow and quality standards |
-| `templates/` | 4 ready-to-fill BA deliverable structures |
+| `templates/` | BA deliverable structures including the requirements backbone |
 | `designs/` | Pencil wireframe artifacts for SRS screens, with screen-to-frame mapping inside `.pen` files |
 | `AGENTS.md` | Persistent Codex repository instructions |
 | `CLAUDE.md` | Claude Code project instructions |
@@ -40,9 +41,9 @@ BA-kit closes that gap with a BA-first operating model.
 ### In Scope
 
 - Intake normalization and gap analysis
-- Requirements engineering (FRD, SRS)
+- Requirements backbone and gated requirements engineering (FRD, SRS)
 - User story generation
-- Wireframe generation for SRS screens
+- Critical-screen-first wireframe generation for UI-backed scope
 - Quality review and packaging
 - Template-driven documentation
 
@@ -69,12 +70,13 @@ BA-kit closes that gap with a BA-first operating model.
 
 ## Design Decisions
 
-1. BA-kit uses a single unified skill instead of 16 separate skills.
-2. Four focused agent roles handle delegation without overlap.
-3. Templates are first-class assets because BA deliverables are repeatable.
-4. Mermaid is the standard diagram syntax for portability in markdown.
-5. Hybrid methodology is the default.
-6. SRS is included by default when UI screens or system interactions are present.
+1. BA-kit uses a single unified skill instead of many disconnected skills.
+2. The requirements backbone is the default authoring source after intake.
+3. Four focused agent roles handle delegation without overlap.
+4. Templates are first-class assets because BA deliverables are repeatable.
+5. Mermaid is the standard diagram syntax for portability in markdown.
+6. Hybrid methodology is the default for solo IT BA work.
+7. SRS and wireframes are gated by real handoff, UI, and risk needs instead of always being emitted in full.
 
 ## Acceptance Criteria
 

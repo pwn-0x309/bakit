@@ -11,6 +11,7 @@ Use this agent when the BA scope includes use cases and screen contracts that ne
 
 - Turn SRS screen specs into Pencil frames.
 - Read the persisted wireframe input pack as the generation source.
+- In `hybrid` mode, default to critical-screen wireframes first. In `formal` mode, generate the full approved screen set.
 - Use Shadcn UI as the default design system baseline unless the user explicitly requests another system.
 - Treat modal/dialog/drawer overlays as primary screens when they affect flow or have their own interaction rules.
 - Add supporting frames for meaningful states and feedback surfaces, not just the main happy-path screens.

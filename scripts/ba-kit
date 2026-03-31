@@ -118,6 +118,7 @@ collect_candidate_slugs() {
   shopt -s nullglob
   for path in \
     "${repo}"/plans/reports/intake-*-*.md \
+    "${repo}"/plans/reports/backbone-*-*.md \
     "${repo}"/plans/reports/frd-*-*.md \
     "${repo}"/plans/reports/user-stories-*-*.md \
     "${repo}"/plans/reports/srs-*-*.md \
@@ -129,6 +130,9 @@ collect_candidate_slugs() {
     case "${base}" in
       intake-*-*.md)
         slug="$(printf '%s\n' "${base}" | sed -nE 's/^intake-(.+)-[0-9]{6}-[0-9]{4}\.md$/\1/p')"
+        ;;
+      backbone-*-*.md)
+        slug="$(printf '%s\n' "${base}" | sed -nE 's/^backbone-[0-9]{6}-[0-9]{4}-(.+)\.md$/\1/p')"
         ;;
       frd-*-*.md)
         slug="$(printf '%s\n' "${base}" | sed -nE 's/^frd-[0-9]{6}-[0-9]{4}-(.+)\.md$/\1/p')"
@@ -164,6 +168,7 @@ collect_candidate_dates() {
   shopt -s nullglob
   for path in \
     "${repo}/plans/reports/intake-${slug}-"*.md \
+    "${repo}/plans/reports/backbone-"*-"${slug}.md" \
     "${repo}/plans/reports/frd-"*-"${slug}.md" \
     "${repo}/plans/reports/user-stories-"*-"${slug}.md" \
     "${repo}/plans/reports/srs-"*-"${slug}.md" \
@@ -176,6 +181,9 @@ collect_candidate_dates() {
     case "${path}" in
       */plans/reports/intake-${slug}-*.md)
         date="$(printf '%s\n' "${base}" | sed -nE "s/^intake-${slug}-([0-9]{6}-[0-9]{4})\\.md$/\\1/p")"
+        ;;
+      */plans/reports/backbone-*-${slug}.md)
+        date="$(printf '%s\n' "${base}" | sed -nE "s/^backbone-([0-9]{6}-[0-9]{4})-${slug}\\.md$/\\1/p")"
         ;;
       */plans/reports/frd-*-${slug}.md)
         date="$(printf '%s\n' "${base}" | sed -nE "s/^frd-([0-9]{6}-[0-9]{4})-${slug}\\.md$/\\1/p")"
@@ -468,6 +476,7 @@ status_command() {
   print_artifact_status_line "${repo}/plans/reports/intake-${slug}-${date_token}.md" "intake-${slug}-${date_token}.md"
   print_artifact_status_line "${repo}/plans/reports/intake-${slug}-${date_token}.html" "intake-${slug}-${date_token}.html"
   print_artifact_status_line "${repo}/plans/${date_token}-${slug}/plan.md" "plans/${date_token}-${slug}/plan.md"
+  print_artifact_status_line "${repo}/plans/reports/backbone-${date_token}-${slug}.md" "backbone-${date_token}-${slug}.md"
   print_artifact_status_line "${repo}/plans/reports/frd-${date_token}-${slug}.md" "frd-${date_token}-${slug}.md"
   print_artifact_status_line "${repo}/plans/reports/frd-${date_token}-${slug}.html" "frd-${date_token}-${slug}.html"
   print_artifact_status_line "${repo}/plans/reports/user-stories-${date_token}-${slug}.md" "user-stories-${date_token}-${slug}.md"

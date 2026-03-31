@@ -66,8 +66,8 @@ Or ask Codex to run:
 13. When delegating, pass only narrow artifact slices and exact excerpts, not full upstream documents.
 14. If a delegated worker reports missing context or `NEEDS_REPARTITION`, split the scope and rerun only that slice.
 15. For non-trivial delegation, use the packet structure from `templates/sub-agent-handoff-template.md` or the equivalent snippet embedded in `ba-start`.
-16. For `srs`, resolve the exact FRD and user-stories artifacts first and begin authoring from those files instead of scanning every report in `plans/reports/`.
-17. For `frd` and `stories`, resolve the exact intake or FRD prerequisite first and begin authoring from that file instead of scanning every report in `plans/reports/`.
+16. For `srs`, resolve the exact backbone and user-stories artifacts first and pull the FRD only when it exists or is required instead of scanning every report in `plans/reports/`.
+17. For `frd` and `stories`, resolve the exact backbone prerequisite first and begin authoring from that file instead of scanning every report in `plans/reports/`.
 18. If only legacy report names like `002-intake-form.md` exist, stop and migrate or rerun them explicitly; do not infer the current slug/date from legacy filenames.
 19. If context truncation happens after the target workflow was already confirmed, recover from the resolved command and exact artifacts on disk instead of asking the user to restate the original task.
 20. Once the user explicitly approves a mutating rerun step, keep that step locked for the current run and do not fall back to generic "what do you want me to do with this document?" prompts.
@@ -81,7 +81,8 @@ Or ask Codex to run:
 ```text
 Use AGENTS.md and skills/ba-start/SKILL.md.
 Parse the requirements in docs/raw/warehouse-rfp.pdf.
-Produce an intake form, FRD, user stories, use case specifications, Screen Contract Lite, wireframes, final screen descriptions, and the BA-kit HTML deliverable set for intake, FRD, user stories, and SRS.
+Default to `hybrid` mode for a solo IT BA.
+Build the requirements backbone first, then emit FRD, user stories, use case specifications, Screen Contract Lite, wireframes, final screen descriptions, and the BA-kit HTML deliverable set only when each artifact is justified.
 ```
 
 ### Step-Level Rerun
@@ -109,7 +110,7 @@ Keep the package scope narrow: regenerate only the final SRS HTML unless I expli
 ```text
 Use AGENTS.md and skills/ba-start/SKILL.md.
 Run the equivalent of `/ba-start status --slug warehouse-rfp`.
-Print artifact names, exists or missing status, last-modified dates, the explicit wireframe state, and any persisted wireframe input/map artifacts when present.
+Print artifact names, exists or missing status, last-modified dates, the persisted backbone, the explicit wireframe state, and any persisted wireframe input/map artifacts when present.
 Also print any delegation trackers under `plans/{date}-{slug}/delegation/`, including `running`, `blocked`, `needs-repartition`, or likely stalled slices.
 ```
 
@@ -119,7 +120,7 @@ Also print any delegation trackers under `plans/{date}-{slug}/delegation/`, incl
 Use the installed ba-start skill from ~/.codex/skills/ba-start/SKILL.md.
 Use the registered Codex BA agents from ~/.codex/agents when the skill delegates work.
 Parse the requirements in docs/raw/warehouse-rfp.pdf.
-Produce an intake form, FRD, user stories, use case specifications, Screen Contract Lite, wireframes, final screen descriptions, and the BA-kit HTML deliverable set for intake, FRD, user stories, and SRS.
+Produce an intake form, requirements backbone, gated FRD/stories/SRS artifacts, wireframes when justified, final screen descriptions, and the BA-kit HTML deliverable set required by the selected mode.
 ```
 
 ### Formal Requirements Only

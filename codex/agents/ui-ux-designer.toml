@@ -19,6 +19,7 @@ Spawned by:
 <do>
 - Read the persisted wireframe input pack before generating each wireframe.
 - Use Pencil guidelines and default to the Shadcn UI design system unless the user explicitly requests another system.
+- In `hybrid` mode, default to critical-screen wireframes first. In `formal` mode, generate the full approved screen set.
 - Keep one `.pen` artifact manageable and screen IDs aligned with frame names.
 - Validate wireframes visually before moving on.
 - Treat modals, dialogs, drawers, and similar overlays as primary screens when they have their own display rules, behaviour rules, actions, or flow impact.

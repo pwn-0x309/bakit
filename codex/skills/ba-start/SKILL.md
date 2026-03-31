@@ -1,7 +1,7 @@
 ---
 name: ba-start
-description: Single entry point for BA-kit. Accepts raw requirements (file or text), normalizes into an intake form, clarifies gaps, produces FRD, user stories, SRS, wireframes, and packages deliverables.
-argument-hint: "[intake|frd|stories|srs|wireframes|package|status] [file|--slug]"
+description: Single entry point for BA-kit. Accepts raw requirements (file or text), normalizes them, locks scope, builds a requirements backbone, emits only the necessary BA artifacts, and packages deliverables.
+argument-hint: "[intake|backbone|frd|stories|srs|wireframes|package|status] [file|--slug|--mode]"
 ---
 
 # BA Start
@@ -14,6 +14,7 @@ Use this skill to run an end-to-end business analysis engagement from raw input 
 /ba-start
 /ba-start intake <file>
 /ba-start intake
+/ba-start backbone --slug <slug>
 /ba-start frd --slug <slug>
 /ba-start stories --slug <slug>
 /ba-start srs --slug <slug>
@@ -29,10 +30,11 @@ Read this section first. Only continue to the detailed step sections when you ne
 ### Fast execution order
 
 1. Parse `ARGUMENTS` before doing any work.
-2. Resolve the subcommand: `intake`, `frd`, `stories`, `srs`, `wireframes`, `package`, or `status`.
+2. Resolve the subcommand: `intake`, `backbone`, `frd`, `stories`, `srs`, `wireframes`, `package`, or `status`.
 3. Apply output defaults:
    - write BA deliverables in Vietnamese unless the user explicitly requests English
    - use `YYMMDD-HHmm` as the artifact-set `{date}` token
+   - default the engagement mode to `hybrid` unless the user explicitly selects `lite` or `formal`
    - default UI-backed wireframes to Shadcn UI unless the user explicitly overrides it
 4. Resolve the target scope with exact matching only:
    - explicit `--slug <slug>` first
@@ -41,25 +43,27 @@ Read this section first. Only continue to the detailed step sections when you ne
    - if multiple dated sets exist for the slug, stop and ask
 5. Check prerequisites for the chosen command.
 6. If any prerequisite is missing, print the missing exact path, print the exact prior subcommand to run, and stop.
-7. Before mutating `frd`, `stories`, `srs`, `wireframes`, or `package`, if the target output already exists, ask whether to overwrite or stop.
+7. Before mutating `backbone`, `frd`, `stories`, `srs`, `wireframes`, or `package`, if the target output already exists, ask whether to overwrite or stop.
 
 ### Command routing summary
 
 | Command | Runs | Must read first | Produces |
 | --- | --- | --- | --- |
-| no subcommand | Full workflow | raw input | intake, FRD, stories, SRS, wireframes, package |
-| `intake` | Steps 1-5 | raw input | intake + intake HTML + plan |
-| `frd` | Step 6 | intake | FRD + FRD HTML |
-| `stories` | Step 7 | FRD | user stories + user stories HTML |
-| `srs` | Steps 8-11 | FRD + user stories | grouped SRS + wireframe-input + merged SRS + wireframes |
+| no subcommand | Full workflow | raw input | intake, backbone, gated downstream artifacts by mode |
+| `intake` | Steps 1-4 | raw input | intake + intake HTML + plan |
+| `backbone` | Step 5 | intake | requirements backbone |
+| `frd` | Step 6 | backbone | FRD + FRD HTML |
+| `stories` | Step 7 | backbone | user stories + user stories HTML |
+| `srs` | Steps 8-11 | backbone + user stories | grouped SRS + wireframe-input + merged SRS + gated wireframes |
 | `wireframes` | Step 9 only | wireframe-input or exact wireframe source set | `.pen`, exports, wireframe-map, wireframe-state |
-| `package` | Step 12 only | merged SRS + non-missing wireframe-state | SRS HTML + delivery summary |
+| `package` | Step 12 only | emitted artifact set + non-missing wireframe-state when SRS screens exist | packaged HTML + delivery summary |
 | `status` | inspection only | none | checklist output |
 
 ### Non-negotiable stop conditions
 
 - Never silently choose a slug or dated set by mtime.
 - Never use broad `*-{slug}*` matching when exact artifact patterns are available.
+- The backbone is the primary authoring source after intake. Do not re-derive downstream artifacts from raw intake when the backbone exists.
 - `wireframes` is read-only on upstream BA artifacts. It may regenerate only design outputs, `wireframe-map`, and the wireframe-state marker.
 - `package` must block only when wireframe state is `missing`.
 - If no wireframe-state marker exists, treat it as `not-applicable` only when the SRS set has no UI-backed screens or Screen Contract Lite section. Otherwise treat it as `missing`.
@@ -70,6 +74,7 @@ Read this section first. Only continue to the detailed step sections when you ne
 
 - Write BA deliverables in Vietnamese by default unless the user explicitly requests English.
 - Treat the artifact-set `{date}` token as `YYMMDD-HHmm` consistently across report filenames and `plans/{date}-{slug}/plan.md`.
+- Default the engagement mode to `hybrid` for solo IT BA work. Use `lite` only when speed matters more than formal artifacts, and `formal` only when governance or handoff needs justify the full set.
 - For UI-backed scope, use Shadcn UI as the default wireframe and UI-handoff design-system baseline unless the user explicitly overrides it.
 
 ### Argument parsing
@@ -77,9 +82,10 @@ Read this section first. Only continue to the detailed step sections when you ne
 Parse `ARGUMENTS` before doing any work.
 
 1. Read tokens left to right.
-2. Extract `--slug <slug>` if present.
+2. Extract `--slug <slug>` and `--mode <lite|hybrid|formal>` if present.
 3. The first remaining token that matches one of these values is the subcommand:
    - `intake`
+   - `backbone`
    - `frd`
    - `stories`
    - `srs`
@@ -90,16 +96,17 @@ Parse `ARGUMENTS` before doing any work.
    - run the full workflow
    - if one free argument remains, treat it as the initial file path or pasted-input hint for Step 1
 5. For `intake`, one free argument may be a direct file path.
-6. For `frd`, `stories`, `srs`, `wireframes`, `package`, and `status`, reject unexpected free arguments, print the supported syntax, and stop.
+6. For `backbone`, `frd`, `stories`, `srs`, `wireframes`, `package`, and `status`, reject unexpected free arguments, print the supported syntax, and stop.
 7. If the first token looks like an unknown subcommand, print the supported subcommand list and stop.
 
 ### Routing rules
 
 - No subcommand means full workflow. Keep the existing lifecycle order intact.
-- `intake` runs Steps 1-5 only.
+- `intake` runs Steps 1-4 only.
+- `backbone` runs Step 5 only.
 - `frd` runs Step 6 only.
 - `stories` runs Step 7 only.
-- `srs` runs Steps 8-11 and includes wireframes by default.
+- `srs` runs Steps 8-11 and applies mode gates instead of assuming full-screen/full-spec coverage.
 - `wireframes` runs Step 9 only as a re-run path from the persisted wireframe input pack or exact fallback sources.
 - `package` runs Step 12 only.
 - `status` inspects current artifacts and prints a checklist with dates.
@@ -113,7 +120,7 @@ Subcommands that operate on an existing project must resolve the target project 
 3. If exactly one candidate slug exists, use it.
 4. If multiple candidate slugs exist, print the candidate list, ask the user to choose a slug or rerun with `--slug`, and stop.
 
-For mutating subcommands (`frd`, `stories`, `srs`, `wireframes`, `package`), never silently choose a slug by mtime.
+For mutating subcommands (`backbone`, `frd`, `stories`, `srs`, `wireframes`, `package`), never silently choose a slug by mtime.
 
 ### Dated set resolution
 
@@ -121,6 +128,7 @@ After resolving the slug, resolve the target dated artifact set.
 
 1. Inspect exact filenames for the selected slug:
    - `plans/reports/intake-{slug}-{date}.md`
+   - `plans/reports/backbone-{date}-{slug}.md`
    - `plans/reports/frd-{date}-{slug}.md`
    - `plans/reports/user-stories-{date}-{slug}.md`
    - `plans/reports/srs-{date}-{slug}.md`
@@ -131,7 +139,7 @@ After resolving the slug, resolve the target dated artifact set.
    - `plans/{date}-{slug}/plan.md`
 2. Build candidate `{date}` sets from exact filename matches only.
 3. If exactly one dated set exists for the slug, use it.
-4. If multiple dated sets exist for that slug and the command is `frd`, `stories`, `srs`, `wireframes`, `package`, or `status`, print the available dates, ask the user to choose the target dated set, and stop until the user chooses.
+4. If multiple dated sets exist for that slug and the command is `backbone`, `frd`, `stories`, `srs`, `wireframes`, `package`, or `status`, print the available dates, ask the user to choose the target dated set, and stop until the user chooses.
 5. Never silently select the latest dated set by mtime.
 
 ### Exact artifact matching
@@ -140,7 +148,7 @@ Use exact filename patterns, not broad `*-{slug}*` matching. Print the specific 
 
 ### Legacy artifact detection
 
-Before mutating `frd`, `stories`, `srs`, `wireframes`, `package`, or `status`:
+Before mutating `backbone`, `frd`, `stories`, `srs`, `wireframes`, `package`, or `status`:
 
 1. Check whether `plans/reports/` contains legacy BA-kit report names such as:
    - `plans/reports/002-intake-form.md`
@@ -157,11 +165,12 @@ Before mutating `frd`, `stories`, `srs`, `wireframes`, `package`, or `status`:
 | Command | Requires | Produces |
 | --- | --- | --- |
 | `intake` | Raw input (file or pasted text) | `plans/reports/intake-{slug}-{date}.md`, `plans/reports/intake-{slug}-{date}.html`, `plans/{date}-{slug}/plan.md` |
-| `frd` | `plans/reports/intake-{slug}-{date}.md` | `plans/reports/frd-{date}-{slug}.md`, `plans/reports/frd-{date}-{slug}.html` |
-| `stories` | `plans/reports/frd-{date}-{slug}.md` | `plans/reports/user-stories-{date}-{slug}.md`, `plans/reports/user-stories-{date}-{slug}.html` |
-| `srs` | `plans/reports/frd-{date}-{slug}.md`, `plans/reports/user-stories-{date}-{slug}.md` | `plans/reports/srs-{date}-{slug}.md`, `plans/reports/wireframe-input-{date}-{slug}.md`, and any supporting `srs-{date}-{slug}-group-*.md` files |
+| `backbone` | `plans/reports/intake-{slug}-{date}.md` | `plans/reports/backbone-{date}-{slug}.md` |
+| `frd` | `plans/reports/backbone-{date}-{slug}.md` | `plans/reports/frd-{date}-{slug}.md`, `plans/reports/frd-{date}-{slug}.html` |
+| `stories` | `plans/reports/backbone-{date}-{slug}.md` | `plans/reports/user-stories-{date}-{slug}.md`, `plans/reports/user-stories-{date}-{slug}.html` |
+| `srs` | `plans/reports/backbone-{date}-{slug}.md`, `plans/reports/user-stories-{date}-{slug}.md` | `plans/reports/srs-{date}-{slug}.md`, `plans/reports/wireframe-input-{date}-{slug}.md`, and any supporting `srs-{date}-{slug}-group-*.md` files |
 | `wireframes` | `plans/reports/wireframe-input-{date}-{slug}.md` or exact fallback sources for pack generation | `designs/{slug}/*.pen`, `designs/{slug}/exports/**`, `plans/reports/wireframe-map-{date}-{slug}.md`, `plans/reports/wireframe-state-{date}-{slug}.md` |
-| `package` | `plans/reports/srs-{date}-{slug}.md`; wireframes may be completed, skipped, or not-applicable | `plans/reports/srs-{date}-{slug}.html`, delivery summary |
+| `package` | emitted downstream artifacts for the selected mode; wireframes may be completed, skipped, or not-applicable | packaged HTML artifacts, delivery summary |
 | `status` | None | Checklist output only |
 
 ### Missing prerequisite behavior
@@ -174,7 +183,7 @@ If a required artifact is missing:
 
 ### Overwrite handling
 
-Before mutating `frd`, `stories`, `srs`, `wireframes`, or `package`:
+Before mutating `backbone`, `frd`, `stories`, `srs`, `wireframes`, or `package`:
 
 1. Check whether the target artifact already exists.
 2. If it exists, print the path and ask whether to overwrite or stop.
@@ -201,7 +210,7 @@ If exploration consumed too much context or the host truncates part of the conve
 
 ### Accepted-scope execution lock
 
-For mutating rerun commands (`frd`, `stories`, `srs`, `wireframes`, `package`):
+For mutating rerun commands (`backbone`, `frd`, `stories`, `srs`, `wireframes`, `package`):
 
 1. Once the user has explicitly approved the next step, treat the target command as locked for the current run.
 2. After that approval, do not fall back to generic prompts such as:
@@ -289,16 +298,18 @@ State meanings:
 When no subcommand is provided, run the complete lifecycle in order:
 
 1. `intake`
-2. `frd`
-3. `stories`
-4. `srs`
-5. `package`
+2. `backbone`
+3. emit downstream artifacts according to mode:
+   - `lite`: `stories`
+   - `hybrid`: `frd` when justified, `stories`, selective `srs`, gated `wireframes`
+   - `formal`: `frd`, `stories`, full `srs`, full approved `wireframes`
+4. `package`
 
-Preserve the current behavior of the full workflow: accept raw input, perform clarification, produce all downstream artifacts, generate wireframes before final screen descriptions, and finish with packaged HTML deliverables.
+Preserve exact slug/date resolution, but do not force the full artifact suite when the selected mode does not justify it.
 
 ## Subcommand: intake
 
-Run Steps 1-5 only.
+Run Steps 1-4 only.
 
 ### Prerequisites
 
@@ -348,7 +359,7 @@ Review the normalized intake against a BA completeness checklist:
 
 Flag each gap explicitly.
 
-### Step 4 - Ask clarifying questions
+### Step 4 - Ask clarifying questions and lock scope
 
 Present the identified gaps to the user as 3-8 targeted questions. Focus on:
 
@@ -358,6 +369,7 @@ Present the identified gaps to the user as 3-8 targeted questions. Focus on:
 - Unstated success criteria
 - Regulatory or compliance context
 - Priority and sequencing preferences
+- Engagement mode preference only when the user already knows it; otherwise default to `hybrid`
 
 Incorporate the answers back into the intake form.
 
@@ -369,20 +381,27 @@ python scripts/md-to-html.py plans/reports/intake-{slug}-{date}.md
 
 Output: `plans/reports/intake-{slug}-{date}.html`
 
-### Step 5 - Generate work plan
+### Step 4.1 - Generate work plan
 
-Based on the normalized intake, produce a scoped work plan covering:
+Based on the normalized intake, produce a scoped work plan covering the selected or default engagement mode:
 
 #### Deliverable selection
 
 | Condition | Deliverable | Template |
 | --- | --- | --- |
+| Always after scope lock | Requirements backbone | `requirements-backbone-template.md` |
 | Detailed functional spec needed | FRD | `frd-template.md` |
 | Agile team needs stories | User stories | `user-story-template.md` |
 | System spec with screens, use cases, or test cases | SRS | `srs-template.md` |
 | UI screens mentioned | Wireframes | `designs/{slug}/` via Pencil MCP, grouped by flow or module with frame-level screen mapping |
 
-SRS default routing: include SRS alongside FRD when the intake contains any of:
+Mode defaults:
+
+- `lite`: intake + backbone + user stories by default; emit more only on explicit request
+- `hybrid`: intake + backbone + user stories, plus targeted FRD/SRS slices when risk or handoff needs justify them
+- `formal`: full artifact suite
+
+SRS default routing in `hybrid` or `formal`: include SRS when the intake contains any of:
 
 - UI screens or screen descriptions
 - System-level interactions (APIs, integrations, data flows)
@@ -393,18 +412,57 @@ SRS default routing: include SRS alongside FRD when the intake contains any of:
 
 | Agent | When |
 | --- | --- |
-| `requirements-engineer` | FRD, user stories, SRS production |
+| `requirements-engineer` | Backbone, FRD, user stories, and selective SRS content |
 | `ui-ux-designer` | Pencil wireframe generation from SRS screens |
-| `ba-documentation-manager` | Final packaging and quality review |
+| `ba-documentation-manager` | Validation pack, final packaging, and quality review |
 | `ba-researcher` | Domain research when external context is needed |
 
 Execution order:
 
-`Intake -> FRD -> User Stories -> SRS -> Wireframes -> Quality Review`
+`Intake -> Backbone -> Mode-gated downstream artifacts -> Quality Review`
 
 UI design system default: unless the user explicitly asks for another system, use Shadcn UI as the default component and layout baseline for wireframes and UI-oriented handoff artifacts.
 
 Save the work plan to `plans/{date}-{slug}/plan.md`.
+
+## Subcommand: backbone
+
+Run Step 5 only.
+
+### Prerequisites
+
+- Resolve the slug and dated set using the shared rules.
+- Require `plans/reports/intake-{slug}-{date}.md`.
+- If the intake artifact is missing, print the exact missing path, tell the user to run `/ba-start intake`, and stop.
+- Run a narrow backbone preflight before reading content:
+  - read only `plans/reports/intake-{slug}-{date}.md` and `plans/{date}-{slug}/plan.md` when it exists
+  - do not scan unrelated files in `plans/reports/` once the target slug/date is resolved
+
+### Output
+
+- `plans/reports/backbone-{date}-{slug}.md`
+
+### Step 5 - Build the requirements backbone
+
+Create the persisted source-of-truth artifact using [requirements-backbone-template.md](../../templates/requirements-backbone-template.md).
+
+The backbone must contain:
+
+- scope lock summary
+- selected engagement mode (`lite`, `hybrid`, or `formal`)
+- business goals and success metrics
+- actors and feature map
+- FR/NFR draft inventory
+- preliminary story map
+- UI/screen coverage assessment
+- artifact emission gates
+- assumptions, risks, and open questions
+
+Backbone rules:
+
+- treat the backbone as the primary authoring source after intake
+- do not draft FRD, stories, or SRS directly from raw intake once the backbone exists
+- keep the artifact concise and decision-oriented; this is not a merged FRD/SRS
 
 ## Subcommand: frd
 
@@ -413,11 +471,11 @@ Run Step 6 only.
 ### Prerequisites
 
 - Resolve the slug and dated set using the shared rules.
-- Require `plans/reports/intake-{slug}-{date}.md`.
-- If the intake artifact is missing, print the exact missing path, tell the user to run `/ba-start intake`, and stop.
+- Require `plans/reports/backbone-{date}-{slug}.md`.
+- If the backbone artifact is missing, print the exact missing path, tell the user to run `/ba-start backbone --slug {slug}`, and stop.
 - Trust the user intent. Do not re-check whether the work plan selected FRD.
 - Run a narrow FRD preflight before reading content:
-  - read only `plans/reports/intake-{slug}-{date}.md` and `plans/{date}-{slug}/plan.md` when it exists
+  - read only `plans/reports/backbone-{date}-{slug}.md` and `plans/{date}-{slug}/plan.md` when it exists
   - do not scan unrelated files in `plans/reports/` once the target slug/date is resolved
   - if only legacy-named report suites exist for the apparent project, stop with the legacy artifact detection message instead of inferring from them
 
@@ -430,11 +488,13 @@ Run Step 6 only.
 
 FRD execution rules:
 
-- Start from the exact intake artifact only, plus the exact plan path when it exists.
-- If the user already confirmed that FRD authoring should proceed, continue from the resolved intake instead of reopening scope discovery.
+- Start from the exact backbone artifact only, plus the exact plan path when it exists.
+- If the user already confirmed that FRD authoring should proceed, continue from the resolved backbone instead of reopening scope discovery.
 - Do not ask what the user wants to do with the document after the FRD step has been accepted.
+- In `hybrid` mode, keep the FRD concise and focus on features, workflows, business rules, and integration-relevant context.
+- In `lite` mode, emit the FRD only when the user explicitly asks for it.
 
-Produce the FRD using [frd-template.md](../../templates/frd-template.md):
+Produce the FRD from the backbone using [frd-template.md](../../templates/frd-template.md):
 
 - Functional overview
 - User personas
@@ -462,11 +522,12 @@ Run Step 7 only.
 ### Prerequisites
 
 - Resolve the slug and dated set using the shared rules.
-- Require `plans/reports/frd-{date}-{slug}.md`.
-- If the FRD artifact is missing, print the exact missing path, tell the user to run `/ba-start frd --slug {slug}`, and stop.
+- Require `plans/reports/backbone-{date}-{slug}.md`.
+- If the backbone artifact is missing, print the exact missing path, tell the user to run `/ba-start backbone --slug {slug}`, and stop.
 - Run a narrow stories preflight before reading content:
-  - read only `plans/reports/frd-{date}-{slug}.md`
+  - read only `plans/reports/backbone-{date}-{slug}.md`
   - read `plans/{date}-{slug}/plan.md` only when it exists and only if it adds needed scope context
+  - read `plans/reports/frd-{date}-{slug}.md` only when it already exists and adds needed vocabulary or workflow structure
   - do not scan unrelated files in `plans/reports/` once the target slug/date is resolved
   - if only legacy-named report suites exist for the apparent project, stop with the legacy artifact detection message instead of inferring from them
 
@@ -479,11 +540,12 @@ Run Step 7 only.
 
 Stories execution rules:
 
-- Start from the exact FRD artifact only, plus the exact plan path when it is genuinely needed.
-- If the user already confirmed that user-story generation should proceed, continue from the resolved FRD instead of reopening discovery.
+- Start from the exact backbone artifact only, plus the exact plan path when it is genuinely needed.
+- Pull the FRD only when it already exists or the current mode requires it.
+- If the user already confirmed that user-story generation should proceed, continue from the resolved backbone instead of reopening discovery.
 - Do not ask what the user wants to do with the document after the stories step has been accepted.
 
-Generate Agile user stories from the FRD feature list using [user-story-template.md](../../templates/user-story-template.md):
+Generate Agile user stories from the backbone feature map and FR draft using [user-story-template.md](../../templates/user-story-template.md):
 
 - Epic and feature breakdown
 - User stories with acceptance criteria (Given/When/Then)
@@ -504,17 +566,17 @@ Output: `plans/reports/user-stories-{date}-{slug}.html`
 
 ## Subcommand: srs
 
-Run Steps 8-11 only. This path includes wireframes by default.
+Run Steps 8-11 only. This path applies mode gates instead of assuming a full-detail SRS every time.
 
 ### Prerequisites
 
 - Resolve the slug and dated set using the shared rules.
 - Require:
-  - `plans/reports/frd-{date}-{slug}.md`
+  - `plans/reports/backbone-{date}-{slug}.md`
   - `plans/reports/user-stories-{date}-{slug}.md`
 - If a required artifact is missing, print the exact missing path, tell the user which subcommand to run first, and stop.
 - Run an SRS preflight before reading content:
-  - read only the resolved intake, FRD, user stories, and `plans/{date}-{slug}/plan.md` when it exists
+  - read only the resolved backbone, user stories, optional FRD, and `plans/{date}-{slug}/plan.md` when it exists
   - do not scan unrelated files in `plans/reports/` once the target slug/date is resolved
   - if only legacy-named report suites exist for the apparent project, stop with the legacy artifact detection message instead of inferring from them
 
@@ -532,30 +594,34 @@ Run Steps 8-11 only. This path includes wireframes by default.
 
 ### Step 8 - Produce SRS core, use cases, and Screen Contract Lite
 
-SRS is the largest artifact. Produce it in dependency order so wireframes are generated before final screen descriptions are expanded.
+SRS is the largest artifact. Produce only the slices justified by the selected mode and artifact gates, then keep wireframes ahead of final screen descriptions.
 
 SRS preflight execution rules:
 
 - Start from the exact prerequisite set only. Do not read every report in `plans/reports/` to "understand the full picture".
-- Trust the accepted scope. If the user has already confirmed that SRS authoring should proceed, continue from the resolved FRD and user stories instead of reopening discovery.
+- Trust the accepted scope. If the user has already confirmed that SRS authoring should proceed, continue from the resolved backbone and user stories instead of reopening discovery.
 - Pull in extra analysis artifacts only when the exact SRS slice needs them and cite the exact path or section.
 - If an extra artifact is useful but non-essential, note it as optional context instead of blocking the run.
+- In `lite` mode, do not run SRS unless the user explicitly asks for it.
+- In `hybrid` mode, default to selective SRS coverage: complex flows, risky validations, integrations, and screens that materially affect delivery or handoff.
+- In `formal` mode, emit the full SRS set.
 
 Provide the relevant upstream context to the SRS production owner:
 
 - Matching intake summary
-- FRD features and business rules
+- Backbone features, gates, and risks
 - User stories with acceptance criteria
+- FRD features and business rules only when FRD exists or the current mode requires it
 
 Sub-agent context management:
 
 - Pass only relevant sections of upstream artifacts, not full documents.
-- Group A receives: intake summary, FRD features and business rules, user stories.
+- Group A receives: intake summary, backbone FR/NFR inventory, optional FRD sections, user stories.
 - Group B receives: Group A FR table and user stories.
 - Group C receives: Group B use cases and user stories.
-- Group D receives: Group A FR table and FRD technical sections.
+- Group D receives: backbone technical gates, Group A FR table, and FRD technical sections only when the technical slice is required.
 - Group E receives: Group B use cases, Group C screen contract, and wireframe mapping.
-- Group F receives: FR IDs, UC IDs, SCR IDs, and the final group outputs.
+- Group F receives: FR IDs, UC IDs, SCR IDs, story IDs, and the final group outputs for documentation-manager validation and packaging.
 - When a group would produce more than 15 use cases or 10 screens, split into sub-groups.
 
 Sub-agent handoff packet:
@@ -697,9 +763,19 @@ Sections:
 
 Output: `plans/reports/srs-{date}-{slug}-group-d.md`
 
+Technical slice gate:
+
+- Produce Group D only when integrations, NFR exposure, data modelling, API handoff, or vendor/governance needs justify it.
+
 ### Step 9 - Generate wireframes from use cases and Screen Contract Lite
 
 Run the Step 9 workflow exactly as defined in the `wireframes` subcommand below, but treat it as part of the SRS pipeline and keep the same `{date}` set.
+
+Mode defaults inside the SRS pipeline:
+
+- `lite`: skip wireframes unless the user explicitly asks for them
+- `hybrid`: generate critical-screen wireframes first
+- `formal`: generate the full approved screen set
 
 ### Step 10 - Produce final screen descriptions
 
@@ -730,7 +806,7 @@ The description column contains up to three rule categories as needed:
 
 ### Step 10.1 - Produce validation pack
 
-Produce the validation and traceability pack from the completed SRS sections.
+Produce the validation and traceability pack from the completed SRS sections. Prefer `ba-documentation-manager` ownership when this slice is delegated.
 
 Sections:
 
@@ -814,13 +890,15 @@ Parse the input pack to build the generation plan:
 
 If Step 9 runs as part of the full `/ba-start` or `/ba-start srs` pipeline and the user has not explicitly asked to skip or manually choose screens, default to:
 
-- Generate all wireframes automatically
+- `lite`: skip unless a screen is explicitly marked critical
+- `hybrid`: generate critical-screen wireframes automatically
+- `formal`: generate all approved wireframes automatically
 
 If Step 9 runs through the standalone `wireframes` subcommand without an explicit preference, ask:
 
 ```text
 The screen contract defines {N} primary screens. How should I generate wireframes?
-- Generate all wireframes automatically
+- Generate all approved wireframes automatically
 - Let me pick which screens
 - Skip wireframes
 ```
@@ -875,15 +953,16 @@ Run Step 12 only.
 ### Prerequisites
 
 - Resolve the slug and dated set using the shared rules.
-- Require `plans/reports/srs-{date}-{slug}.md`.
-- If the merged SRS is missing, print the exact path, tell the user to run `/ba-start srs --slug {slug}`, and stop.
+- Require at least one emitted downstream artifact for the selected mode.
+- If the engagement emitted an SRS, require `plans/reports/srs-{date}-{slug}.md`.
+- If the merged SRS is required but missing, print the exact path, tell the user to run `/ba-start srs --slug {slug}`, and stop.
 - Read `plans/reports/wireframe-state-{date}-{slug}.md` when present.
 - If the wireframe state is `missing`, print the marker path, tell the user to run `/ba-start wireframes --slug {slug}`, and stop.
 - If the wireframe state is `completed`, `skipped`, or `not-applicable`, continue.
 
 ### Output
 
-- `plans/reports/srs-{date}-{slug}.html`
+- packaged HTML for the emitted artifact set
 - Delivery summary
 
 ### Step 12 - Package deliverables
@@ -891,10 +970,11 @@ Run Step 12 only.
 Run a final packaging and quality pass:
 
 - Keep the default `package` scope narrow: validate the existing artifact set, then regenerate only `plans/reports/srs-{date}-{slug}.html`.
-- Do not treat `package` as a full rebuild of intake, FRD, user-stories, and SRS HTML in one delegated pass unless the user explicitly asks for a full HTML repack.
+- Do not treat `package` as a full rebuild of intake, backbone, FRD, user-stories, and SRS HTML in one delegated pass unless the user explicitly asks for a full HTML repack.
 - Verify all deliverables follow their templates.
-- Check cross-references between FRD, user stories, and SRS.
-- Verify user-story traceability: every SRS FR, UC, and SCR maps to at least one user story.
+- Check cross-references between the backbone and every emitted downstream artifact.
+- When FRD and SRS exist, check their cross-references against stories.
+- Verify user-story traceability: every emitted SRS FR, UC, and SCR maps to at least one user story.
 - Run a cross-artifact consistency audit:
   - UC actor actions match screen User Actions.
   - Screen Contract Lite entries match both the wireframes and the final screen descriptions.
@@ -908,7 +988,9 @@ Run a final packaging and quality pass:
 - Flag broken links or missing sections.
 - Produce a delivery summary.
 
-### Step 12.1 - Generate unified SRS HTML with embedded wireframes
+### Step 12.1 - Generate packaged HTML for the emitted engagement
+
+When the engagement includes a merged SRS, convert it to HTML with wireframe images embedded inline:
 
 Convert the merged SRS markdown to HTML with wireframe images embedded inline:
 
@@ -917,6 +999,8 @@ python scripts/md-to-html.py plans/reports/srs-{date}-{slug}.md
 ```
 
 Output: `plans/reports/srs-{date}-{slug}.html`
+
+When the engagement does not include an SRS, package only the artifacts that were actually emitted and requested for stakeholder handoff.
 
 The final HTML should present:
 
@@ -932,6 +1016,7 @@ plans/
   reports/
     intake-{slug}-{date}.md
     intake-{slug}-{date}.html
+    backbone-{date}-{slug}.md
     frd-{date}-{slug}.md
     frd-{date}-{slug}.html
     user-stories-{date}-{slug}.md
@@ -980,6 +1065,7 @@ Date set: {date}
 - [x] intake-{slug}-{date}.md — 2026-03-26
 - [x] intake-{slug}-{date}.html — 2026-03-26
 - [x] plans/{date}-{slug}/plan.md — 2026-03-26
+- [x] backbone-{date}-{slug}.md — 2026-03-26
 - [x] frd-{date}-{slug}.md — 2026-03-26
 - [x] frd-{date}-{slug}.html — 2026-03-26
 - [ ] user-stories-{date}-{slug}.md — missing
@@ -1011,6 +1097,7 @@ Status rules:
 - Intake HTML in the shared BA-kit document shell
 - Gap analysis summary
 - Scoped BA work plan
+- Requirements backbone
 - FRD in Markdown and HTML
 - User stories in Markdown and HTML
 - SRS working fragments for grouped production
@@ -1026,6 +1113,7 @@ Status rules:
 ## Templates
 
 - [intake-form-template.md](../../templates/intake-form-template.md)
+- [requirements-backbone-template.md](../../templates/requirements-backbone-template.md)
 - [frd-template.md](../../templates/frd-template.md)
 - [user-story-template.md](../../templates/user-story-template.md)
 - [srs-template.md](../../templates/srs-template.md)
@@ -1038,23 +1126,26 @@ Status rules:
 
 | Agent | Role |
 | --- | --- |
-| `requirements-engineer` | FRD, user stories, SRS groups, traceability |
+| `requirements-engineer` | Backbone, FRD, user stories, selective SRS content |
 | `ui-ux-designer` | Pencil wireframe generation |
-| `ba-documentation-manager` | Quality review and packaging |
+| `ba-documentation-manager` | Validation pack, quality review, and packaging |
 | `ba-researcher` | Domain research when needed |
 
 ## Quality Check
 
 - Intake form has no blank required sections.
 - Every gap is resolved or listed as an open question.
-- FRD covers all features with priorities and acceptance criteria.
+- Backbone exists before FRD, stories, or SRS are emitted.
+- Backbone gates explain why each downstream artifact exists or is skipped.
+- FRD covers the selected features with priorities and acceptance criteria when the FRD gate is open.
 - User stories follow INVEST and have Given/When/Then acceptance criteria.
-- SRS flow follows: FRD -> User Stories -> Use Case Specification -> Screen Contract Lite -> Wireframes -> Final Screen Descriptions -> Unified HTML.
-- SRS covers functional requirements, use cases, screen contract lite, final screens, NFRs, and test cases.
+- SRS flow follows: Backbone -> User Stories -> selective Use Case Specification -> Screen Contract Lite -> gated Wireframes -> Final Screen Descriptions -> Validation Pack -> Unified HTML.
+- SRS covers only the slices justified by the selected mode and artifact gates.
 - Every FR, UC, and SCR links to at least one user story.
 - Screen Contract Lite exists for every primary screen before wireframes are generated.
 - Screen field tables use the Display/Behaviour/Validation description format.
 - Cross-artifact consistency is enforced across UC steps, screen fields, actions, and wireframe labels.
+- `hybrid` mode defaults to critical-screen wireframes first; `formal` mode covers the full approved set.
 - Wireframes are generated from the use cases and Screen Contract Lite before final screen descriptions are expanded.
 - Every UC actor action has a matching screen User Action.
 - Every UC system response has a matching screen Behaviour Rule.
@@ -1064,7 +1155,7 @@ Status rules:
 - Screen IDs stay aligned between SRS and Pencil frame names.
 - Modal, drawer, and dialog overlays with flow impact are modeled as primary screens.
 - Supporting state frames implied by screen behavior exist in `.pen` and are listed in the SRS screen inventory.
-- Cross-references between FRD, user stories, and SRS are consistent.
+- Cross-references between backbone, FRD, user stories, and SRS are consistent.
 
 ## Token Efficiency
 

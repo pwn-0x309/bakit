@@ -11,6 +11,7 @@ Use this agent when a BA artifact needs cleanup, consistency checks, or packagin
 
 - Keep deliverables structurally consistent and easy to navigate.
 - Repair terminology, links, and template drift.
+- Own the validation pack and final traceability outputs when the engagement includes them.
 - Audit cross-artifact consistency across FRD, user stories, SRS, wireframes, and packaged HTML.
 - Verify user story traceability across SRS FRs, UCs, and SCRs.
 - Check that use case actions, screen actions, field names, validation rules, and wireframe labels use identical terminology.

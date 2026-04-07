@@ -1,12 +1,12 @@
 ---
 name: ba-start
-description: Single entry point for BA-kit. Accepts raw requirements (file or text), normalizes them, locks scope, builds a requirements backbone, emits only the necessary BA artifacts, and packages deliverables.
-argument-hint: "[intake|backbone|frd|stories|srs|wireframes|package|status] [file|--slug|--mode]"
+description: Lifecycle engine for BA-kit. Accepts raw requirements (file or text), normalizes them, locks scope, builds a requirements backbone, emits only the necessary BA artifacts, and packages deliverables.
+argument-hint: "[intake|impact|backbone|frd|stories|srs|wireframes|package|status] [file|--slug|--mode]"
 ---
 
 # BA Start
 
-Use this skill to run an end-to-end business analysis engagement from raw input to packaged deliverables. This remains the single BA-kit skill, but it now supports step-level subcommands for resumable and partial runs.
+Use this skill to run an end-to-end business analysis engagement from raw input to packaged deliverables. Treat `ba-do` as the freeform router and use `ba-start` once the lifecycle step is explicit. `ba-start` supports step-level subcommands for resumable and partial runs.
 
 ## Invocation
 
@@ -14,6 +14,8 @@ Use this skill to run an end-to-end business analysis engagement from raw input 
 /ba-start
 /ba-start intake <file>
 /ba-start intake
+/ba-start impact --slug <slug>
+/ba-start impact --slug <slug> <change-file>
 /ba-start backbone --slug <slug>
 /ba-start frd --slug <slug>
 /ba-start stories --slug <slug>
@@ -30,7 +32,7 @@ Read this section first. Only continue to the detailed step sections when you ne
 ### Fast execution order
 
 1. Parse `ARGUMENTS` before doing any work.
-2. Resolve the subcommand: `intake`, `backbone`, `frd`, `stories`, `srs`, `wireframes`, `package`, or `status`.
+2. Resolve the subcommand: `intake`, `impact`, `backbone`, `frd`, `stories`, `srs`, `wireframes`, `package`, or `status`.
 3. Apply output defaults:
    - write BA deliverables in Vietnamese unless the user explicitly requests English
    - use `YYMMDD-HHmm` as the artifact-set `{date}` token
@@ -51,6 +53,7 @@ Read this section first. Only continue to the detailed step sections when you ne
 | --- | --- | --- | --- |
 | no subcommand | Full workflow | raw input | intake, backbone, gated downstream artifacts by mode |
 | `intake` | Steps 1-4 | raw input | intake + plan |
+| `impact` | change-impact triage only | exact project set + change input | impact summary + recommended path + exact next commands |
 | `backbone` | Step 5 | intake | requirements backbone |
 | `frd` | Step 6 | backbone | FRD + FRD HTML |
 | `stories` | Step 7 | backbone | user stories |
@@ -85,6 +88,7 @@ Parse `ARGUMENTS` before doing any work.
 2. Extract `--slug <slug>` and `--mode <lite|hybrid|formal>` if present.
 3. The first remaining token that matches one of these values is the subcommand:
    - `intake`
+   - `impact`
    - `backbone`
    - `frd`
    - `stories`
@@ -96,13 +100,15 @@ Parse `ARGUMENTS` before doing any work.
    - run the full workflow
    - if one free argument remains, treat it as the initial file path or pasted-input hint for Step 1
 5. For `intake`, one free argument may be a direct file path.
-6. For `backbone`, `frd`, `stories`, `srs`, `wireframes`, `package`, and `status`, reject unexpected free arguments, print the supported syntax, and stop.
-7. If the first token looks like an unknown subcommand, print the supported subcommand list and stop.
+6. For `impact`, one free argument may be a direct file path for the change request. If no free argument is present, accept pasted change text in the conversation.
+7. For `backbone`, `frd`, `stories`, `srs`, `wireframes`, `package`, and `status`, reject unexpected free arguments, print the supported syntax, and stop.
+8. If the first token looks like an unknown subcommand, print the supported subcommand list and stop.
 
 ### Routing rules
 
 - No subcommand means full workflow. Keep the existing lifecycle order intact.
 - `intake` runs Steps 1-4 only.
+- `impact` runs the change-impact triage path only. It does not mutate artifacts.
 - `backbone` runs Step 5 only.
 - `frd` runs Step 6 only.
 - `stories` runs Step 7 only.
@@ -110,6 +116,32 @@ Parse `ARGUMENTS` before doing any work.
 - `wireframes` runs Step 9 only as a re-run path from the persisted wireframe input pack or exact fallback sources.
 - `package` runs Step 12 only.
 - `status` inspects current artifacts and prints a checklist with dates.
+
+### Natural-language routing
+
+When the user does not explicitly name a subcommand, infer `impact` when all of these are true:
+
+- the user references an existing project set, a downstream step or artifact such as `frd`, `stories`, `srs`, `wireframes`, or `package`, or says they want to add the change into the current `intake` or `backbone`
+- the user says a requirement, rule, actor, acceptance criterion, screen behavior, or scope item has changed, been added, or been removed
+- the request is not obviously limited to wording, typo, formatting, or layout-only cleanup
+
+Also infer `impact` when both of these are true:
+
+- exactly one existing project set can be resolved from the current workspace context
+- the user sends a bare requirement or correction statement such as a single sentence, bullet, or short note, without explicitly asking to edit, overwrite, regenerate, or rerun an artifact
+
+Example user intents that should route to `impact`:
+
+- "Đang viết dở SRS thì thêm yêu cầu này"
+- "Rule này đổi từ 1 cấp duyệt sang 2 cấp"
+- "Màn hình này phải thêm trạng thái khóa"
+- "Bổ sung audit log cho export CSV"
+- "Không có nhóm admin user"
+- "Không cho xóa dữ liệu khi đã chốt kỳ"
+
+Do not route to `impact` for obvious no-impact edits such as typo fixes, wording cleanup, or formatting-only changes.
+
+Do not mutate artifacts directly from a bare requirement or correction statement. Treat that input as change evidence for `impact` first. Only mutate when the user explicitly asks to update, edit, overwrite, regenerate, rerun, or otherwise apply the change to a named artifact or step.
 
 ### Slug resolution
 
@@ -120,7 +152,7 @@ Subcommands that operate on an existing project must resolve the target project 
 3. If exactly one candidate slug exists, use it.
 4. If multiple candidate slugs exist, print the candidate list, ask the user to choose a slug or rerun with `--slug`, and stop.
 
-For mutating subcommands (`backbone`, `frd`, `stories`, `srs`, `wireframes`, `package`), never silently choose a slug by mtime.
+For mutating subcommands (`backbone`, `frd`, `stories`, `srs`, `wireframes`, `package`) and for `impact`, never silently choose a slug by mtime.
 
 ### Dated set resolution
 
@@ -139,7 +171,7 @@ After resolving the slug, resolve the target dated artifact set.
    - `plans/{date}-{slug}/plan.md`
 2. Build candidate `{date}` sets from exact filename matches only.
 3. If exactly one dated set exists for the slug, use it.
-4. If multiple dated sets exist for that slug and the command is `backbone`, `frd`, `stories`, `srs`, `wireframes`, `package`, or `status`, print the available dates, ask the user to choose the target dated set, and stop until the user chooses.
+4. If multiple dated sets exist for that slug and the command is `impact`, `backbone`, `frd`, `stories`, `srs`, `wireframes`, `package`, or `status`, print the available dates, ask the user to choose the target dated set, and stop until the user chooses.
 5. Never silently select the latest dated set by mtime.
 
 ### Exact artifact matching
@@ -165,6 +197,7 @@ Before mutating `backbone`, `frd`, `stories`, `srs`, `wireframes`, `package`, or
 | Command | Requires | Produces |
 | --- | --- | --- |
 | `intake` | Raw input (file or pasted text) | `plans/reports/final/intake-{slug}-{date}.md`, `plans/{date}-{slug}/plan.md` |
+| `impact` | resolved slug/date, change input, `plans/reports/final/intake-{slug}-{date}.md` | impact summary + exact next commands only |
 | `backbone` | `plans/reports/final/intake-{slug}-{date}.md` | `plans/reports/final/backbone-{date}-{slug}.md` |
 | `frd` | `plans/reports/final/backbone-{date}-{slug}.md` | `plans/reports/final/frd-{date}-{slug}.md`, `plans/reports/final/frd-{date}-{slug}.html` |
 | `stories` | `plans/reports/final/backbone-{date}-{slug}.md` | `plans/reports/final/user-stories-{date}-{slug}.md` |
@@ -418,6 +451,132 @@ Execution order:
 UI design system default: unless the user explicitly asks for another system, use Shadcn UI as the default component and layout baseline only until the approved project `DESIGN.md` overrides those choices.
 
 Save the work plan to `plans/{date}-{slug}/plan.md`.
+
+## Subcommand: impact
+
+Run the change-impact triage path only.
+
+### Purpose
+
+Use this subcommand when an existing project set already exists and the user introduces a new requirement, a changed rule, a removed scope item, or a screen behavior change while downstream authoring is already in progress.
+
+This subcommand is also the default safe landing zone for a bare correction statement in an existing project context, for example:
+
+- "Không có nhóm admin user"
+- "Phải có 2 cấp duyệt"
+- "Không cho sửa sau khi đã nộp"
+
+The goal is to decide:
+
+- whether the change is only a wording clarification or a real baseline change
+- which artifact is the current source of truth for the change
+- which downstream artifacts are invalidated
+- the narrowest safe rerun path
+- the exact commands the user should run next
+
+### Prerequisites
+
+- Resolve the slug and dated set using the shared rules.
+- Require a change input:
+  - a direct file path as the free argument, or
+  - pasted change text in the conversation
+- Require `plans/reports/final/intake-{slug}-{date}.md`.
+- If the intake artifact is missing, print the exact missing path, tell the user to run `/ba-start intake`, and stop.
+- Read the backbone when it exists:
+  - `plans/reports/final/backbone-{date}-{slug}.md`
+- Read downstream artifacts only when they exist and only when they are relevant to the suspected impact:
+  - `plans/reports/final/frd-{date}-{slug}.md`
+  - `plans/reports/final/user-stories-{date}-{slug}.md`
+  - `plans/reports/final/srs-{date}-{slug}.md`
+  - `plans/reports/drafts/wireframe-input-{date}-{slug}.md`
+  - `plans/reports/drafts/wireframe-map-{date}-{slug}.md`
+  - `plans/reports/drafts/wireframe-state-{date}-{slug}.md`
+  - `plans/{date}-{slug}/plan.md` when it exists and adds gate context
+- Do not scan unrelated report files once slug/date is resolved.
+- If only legacy-named report suites exist for the apparent project, stop with the legacy artifact detection message instead of inferring from them.
+
+### Output
+
+Print a structured impact triage summary. Do not mutate artifacts.
+
+### Decision rules
+
+Treat the current source of truth in this order:
+
+1. `backbone` when it exists
+2. otherwise `intake`
+
+Classify the change into one or more of these buckets:
+
+- `wording-only`: no requirement intent, acceptance criteria, behavior, scope, or traceability impact
+- `clarification-only`: narrows or explains an existing requirement without changing business intent or scope
+- `backbone-change`: changes feature map, FR/NFR inventory, actor responsibility, acceptance-criteria intent, or artifact gates
+- `scope-lock-change`: changes business problem, desired outcome, out-of-scope boundary, success metric, or a scope decision already locked in intake/backbone
+- `ui-impact`: changes screen inventory, navigation, state model, field behavior, validation surfaces, or wireframe assumptions
+
+Evaluate impact against these exact anchors when present:
+
+- intake: business problem, goals, out-of-scope, success metrics
+- backbone: scope lock summary, feature map, FR/NFR backbone, actors, story map, UI/screen coverage, artifact gates
+- FRD: feature wording, workflows, business rules, integration points
+- user stories: story intent and acceptance criteria
+- SRS: use cases, Screen Contract Lite, validation rules, screen inventory, final screen descriptions
+- wireframe artifacts: screen-to-frame mapping, runtime `DESIGN.md` assumptions, wireframe state
+
+### Impact routing rules
+
+- If the change touches goals, out-of-scope, success metrics, or scope decisions, route to `intake` first.
+- If the change touches feature scope, FR/NFR intent, actors, or acceptance-criteria intent, route to `backbone` first.
+- If the change stays within existing backbone intent but changes story wording or testable acceptance detail, route to `stories`.
+- If the change stays within existing backbone and story intent but changes use case flow, validation behavior, error states, or screen behavior, route to `srs`.
+- If the change affects screen inventory, state variants, navigation, overlays, or field interactions that wireframes must show, mark `ui-impact` and include `wireframes` after the required upstream rerun.
+- Never recommend `package` as the first remediation step after a real requirement change. `package` remains downstream of content correction.
+
+### Consult rules
+
+- `requirements-engineer` is the default owner of the impact analysis.
+- Consult `ui-ux-designer` only when `ui-impact` is present.
+- Consult `ba-researcher` only when the change depends on external domain rules or unresolved evidence.
+- Consult `ba-documentation-manager` only for final consistency review after reruns, not for the initial triage decision.
+
+### Stop conditions
+
+- Stop and ask focused questions if the change text is too vague to classify.
+- Stop and ask for slug/date selection if the shared resolution rules remain ambiguous.
+- Stop and report the exact missing prerequisite path if intake is missing.
+- Stop if only legacy artifacts exist for the apparent project.
+
+### Output format
+
+Print a summary like this:
+
+```text
+Project: {slug}
+Date set: {date}
+Current Step: {detected-current-step-or-unknown}
+
+Impact Summary:
+- Change Type: [wording-only | clarification-only | backbone-change | scope-lock-change | ui-impact]
+- Source Of Truth To Update: [intake | backbone | stories | srs]
+- Current Source Of Truth Used For Analysis: [backbone | intake]
+
+Affected Artifacts:
+- [artifact]
+
+Unaffected Artifacts:
+- [artifact]
+
+Recommended Path:
+1. [next step]
+2. [next step]
+
+Exact Commands:
+- /ba-start [subcommand] --slug {slug}
+- /ba-start [subcommand] --slug {slug}
+
+Questions:
+- [only when required]
+```
 
 ## Subcommand: backbone
 

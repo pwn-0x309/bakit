@@ -1,12 +1,12 @@
 ---
 name: ba-start
-description: Single entry point for BA-kit. Accepts raw requirements (file or text), normalizes them, locks scope, builds a requirements backbone, emits only the necessary BA artifacts, and packages deliverables.
-argument-hint: "[intake|backbone|frd|stories|srs|wireframes|package|status] [file|--slug|--mode]"
+description: Lifecycle engine for BA-kit. Accepts raw requirements (file or text), normalizes them, locks scope, builds a requirements backbone, emits only the necessary BA artifacts, and packages deliverables.
+argument-hint: "[intake|impact|backbone|frd|stories|srs|wireframes|package|status] [file|--slug|--mode]"
 ---
 
 # BA Start
 
-Use this skill to run an end-to-end business analysis engagement from raw input to packaged deliverables. This remains the single BA-kit skill, but it now supports step-level subcommands for resumable and partial runs.
+Use this skill to run an end-to-end business analysis engagement from raw input to packaged deliverables. Treat `ba-do` as the freeform router and use `ba-start` once the lifecycle step is explicit. `ba-start` supports step-level subcommands for resumable and partial runs.
 
 ## Invocation
 
@@ -14,6 +14,8 @@ Use this skill to run an end-to-end business analysis engagement from raw input 
 /ba-start
 /ba-start intake <file>
 /ba-start intake
+/ba-start impact --slug <slug>
+/ba-start impact --slug <slug> <change-file>
 /ba-start backbone --slug <slug>
 /ba-start frd --slug <slug>
 /ba-start stories --slug <slug>
@@ -30,12 +32,12 @@ Read this section first. Only continue to the detailed step sections when you ne
 ### Fast execution order
 
 1. Parse `ARGUMENTS` before doing any work.
-2. Resolve the subcommand: `intake`, `backbone`, `frd`, `stories`, `srs`, `wireframes`, `package`, or `status`.
+2. Resolve the subcommand: `intake`, `impact`, `backbone`, `frd`, `stories`, `srs`, `wireframes`, `package`, or `status`.
 3. Apply output defaults:
    - write BA deliverables in Vietnamese unless the user explicitly requests English
    - use `YYMMDD-HHmm` as the artifact-set `{date}` token
    - default the engagement mode to `hybrid` unless the user explicitly selects `lite` or `formal`
-   - default UI-backed wireframes to Shadcn UI unless the user explicitly overrides it
+   - default the project `DESIGN.md` baseline to Shadcn UI unless the user explicitly overrides it
 4. Resolve the target scope with exact matching only:
    - explicit `--slug <slug>` first
    - otherwise use a single detected slug only
@@ -51,11 +53,12 @@ Read this section first. Only continue to the detailed step sections when you ne
 | --- | --- | --- | --- |
 | no subcommand | Full workflow | raw input | intake, backbone, gated downstream artifacts by mode |
 | `intake` | Steps 1-4 | raw input | intake + plan |
+| `impact` | change-impact triage only | exact project set + change input | impact summary + recommended path + exact next commands |
 | `backbone` | Step 5 | intake | requirements backbone |
 | `frd` | Step 6 | backbone | FRD + FRD HTML |
 | `stories` | Step 7 | backbone | user stories |
-| `srs` | Steps 8-11 | backbone + user stories | grouped SRS + wireframe-input + merged SRS + gated wireframes |
-| `wireframes` | Step 9 only | wireframe-input or exact wireframe source set | `.pen`, exports, wireframe-map, wireframe-state |
+| `srs` | Steps 8-11 | backbone + user stories | grouped SRS + wireframe-input + project runtime DESIGN.md + merged SRS + gated wireframes |
+| `wireframes` | Step 9 only | wireframe-input or exact wireframe source set | `designs/{slug}/DESIGN.md`, `.pen`, exports, wireframe-map, wireframe-state |
 | `package` | Step 12 only | emitted artifact set + non-missing wireframe-state when SRS screens exist | FRD/SRS HTML + delivery summary |
 | `status` | inspection only | none | checklist output |
 
@@ -64,7 +67,7 @@ Read this section first. Only continue to the detailed step sections when you ne
 - Never silently choose a slug or dated set by mtime.
 - Never use broad `*-{slug}*` matching when exact artifact patterns are available.
 - The backbone is the primary authoring source after intake. Do not re-derive downstream artifacts from raw intake when the backbone exists.
-- `wireframes` is read-only on upstream BA artifacts. It may regenerate only design outputs, `wireframe-map`, and the wireframe-state marker.
+- `wireframes` is read-only on upstream BA artifacts. It may regenerate only runtime design outputs, `designs/{slug}/DESIGN.md`, `wireframe-map`, and the wireframe-state marker.
 - `package` must block only when wireframe state is `missing`.
 - If no wireframe-state marker exists, treat it as `not-applicable` only when the SRS set has no UI-backed screens or Screen Contract Lite section. Otherwise treat it as `missing`.
 
@@ -75,7 +78,7 @@ Read this section first. Only continue to the detailed step sections when you ne
 - Write BA deliverables in Vietnamese by default unless the user explicitly requests English.
 - Treat the artifact-set `{date}` token as `YYMMDD-HHmm` consistently across report filenames and `plans/{date}-{slug}/plan.md`.
 - Default the engagement mode to `hybrid` for solo IT BA work. Use `lite` only when speed matters more than formal artifacts, and `formal` only when governance or handoff needs justify the full set.
-- For UI-backed scope, use Shadcn UI as the default wireframe and UI-handoff design-system baseline unless the user explicitly overrides it.
+- For UI-backed scope, use Shadcn UI as the default component baseline only when the approved project `DESIGN.md` does not override it.
 
 ### Argument parsing
 
@@ -85,6 +88,7 @@ Parse `ARGUMENTS` before doing any work.
 2. Extract `--slug <slug>` and `--mode <lite|hybrid|formal>` if present.
 3. The first remaining token that matches one of these values is the subcommand:
    - `intake`
+   - `impact`
    - `backbone`
    - `frd`
    - `stories`
@@ -96,13 +100,15 @@ Parse `ARGUMENTS` before doing any work.
    - run the full workflow
    - if one free argument remains, treat it as the initial file path or pasted-input hint for Step 1
 5. For `intake`, one free argument may be a direct file path.
-6. For `backbone`, `frd`, `stories`, `srs`, `wireframes`, `package`, and `status`, reject unexpected free arguments, print the supported syntax, and stop.
-7. If the first token looks like an unknown subcommand, print the supported subcommand list and stop.
+6. For `impact`, one free argument may be a direct file path for the change request. If no free argument is present, accept pasted change text in the conversation.
+7. For `backbone`, `frd`, `stories`, `srs`, `wireframes`, `package`, and `status`, reject unexpected free arguments, print the supported syntax, and stop.
+8. If the first token looks like an unknown subcommand, print the supported subcommand list and stop.
 
 ### Routing rules
 
 - No subcommand means full workflow. Keep the existing lifecycle order intact.
 - `intake` runs Steps 1-4 only.
+- `impact` runs the change-impact triage path only. It does not mutate artifacts.
 - `backbone` runs Step 5 only.
 - `frd` runs Step 6 only.
 - `stories` runs Step 7 only.
@@ -110,6 +116,32 @@ Parse `ARGUMENTS` before doing any work.
 - `wireframes` runs Step 9 only as a re-run path from the persisted wireframe input pack or exact fallback sources.
 - `package` runs Step 12 only.
 - `status` inspects current artifacts and prints a checklist with dates.
+
+### Natural-language routing
+
+When the user does not explicitly name a subcommand, infer `impact` when all of these are true:
+
+- the user references an existing project set, a downstream step or artifact such as `frd`, `stories`, `srs`, `wireframes`, or `package`, or says they want to add the change into the current `intake` or `backbone`
+- the user says a requirement, rule, actor, acceptance criterion, screen behavior, or scope item has changed, been added, or been removed
+- the request is not obviously limited to wording, typo, formatting, or layout-only cleanup
+
+Also infer `impact` when both of these are true:
+
+- exactly one existing project set can be resolved from the current workspace context
+- the user sends a bare requirement or correction statement such as a single sentence, bullet, or short note, without explicitly asking to edit, overwrite, regenerate, or rerun an artifact
+
+Example user intents that should route to `impact`:
+
+- "Đang viết dở SRS thì thêm yêu cầu này"
+- "Rule này đổi từ 1 cấp duyệt sang 2 cấp"
+- "Màn hình này phải thêm trạng thái khóa"
+- "Bổ sung audit log cho export CSV"
+- "Không có nhóm admin user"
+- "Không cho xóa dữ liệu khi đã chốt kỳ"
+
+Do not route to `impact` for obvious no-impact edits such as typo fixes, wording cleanup, or formatting-only changes.
+
+Do not mutate artifacts directly from a bare requirement or correction statement. Treat that input as change evidence for `impact` first. Only mutate when the user explicitly asks to update, edit, overwrite, regenerate, rerun, or otherwise apply the change to a named artifact or step.
 
 ### Slug resolution
 
@@ -120,7 +152,7 @@ Subcommands that operate on an existing project must resolve the target project 
 3. If exactly one candidate slug exists, use it.
 4. If multiple candidate slugs exist, print the candidate list, ask the user to choose a slug or rerun with `--slug`, and stop.
 
-For mutating subcommands (`backbone`, `frd`, `stories`, `srs`, `wireframes`, `package`), never silently choose a slug by mtime.
+For mutating subcommands (`backbone`, `frd`, `stories`, `srs`, `wireframes`, `package`) and for `impact`, never silently choose a slug by mtime.
 
 ### Dated set resolution
 
@@ -139,7 +171,7 @@ After resolving the slug, resolve the target dated artifact set.
    - `plans/{date}-{slug}/plan.md`
 2. Build candidate `{date}` sets from exact filename matches only.
 3. If exactly one dated set exists for the slug, use it.
-4. If multiple dated sets exist for that slug and the command is `backbone`, `frd`, `stories`, `srs`, `wireframes`, `package`, or `status`, print the available dates, ask the user to choose the target dated set, and stop until the user chooses.
+4. If multiple dated sets exist for that slug and the command is `impact`, `backbone`, `frd`, `stories`, `srs`, `wireframes`, `package`, or `status`, print the available dates, ask the user to choose the target dated set, and stop until the user chooses.
 5. Never silently select the latest dated set by mtime.
 
 ### Exact artifact matching
@@ -165,11 +197,12 @@ Before mutating `backbone`, `frd`, `stories`, `srs`, `wireframes`, `package`, or
 | Command | Requires | Produces |
 | --- | --- | --- |
 | `intake` | Raw input (file or pasted text) | `plans/reports/final/intake-{slug}-{date}.md`, `plans/{date}-{slug}/plan.md` |
+| `impact` | resolved slug/date, change input, `plans/reports/final/intake-{slug}-{date}.md` | impact summary + exact next commands only |
 | `backbone` | `plans/reports/final/intake-{slug}-{date}.md` | `plans/reports/final/backbone-{date}-{slug}.md` |
 | `frd` | `plans/reports/final/backbone-{date}-{slug}.md` | `plans/reports/final/frd-{date}-{slug}.md`, `plans/reports/final/frd-{date}-{slug}.html` |
 | `stories` | `plans/reports/final/backbone-{date}-{slug}.md` | `plans/reports/final/user-stories-{date}-{slug}.md` |
 | `srs` | `plans/reports/final/backbone-{date}-{slug}.md`, `plans/reports/final/user-stories-{date}-{slug}.md` | `plans/reports/final/srs-{date}-{slug}.md`, `plans/reports/drafts/wireframe-input-{date}-{slug}.md`, and any supporting `plans/reports/drafts/srs-{date}-{slug}-group-*.md` files |
-| `wireframes` | `plans/reports/drafts/wireframe-input-{date}-{slug}.md` or exact fallback sources for pack generation | `designs/{slug}/*.pen`, `designs/{slug}/exports/**`, `plans/reports/drafts/wireframe-map-{date}-{slug}.md`, `plans/reports/drafts/wireframe-state-{date}-{slug}.md` |
+| `wireframes` | `plans/reports/drafts/wireframe-input-{date}-{slug}.md` or exact fallback sources for pack generation | `designs/{slug}/DESIGN.md`, `designs/{slug}/*.pen`, `designs/{slug}/exports/**`, `plans/reports/drafts/wireframe-map-{date}-{slug}.md`, `plans/reports/drafts/wireframe-state-{date}-{slug}.md` |
 | `package` | emitted downstream artifacts for the selected mode; wireframes may be completed, skipped, or not-applicable | packaged HTML artifacts, delivery summary |
 | `status` | None | Checklist output only |
 
@@ -415,9 +448,135 @@ Execution order:
 
 `Intake -> Backbone -> Mode-gated downstream artifacts -> Quality Review`
 
-UI design system default: unless the user explicitly asks for another system, use Shadcn UI as the default component and layout baseline for wireframes and UI-oriented handoff artifacts.
+UI design system default: unless the user explicitly asks for another system, use Shadcn UI as the default component and layout baseline only until the approved project `DESIGN.md` overrides those choices.
 
 Save the work plan to `plans/{date}-{slug}/plan.md`.
+
+## Subcommand: impact
+
+Run the change-impact triage path only.
+
+### Purpose
+
+Use this subcommand when an existing project set already exists and the user introduces a new requirement, a changed rule, a removed scope item, or a screen behavior change while downstream authoring is already in progress.
+
+This subcommand is also the default safe landing zone for a bare correction statement in an existing project context, for example:
+
+- "Không có nhóm admin user"
+- "Phải có 2 cấp duyệt"
+- "Không cho sửa sau khi đã nộp"
+
+The goal is to decide:
+
+- whether the change is only a wording clarification or a real baseline change
+- which artifact is the current source of truth for the change
+- which downstream artifacts are invalidated
+- the narrowest safe rerun path
+- the exact commands the user should run next
+
+### Prerequisites
+
+- Resolve the slug and dated set using the shared rules.
+- Require a change input:
+  - a direct file path as the free argument, or
+  - pasted change text in the conversation
+- Require `plans/reports/final/intake-{slug}-{date}.md`.
+- If the intake artifact is missing, print the exact missing path, tell the user to run `/ba-start intake`, and stop.
+- Read the backbone when it exists:
+  - `plans/reports/final/backbone-{date}-{slug}.md`
+- Read downstream artifacts only when they exist and only when they are relevant to the suspected impact:
+  - `plans/reports/final/frd-{date}-{slug}.md`
+  - `plans/reports/final/user-stories-{date}-{slug}.md`
+  - `plans/reports/final/srs-{date}-{slug}.md`
+  - `plans/reports/drafts/wireframe-input-{date}-{slug}.md`
+  - `plans/reports/drafts/wireframe-map-{date}-{slug}.md`
+  - `plans/reports/drafts/wireframe-state-{date}-{slug}.md`
+  - `plans/{date}-{slug}/plan.md` when it exists and adds gate context
+- Do not scan unrelated report files once slug/date is resolved.
+- If only legacy-named report suites exist for the apparent project, stop with the legacy artifact detection message instead of inferring from them.
+
+### Output
+
+Print a structured impact triage summary. Do not mutate artifacts.
+
+### Decision rules
+
+Treat the current source of truth in this order:
+
+1. `backbone` when it exists
+2. otherwise `intake`
+
+Classify the change into one or more of these buckets:
+
+- `wording-only`: no requirement intent, acceptance criteria, behavior, scope, or traceability impact
+- `clarification-only`: narrows or explains an existing requirement without changing business intent or scope
+- `backbone-change`: changes feature map, FR/NFR inventory, actor responsibility, acceptance-criteria intent, or artifact gates
+- `scope-lock-change`: changes business problem, desired outcome, out-of-scope boundary, success metric, or a scope decision already locked in intake/backbone
+- `ui-impact`: changes screen inventory, navigation, state model, field behavior, validation surfaces, or wireframe assumptions
+
+Evaluate impact against these exact anchors when present:
+
+- intake: business problem, goals, out-of-scope, success metrics
+- backbone: scope lock summary, feature map, FR/NFR backbone, actors, story map, UI/screen coverage, artifact gates
+- FRD: feature wording, workflows, business rules, integration points
+- user stories: story intent and acceptance criteria
+- SRS: use cases, Screen Contract Lite, validation rules, screen inventory, final screen descriptions
+- wireframe artifacts: screen-to-frame mapping, runtime `DESIGN.md` assumptions, wireframe state
+
+### Impact routing rules
+
+- If the change touches goals, out-of-scope, success metrics, or scope decisions, route to `intake` first.
+- If the change touches feature scope, FR/NFR intent, actors, or acceptance-criteria intent, route to `backbone` first.
+- If the change stays within existing backbone intent but changes story wording or testable acceptance detail, route to `stories`.
+- If the change stays within existing backbone and story intent but changes use case flow, validation behavior, error states, or screen behavior, route to `srs`.
+- If the change affects screen inventory, state variants, navigation, overlays, or field interactions that wireframes must show, mark `ui-impact` and include `wireframes` after the required upstream rerun.
+- Never recommend `package` as the first remediation step after a real requirement change. `package` remains downstream of content correction.
+
+### Consult rules
+
+- `requirements-engineer` is the default owner of the impact analysis.
+- Consult `ui-ux-designer` only when `ui-impact` is present.
+- Consult `ba-researcher` only when the change depends on external domain rules or unresolved evidence.
+- Consult `ba-documentation-manager` only for final consistency review after reruns, not for the initial triage decision.
+
+### Stop conditions
+
+- Stop and ask focused questions if the change text is too vague to classify.
+- Stop and ask for slug/date selection if the shared resolution rules remain ambiguous.
+- Stop and report the exact missing prerequisite path if intake is missing.
+- Stop if only legacy artifacts exist for the apparent project.
+
+### Output format
+
+Print a summary like this:
+
+```text
+Project: {slug}
+Date set: {date}
+Current Step: {detected-current-step-or-unknown}
+
+Impact Summary:
+- Change Type: [wording-only | clarification-only | backbone-change | scope-lock-change | ui-impact]
+- Source Of Truth To Update: [intake | backbone | stories | srs]
+- Current Source Of Truth Used For Analysis: [backbone | intake]
+
+Affected Artifacts:
+- [artifact]
+
+Unaffected Artifacts:
+- [artifact]
+
+Recommended Path:
+1. [next step]
+2. [next step]
+
+Exact Commands:
+- /ba-start [subcommand] --slug {slug}
+- /ba-start [subcommand] --slug {slug}
+
+Questions:
+- [only when required]
+```
 
 ## Subcommand: backbone
 
@@ -634,6 +793,8 @@ Delegation fallback:
   - the smallest viable split proposal
   - the exact upstream sections needed for the rerun
 - On `NEEDS_REPARTITION`, rerun only the affected group or subgroup. Do not restart the whole SRS pipeline.
+- **Never delegate assembly or merge steps to a sub-agent.** Merging group fragments into a final artifact (SRS, FRD, HTML) must run inline in the orchestrator using incremental Read-then-Edit-append writes. Sub-agents have a 200k context window and limited output tokens; a merged SRS can easily exceed both.
+- Similarly, never delegate HTML conversion of a large merged artifact to a sub-agent. Run md-to-html inline or chunk the conversion.
 
 Delegation packet template:
 
@@ -732,11 +893,39 @@ Save to `plans/reports/drafts/wireframe-input-{date}-{slug}.md`.
 The wireframe input pack must contain:
 
 - artifact set information and app type
+- target project runtime design document path
 - exact use case excerpts needed for each primary screen
 - Screen Contract Lite
 - Screen Inventory
+- approved runtime design decision snapshot or explicit gaps that still require user choice
 - proposed artifact grouping plan
 - stop conditions for missing context or overloaded screen sets
+
+#### Step 8.2 - Capture design decisions and persist project runtime DESIGN.md
+
+Before any AI agent generates wireframes, ask the user to make or approve the design decisions that will define the project-specific runtime `DESIGN.md`.
+
+Decision intake must cover:
+
+- reference direction: existing brand guidance, a custom brief, or a named external `DESIGN.md` inspiration
+- visual tone and density
+- color direction and contrast expectations
+- typography direction
+- component feel: borders, radius, formality, dashboard density, navigation style
+- layout and responsive priority
+- hard constraints and explicit anti-patterns
+
+If `designs/{slug}/DESIGN.md` already exists, ask whether to:
+
+- reuse the approved file as-is
+- refresh it from new decisions
+- stop
+
+If no file exists, or the user asks to refresh it:
+
+- synthesize `designs/{slug}/DESIGN.md` from the approved decisions using `templates/design-md-template.md`
+- keep Shadcn UI as the default component baseline only when the approved `DESIGN.md` does not specify a different direction
+- stop before Step 9 if design decisions remain unresolved
 
 #### Group D - Technical
 
@@ -754,7 +943,7 @@ Technical slice gate:
 
 - Produce Group D only when integrations, NFR exposure, data modelling, API handoff, or vendor/governance needs justify it.
 
-### Step 9 - Generate wireframes from use cases and Screen Contract Lite
+### Step 9 - Generate wireframes from use cases, Screen Contract Lite, and approved runtime DESIGN.md
 
 Run the Step 9 workflow exactly as defined in the `wireframes` subcommand below, but treat it as part of the SRS pipeline and keep the same `{date}` set.
 
@@ -805,10 +994,16 @@ Output: `plans/reports/drafts/srs-{date}-{slug}-group-f.md`
 
 ### Step 11 - Assembly and quality review
 
-After all groups complete:
+After all groups complete, the **orchestrator** assembles the final SRS inline. Do not delegate assembly to a sub-agent — the merged output is likely to exceed sub-agent output token limits.
 
-1. Merge groups into a single SRS following `srs-template.md` section order.
-2. Run a cross-artifact consistency check:
+Assembly procedure (incremental writes):
+
+1. Write the SRS skeleton to `plans/reports/final/srs-{date}-{slug}.md` using the `srs-template.md` heading structure with empty section bodies.
+2. For each group in template section order (A → B → C → D → E → F):
+   a. Read the group fragment from `plans/reports/drafts/`.
+   b. Edit-append the fragment content into the matching section of the skeleton.
+   c. Confirm the edit succeeded before moving to the next group.
+3. After all groups are appended, run a cross-artifact consistency check on the file on disk:
    - Every UC step maps to a screen field or action and vice versa.
    - Screen Contract Lite entries have matching wireframes and final screen descriptions.
    - UC actor actions use the same wording as screen User Actions.
@@ -816,11 +1011,11 @@ After all groups complete:
    - UC alternate flows are reflected in screen Error or States.
    - Field names are identical between UC steps, screen field tables, and wireframe labels.
    - User story acceptance criteria are covered by UC postconditions and screen Validation Rules.
-3. Resolve UC placeholder references in screens.
-4. Resolve ID conflicts across namespaces.
-5. Verify every SCR and UC traces back to user stories.
-6. Save to `plans/reports/final/srs-{date}-{slug}.md`.
-7. Delete group fragments only after the merged SRS is verified.
+4. Resolve UC placeholder references in screens.
+5. Resolve ID conflicts across namespaces.
+6. Verify every SCR and UC traces back to user stories.
+7. Apply inline fixes to the file on disk using Edit, not by regenerating the whole file.
+8. Delete group fragments only after the merged SRS is verified.
 
 Execution order:
 
@@ -835,11 +1030,11 @@ Group E -> Group F
 Group F -> Assembly
 ```
 
-Failure handling: if a grouped pass fails, retry once. If it still fails, complete that group inline.
+Failure handling: if a grouped pass fails, retry once. If it still fails, complete that group inline. Assembly (Step 11) always runs inline regardless of failure state — never delegate the merge to a sub-agent.
 
 ## Subcommand: wireframes
 
-Run Step 9 only. This path must be read-only on upstream artifacts and regenerate only design outputs, `wireframe-map`, and the explicit wireframe-state marker.
+Run Step 9 only. This path must be read-only on upstream artifacts and regenerate only runtime design outputs, the project `DESIGN.md`, `wireframe-map`, and the explicit wireframe-state marker.
 
 ### Prerequisites
 
@@ -853,6 +1048,7 @@ Run Step 9 only. This path must be read-only on upstream artifacts and regenerat
 
 ### Output
 
+- `designs/{slug}/DESIGN.md`
 - `designs/{slug}/{artifact-name}.pen`
 - `designs/{slug}/exports/{artifact-name}/SCR-xx-name.png`
 - `plans/reports/drafts/wireframe-map-{date}-{slug}.md`
@@ -872,8 +1068,34 @@ Parse the input pack to build the generation plan:
 - group related screens into one or more Pencil artifacts by flow, module, or journey
 - treat modal, dialog, and drawer overlays with flow impact as primary screens
 - for each primary screen, derive required supporting frames from the documented states, validation rules, table or list behavior, and feedback surfaces
+- carry forward the runtime design-document target path `designs/{slug}/DESIGN.md`
 
-### Step 9.2 - Ask for wireframe preference
+### Step 9.2 - Ask for or refresh project runtime DESIGN.md
+
+Before any wireframe generation starts:
+
+- check whether `designs/{slug}/DESIGN.md` already exists
+- if it exists, ask whether to reuse it or refresh it from new decisions
+- if it does not exist, ask the user to make the design decisions needed to create it
+
+Minimum decision set:
+
+- reference direction or inspiration source
+- visual tone
+- color direction
+- typography direction
+- component feel
+- layout/responsive priority
+- explicit anti-patterns
+
+After the user answers:
+
+- persist or refresh `designs/{slug}/DESIGN.md`
+- summarize the approved choices in `plans/reports/drafts/wireframe-input-{date}-{slug}.md`
+- treat the resulting `DESIGN.md` as a project runtime artifact and semi-finished handoff input for the wireframe agent, not as a final BA deliverable
+- stop if the user declines to approve a design direction
+
+### Step 9.3 - Ask for wireframe preference
 
 If Step 9 runs as part of the full `/ba-start` or `/ba-start srs` pipeline and the user has not explicitly asked to skip or manually choose screens, default to:
 
@@ -905,21 +1127,22 @@ If wireframes are expected but generation fails before completion:
 - persist the marker with `State: missing`
 - stop and report the failure
 
-### Step 9.3 - Generate Pencil wireframes and mapping
+### Step 9.4 - Generate Pencil wireframes and mapping
 
 For each approved screen group:
 
 1. Read the linked use case excerpts, Screen Contract Lite entries, and Screen Inventory rows from the wireframe input pack.
-2. Verify that the wireframe intent matches the same actions, flow steps, and required states.
-3. Use `web-app` or `mobile-app` guidelines as appropriate.
-4. Use Shadcn UI as the default design-system baseline unless the user explicitly overrides it.
-5. Create or update one `.pen` artifact per approved screen group.
-6. Create one frame per primary screen and one frame per required supporting state or view.
-7. Validate screenshots against the Use Cases and Screen Contract Lite.
-8. Record screen-to-artifact-to-frame mapping, including supporting frames and export targets, for every generated artifact.
-9. Save each artifact to `designs/{slug}/{artifact-name}.pen`.
+2. Read `designs/{slug}/DESIGN.md` and treat it as the system design document for the current wireframe run.
+3. Verify that the wireframe intent matches the same actions, flow steps, required states, and approved design decisions.
+4. Use `web-app` or `mobile-app` guidelines as appropriate.
+5. Use Shadcn UI as the default component baseline only when `DESIGN.md` does not override it.
+6. Create or update one `.pen` artifact per approved screen group.
+7. Create one frame per primary screen and one frame per required supporting state or view.
+8. Validate screenshots against the Use Cases, Screen Contract Lite, and approved `DESIGN.md`.
+9. Record screen-to-artifact-to-frame mapping, including supporting frames and export targets, for every generated artifact.
+10. Save each artifact to `designs/{slug}/{artifact-name}.pen`.
 
-### Step 9.4 - Export wireframes to PNG
+### Step 9.5 - Export wireframes to PNG
 
 Export each relevant primary frame to PNG for embedding in the final SRS HTML:
 
@@ -931,7 +1154,7 @@ After successful export:
 
 - persist `plans/reports/drafts/wireframe-map-{date}-{slug}.md` with the final artifact, frame, and export mapping
 - persist `plans/reports/drafts/wireframe-state-{date}-{slug}.md` with `State: completed`
-- list the input-pack, mapping, artifact, and export paths in the marker
+- list the input-pack, project `DESIGN.md`, mapping, artifact, and export paths in the marker
 
 ## Subcommand: package
 
@@ -1030,6 +1253,7 @@ plans/
       ui-ux-designer-auth-flow.md
 designs/
   {slug}/
+    DESIGN.md
     auth-flow.pen
     checkout.pen
     exports/
@@ -1068,6 +1292,7 @@ Date set: {date}
 - [ ] final/srs-{date}-{slug}.md — missing
 - [ ] drafts/wireframe-input-{date}-{slug}.md — missing
 - [ ] drafts/wireframe-map-{date}-{slug}.md — missing
+- [ ] designs/{slug}/DESIGN.md — missing
 - [!] wireframes — skipped — 2026-03-26
 
 Delegated slices:
@@ -1080,13 +1305,13 @@ Status rules:
 
 - For regular artifacts, print `exists` or `missing` with the last-modified date when present.
 - For wireframes, print the explicit wireframe state (`completed`, `skipped`, `not-applicable`, or `missing`) plus the marker date.
-- When wireframes are `completed`, also list the detected input pack, wireframe map, `.pen` artifact paths, and export folders under `designs/{slug}/`.
+- When wireframes are `completed`, also list the detected project runtime `DESIGN.md`, input pack, wireframe map, `.pen` artifact paths, and export folders under `designs/{slug}/`.
 - For delegated slices under `plans/{date}-{slug}/delegation/`, print:
   - `queued`, `running`, `completed`, `needs-repartition`, `blocked`, or `failed` directly from the tracker
   - `likely stalled` when the tracker says `running` or `queued` but the last heartbeat is older than the tracker threshold
   - the last heartbeat timestamp and latest milestone or blocker when present
 
-## Deliverables
+## Outputs And Runtime Artifacts
 
 - Normalized intake form
 - Gap analysis summary
@@ -1095,6 +1320,7 @@ Status rules:
 - FRD in Markdown and HTML
 - User stories in Markdown
 - SRS working fragments for grouped production
+- Project-specific runtime `DESIGN.md` as a semi-finished handoff input for AI wireframe generation
 - Wireframe input pack for resumable Step 9 generation
 - Unified SRS with use cases, wireframe-backed screen descriptions, NFRs, and test cases
 - SRS HTML with embedded wireframes and rendered diagrams
@@ -1111,6 +1337,7 @@ Status rules:
 - [frd-template.md](../../templates/frd-template.md)
 - [user-story-template.md](../../templates/user-story-template.md)
 - [srs-template.md](../../templates/srs-template.md)
+- [design-md-template.md](../../templates/design-md-template.md)
 - [wireframe-input-template.md](../../templates/wireframe-input-template.md)
 - [wireframe-map-template.md](../../templates/wireframe-map-template.md)
 - [delegation-status-template.md](../../templates/delegation-status-template.md)
@@ -1137,6 +1364,7 @@ Status rules:
 - SRS covers only the slices justified by the selected mode and artifact gates.
 - Every FR, UC, and SCR links to at least one user story.
 - Screen Contract Lite exists for every primary screen before wireframes are generated.
+- An approved project `DESIGN.md` exists before AI wireframes are generated.
 - Screen field tables use the Display/Behaviour/Validation description format.
 - Cross-artifact consistency is enforced across UC steps, screen fields, actions, and wireframe labels.
 - `hybrid` mode defaults to critical-screen wireframes first; `formal` mode covers the full approved set.
@@ -1144,7 +1372,7 @@ Status rules:
 - Every UC actor action has a matching screen User Action.
 - Every UC system response has a matching screen Behaviour Rule.
 - Wireframes match their SRS screen descriptions field by field.
-- Wireframes use Shadcn UI by default unless the user explicitly requests another system.
+- Wireframes use the approved `DESIGN.md` as the system design document, with Shadcn UI only as the fallback component baseline.
 - SRS screens link to `.pen` artifacts and frame references unless wireframes were explicitly skipped or not applicable.
 - Screen IDs stay aligned between SRS and Pencil frame names.
 - Modal, drawer, and dialog overlays with flow impact are modeled as primary screens.
@@ -1161,3 +1389,13 @@ Status rules:
 - Prefer slim handoff packets: objective, write scope, trace IDs, and a few quoted excerpts. If you are tempted to attach full upstream documents, repartition first.
 - Do not combine content generation, full cross-artifact audit, and packaging into the same delegated call when the artifact set is already large.
 - If one delegated slice still feels too large after summarization, stop and split it again rather than hoping the worker keeps the whole context consistent.
+
+### Large artifact write protocol
+
+Assembly and merge steps that produce artifacts longer than roughly 150 lines must use **incremental writes** instead of a single Write call.
+
+1. **Write the skeleton first**: create the target file with the template structure (headings, boilerplate, front matter) using one Write call.
+2. **Append group content sequentially**: for each group fragment, Read the fragment, then Edit-append it into the correct section of the target file. Complete one group before starting the next.
+3. **Never generate the entire merged content in memory and flush it in one Write call.** The output token budget of a sub-agent (or even the orchestrator) may not be large enough to hold the full artifact.
+4. **Assembly must run inline** (orchestrator context), not delegated to a sub-agent. Merged SRS, merged FRD, and HTML conversion are all assembly tasks.
+5. After all groups are appended, run validation on the file already on disk rather than validating an in-memory draft.

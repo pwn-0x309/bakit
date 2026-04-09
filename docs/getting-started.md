@@ -45,7 +45,7 @@ ba-kit status --slug warehouse-rfp
 
 This checks the registered BA-kit source repo, blocks when the repo has local changes or unfinished merge/rebase state, runs `git pull --ff-only`, then reruns the installers for any previously installed runtimes.
 `ba-kit status` reads the registered source repo, prints the current artifact set, and flags likely stalled delegated slices from stale tracker heartbeats.
-`ba-kit doctor` checks runtime readiness: install manifests, registered repo health, required local tools, and optional MCP hints for Pencil and Notion.
+`ba-kit doctor` checks runtime readiness: install manifests, registered repo health, required local tools, and optional MCP hints for Stitch and Notion.
 Both commands also surface update availability when the registered upstream has newer commits.
 
 ## 4. Use BA-kit In Claude Code
@@ -148,7 +148,7 @@ Instead:
 Use AGENTS.md and skills/ba-start/SKILL.md.
 Parse the requirements in docs/raw/warehouse-rfp.pdf.
 Include use cases, Screen Contract Lite, a project runtime `DESIGN.md`, final screen descriptions, linked requirements, test cases, and wireframes.
-Reference Pencil artifacts under designs/customer-portal/ and map each SRS screen to its target frame.
+Reference Stitch generated screens and map each SRS screen to its target Stitch screen.
 ```
 
 If the Codex conversion is installed, you can point Codex directly at the bundled skill:
@@ -212,9 +212,9 @@ Expected behavior:
 - run `git pull --ff-only`
 - rerun `install.sh` and/or `scripts/install-codex-ba-kit.sh` for the runtimes already installed from that repo
 
-## 6. Add Pencil Wireframes For SRS Work
+## 6. Add Stitch Wireframes For SRS Work
 
-Use Pencil only for wireframes in BA-kit.
+Use Stitch MCP only for wireframes in BA-kit.
 
 Before an AI agent generates or reruns wireframes, capture or confirm the project-specific design decisions and persist them to:
 
@@ -224,27 +224,26 @@ designs/[initiative-slug]/DESIGN.md
 
 This `DESIGN.md` is a project-specific runtime artifact, not a BA-kit product artifact. It becomes the system design document for the wireframe agent and summarizes the approved visual tone, colors, typography, component feel, layout principles, responsive behavior, and anti-patterns for that initiative.
 
-Store `.pen` files under:
+Track stitch state under:
 
 ```text
-designs/[initiative-slug]/
+designs/[initiative-slug]/stitch-state.json
 ```
 
 Example:
 
 ```text
 designs/customer-portal/DESIGN.md
-designs/customer-portal/auth-flow.pen
-designs/customer-portal/dashboard-core.pen
+designs/customer-portal/stitch-state.json
 designs/customer-portal/exports/auth-flow/SCR-01-login.png
 designs/customer-portal/exports/dashboard-core/SCR-02-dashboard.png
 ```
 
 Rules:
-- a single `.pen` file may contain multiple frames
-- keep screen IDs aligned between the SRS and Pencil frame names
-- link each SRS screen to both the `.pen` artifact and the specific frame it uses
-- use the `.pen` file as the wireframe source of truth
+- a single Stitch Project may contain multiple Screen IDs
+- keep screen IDs aligned between the SRS and Stitch generated screens
+- link each SRS screen to both the Stitch Project ID and the specific Screen ID it uses
+- use the generated Screen PNGs and Stitch variants as the wireframe source of truth
 - use the approved `DESIGN.md` as the wireframe system document
 - use Shadcn UI as the default component baseline only when `DESIGN.md` does not specify a different direction
 - keep the SRS focused on behavior, validation, states, navigation, and traceability
@@ -264,7 +263,7 @@ A full `/ba-start` engagement produces final BA deliverables plus runtime artifa
 | User stories | `user-story-template.md` | `plans/reports/final/user-stories-{date}-{slug}.md` |
 | Project runtime DESIGN.md (bán thành phẩm) | `design-md-template.md` | `designs/{slug}/DESIGN.md` |
 | Wireframe input pack | `wireframe-input-template.md` | `plans/reports/drafts/wireframe-input-{date}-{slug}.md` |
-| Wireframes | Pencil MCP | `designs/{slug}/{artifact-name}.pen` plus `designs/{slug}/exports/{artifact-name}/SCR-xx-{name}.png` |
+| Wireframes | Stitch MCP | `designs/{slug}/stitch-state.json` plus `designs/{slug}/exports/{artifact-name}/SCR-xx-{name}.png` |
 | Wireframe map | `wireframe-map-template.md` | `plans/reports/drafts/wireframe-map-{date}-{slug}.md` |
 | Wireframe state | BA-kit routing metadata | `plans/reports/drafts/wireframe-state-{date}-{slug}.md` |
 | SRS HTML | `scripts/md-to-html.py` | `plans/reports/final/srs-{date}-{slug}.html` as the primary browser-editable stakeholder copy |
@@ -284,7 +283,7 @@ Packaged HTML keeps Mermaid diagrams visualized in-browser and constrains embedd
 - Codex-specific setup notes: [codex-setup.md](./codex-setup.md)
 - Skill catalog: [skill-catalog.md](./skill-catalog.md)
 - Methodology guide: [ba-methodology-guide.md](./ba-methodology-guide.md)
-- Pencil naming convention: [designs/README.md](../designs/README.md)
+- Stitch structure details: [designs/README.md](../designs/README.md)
 
 ## 9. Practical Tips
 

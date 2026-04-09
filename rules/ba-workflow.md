@@ -26,7 +26,7 @@ BA-kit is optimized for a solo IT BA. The workflow should reduce duplicated writ
 | Agent | Scope |
 | --- | --- |
 | `requirements-engineer` | Intake refinement, requirements backbone, FRD, user stories, selective SRS content |
-| `ui-ux-designer` | Pencil wireframes from SRS screens |
+| `ui-ux-designer` | Stitch UI screens from SRS usage |
 | `ba-documentation-manager` | Validation pack, quality review, packaging, cross-references |
 | `ba-researcher` | Domain research, standards, market context |
 
@@ -81,7 +81,7 @@ BA-kit is optimized for a solo IT BA. The workflow should reduce duplicated writ
 - **SRS (Module):** `.../03_modules/{module_slug}/srs.md`
 - **User stories (Module):** `.../03_modules/{module_slug}/user-stories.md`
 - **Compiled Outputs:** `plans/{slug}-{date}/04_compiled/compiled-frd.html` and `compiled-srs.html`
-- Wireframes: `designs/{slug}/{artifact-name}.pen` plus frame-level screen mapping in the SRS
+- Wireframes: Stitch Project screens plus screen-level mapping in the SRS and exported PNGs
 - Project runtime design system document: `designs/{slug}/DESIGN.md`
 - Supporting wireframe frames: use the parent screen ID prefix plus a stable suffix such as `SCR-01-EMPTY`, `SCR-01-ERROR`, or `SCR-01-TOAST-SUCCESS`
 - Modal/drawer/dialog overlays that affect flow should get their own primary `SCR-xx` IDs, not supporting-state suffix IDs
@@ -112,8 +112,8 @@ BA-kit is optimized for a solo IT BA. The workflow should reduce duplicated writ
 - **Cross-artifact consistency check before packaging:** UC steps, screen fields/actions, and wireframe labels must use identical terminology and describe the same behavior.
 - Reusable cross-screen rules and standard messages should be centralized once in the SRS and referenced by code from individual screen descriptions to reduce duplication and drift.
 - Shared SRS codes should follow one convention only: `CR-{TYPE}-{NN}` for rules and `MSG-{TYPE}-{NN}` for messages; do not mix local ad-hoc formats inside the same artifact set.
-- Wireframe linkage must be screen-to-frame, not screen-to-file only. A single `.pen` file may cover multiple screens.
-- Supporting frames that are not expanded into full screen sections must still be captured in the SRS screen inventory and present in the `.pen` artifact.
+- Wireframe linkage must be screen-to-(Stitch)ProjectID and ScreenID. A single Stitch Project may cover multiple screens.
+- Supporting frames that are not expanded into full screen sections must still be captured in the SRS screen inventory and present in the Stitch Project state.
 - Modal and overlay screens that affect flow must be treated like first-class screens in traceability, not collapsed into supporting-state inventory entries.
 - Verify quality before handoff.
 - **SRS preflight gate:** once slug/date and prerequisites are resolved, start from the exact backbone and user-stories artifacts, and pull the FRD only when it exists or is explicitly required.

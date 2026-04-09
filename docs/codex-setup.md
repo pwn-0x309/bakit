@@ -10,7 +10,7 @@ BA-kit can work with Codex as a repo-native BA operating guide. The root [AGENTS
 - `skills/` as reference playbooks for BA task types
 - `rules/` as BA quality and workflow constraints
 - `templates/` as deliverable structures
-- `designs/` for project-specific runtime `DESIGN.md` files and Pencil wireframe artifacts referenced by SRS screen sections
+- `designs/` for project-specific runtime `DESIGN.md` files and Stitch UI states and exported PNGs referenced by SRS screen sections
 
 ## Codex Conversion Install
 
@@ -62,7 +62,7 @@ Or ask Codex to run:
 1. Start with the business outcome or artifact you need.
 2. For freeform BA requests, use `ba-do` as the router first.
 3. Tell Codex to use the BA playbook for the resolved step.
-4. If UI is involved, point it at the relevant project `DESIGN.md` and any existing Pencil `.pen` artifacts and frame mappings in `designs/`.
+4. If UI is involved, point it at the relevant project `DESIGN.md` and Stitch `stitch-state.json` mappings in `designs/`.
 5. Use `/ba-start` for full workflow runs and the matching explicit subcommand for reruns.
 6. For rerun commands, pass `--slug <slug>` when more than one project may exist.
 7. If one slug has multiple dated artifact sets, Codex should stop and ask which date to use instead of silently taking the latest set.
@@ -188,7 +188,7 @@ Produce an intake form, requirements backbone, gated FRD/stories/SRS artifacts, 
 Use AGENTS.md and skills/ba-start/SKILL.md.
 Draft an SRS from templates/srs-template.md.
 Include use cases, screen descriptions, and linked requirements.
-Reference Pencil artifacts under designs/[initiative-slug]/ and identify the target frame for each screen.
+Reference Stitch generated screens under designs/[initiative-slug]/ and identify the target screen ID for each screen.
 ```
 
 ### Agile Story Breakdown
@@ -208,14 +208,13 @@ That means prompts should explicitly tell Codex which playbook to consult when t
 The root `AGENTS.md` carries the short non-negotiable defaults, but it does not replace the detailed routing and prerequisite logic in `skills/ba-start/SKILL.md`.
 For delegated BA work, resolve the workflow once in the orchestrator, then pass only the minimal handoff packet to each registered agent instead of replaying the entire playbook and merged artifact set every time.
 
-## Pencil For Codex
+## Stitch For Codex
 
-Use Pencil only for wireframes in SRS-backed work:
+Use Stitch only for wireframes in SRS-backed work:
 - persist or reuse `designs/{slug}/DESIGN.md` before generating wireframes
-- store `.pen` files under `designs/`
-- allow one `.pen` file to contain multiple frames
-- reference both the artifact path and the target frame directly from the SRS
-- keep screen IDs aligned across the SRS and Pencil frame names
+- store `stitch-state.json` under `designs/` and extract exported PNGs
+- reference generated screen paths and IDs directly from the SRS
+- keep screen IDs aligned across the SRS and Stitch generated properties
 
 ## HTML Deliverable
 

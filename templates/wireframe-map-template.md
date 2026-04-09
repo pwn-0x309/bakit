@@ -11,26 +11,26 @@
 
 ## Artifact Summary
 
-| Artifact Name | Pencil File | Export Folder | Included Primary Screens | Included Supporting Frames |
+| Artifact Name | Stitch Project ID | Export Folder | Included Primary Screens | Included Supporting Screens |
 | --- | --- | --- | --- | --- |
-| [artifact-name] | `designs/{slug}/[artifact-name].pen` | `designs/{slug}/exports/[artifact-name]/` | [SCR-01, SCR-02] | [SCR-01-EMPTY, SCR-01-ERROR] |
+| [artifact-name] | [ID] | `designs/{slug}/exports/[artifact-name]/` | [SCR-01, SCR-02] | [SCR-01-EMPTY, SCR-01-ERROR] |
 
-## Screen To Frame Mapping
+## Screen To UI Mapping
 
-| Screen ID | Screen Name | Classification | Pencil Artifact | Pencil Frame | Export PNG | Supporting Frames | Notes |
+| Screen ID | Screen Name | Classification | Stitch Project ID | Stitch Screen ID | Export PNG | Supporting Screens | Notes |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| SCR-01 | [Screen] | Primary screen | `designs/{slug}/[artifact-name].pen` | `SCR-01 - [Screen Name]` | `designs/{slug}/exports/[artifact-name]/SCR-01-[screen-name].png` | [SCR-01-EMPTY, SCR-01-ERROR] | [Mapping notes] |
+| SCR-01 | [Screen] | Primary screen | [Project ID] | [Screen ID] | `designs/{slug}/exports/[artifact-name]/SCR-01-[screen-name].png` | [SCR-01-EMPTY, SCR-01-ERROR] | [Mapping notes] |
 
-## Supporting Frame Inventory
+## Supporting Screen Inventory
 
-| Frame ID | Parent Screen | Classification | Pencil Artifact | Pencil Frame | Reason |
+| Screen ID | Parent Screen | Classification | Stitch Project ID | Stitch Screen ID | Reason |
 | --- | --- | --- | --- | --- | --- |
-| SCR-01-EMPTY | SCR-01 | Supporting state | `designs/{slug}/[artifact-name].pen` | `SCR-01-EMPTY - [State Name]` | [Why this state exists] |
+| SCR-01-EMPTY | SCR-01 | Supporting state | [Project ID] | [Screen ID] | [Why this state exists] |
 
 ## Coverage Checks
 
-- Every primary screen in the input pack has a Pencil frame
-- Every required supporting state inferred during wireframing is listed
-- Every exported PNG path matches the actual artifact/frame naming
+- Every primary screen in the input pack has a Stitch Screen generated
+- Every required supporting state inferred during wireframing is mapped to Stitch
+- Every exported PNG path matches the actual generated layout
 - Frame names preserve screen IDs for SRS linkback
 - Wireframe outputs remain aligned with the approved `DESIGN.md`

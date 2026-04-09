@@ -41,8 +41,8 @@ Related rules:
 - `Rule Code` should use the format `CR-{TYPE}-{NN}` where `TYPE` is one of `DIS`, `BEH`, `VAL`, or `MIX`.
 - `Message Code` should use the format `MSG-{TYPE}-{NN}` where `TYPE` is one of `ERR`, `WRN`, `SUC`, or `INF`.
 - `NN` should be a 2-digit sequence that remains unique within the SRS and stable when the same shared rule or message is reused.
-- Each SRS screen must reference the correct Pencil artifact and the exact frame representing that screen.
-- Inventory-only supporting frames must still be listed in the SRS screen inventory and kept aligned with their Pencil frame names.
+- Each SRS screen must reference the correct Stitch Project ID and the exact Screen ID representing that screen.
+- Inventory-only supporting screens must still be listed in the SRS screen inventory and kept aligned with their Stitch Screen IDs.
 - User story acceptance criteria must be covered by UC postconditions and screen Validation Rules.
 - FRD features must be fully traceable through user stories into SRS requirements.
 - Final screen descriptions must be derived from and remain consistent with both the generated wireframes and the upstream use cases.

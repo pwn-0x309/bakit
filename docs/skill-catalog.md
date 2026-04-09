@@ -68,7 +68,7 @@ Subcommand targeting rules:
 | Agent | Role in Workflow |
 | --- | --- |
 | `requirements-engineer` | Backbone, FRD, user stories, use cases, Screen Contract Lite, final screen descriptions |
-| `ui-ux-designer` | Pencil wireframe generation from use cases, screen contract, and approved `DESIGN.md` |
+| `ui-ux-designer` | Stitch UI generation from use cases, screen contract, and approved `DESIGN.md` |
 | `ba-documentation-manager` | Validation pack, quality review, consistency, packaging |
 | `ba-researcher` | Domain research when external context is needed |
 

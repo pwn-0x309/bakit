@@ -843,7 +843,7 @@ doctor_command() {
   fi
   printf '\n'
 
-  doctor_mcp_check "Pencil MCP" "pencil" || warnings=$((warnings + 1))
+  doctor_mcp_check "Stitch MCP" "stitch" || warnings=$((warnings + 1))
   doctor_mcp_check "Notion MCP" "notion" || warnings=$((warnings + 1))
   printf '\n'
 

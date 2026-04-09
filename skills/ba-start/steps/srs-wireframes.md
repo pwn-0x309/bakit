@@ -66,7 +66,7 @@ After Step 9 resolves, expand final screen descriptions from:
 - `paths.wireframe_map` when wireframe state is `completed`
 - supporting frame inventory
 
-If wireframes are `skipped` or `not-applicable`, expand screen descriptions from use cases and Screen Contract Lite only, and keep Pencil references absent.
+If wireframes are `skipped` or `not-applicable`, expand screen descriptions from use cases and Screen Contract Lite only, and keep Stitch MCP dependencies absent.
 
 If wireframe state is `completed` but `paths.wireframe_map` is missing, stop and rerun `wireframes` before expanding final screen descriptions.
 

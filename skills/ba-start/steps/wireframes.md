@@ -22,7 +22,6 @@ Run Step 9 only. This path is read-only on upstream BA artifacts and may regener
 ## Outputs
 
 - `paths.design_doc`
-- `paths.pen_artifact`
 - `paths.png_export`
 - `paths.wireframe_map`
 - `paths.wireframe_state`
@@ -40,7 +39,7 @@ If the pack is missing but fallback sources exist:
 
 Parse the input pack to build the generation plan:
 
-- group related screens into one or more Pencil artifacts by flow, module, or journey
+- group related screens into Stitch Project scope by flow, module, or journey
 - treat modal, dialog, and drawer overlays with flow impact as primary screens
 - derive required supporting frames from documented states, validation rules, list behavior, and feedback surfaces
 - carry forward the runtime design target `paths.design_doc`
@@ -92,26 +91,19 @@ If wireframes are expected but generation fails before completion:
 - persist the marker with `State: missing`
 - stop and report the failure
 
-## Step 9.4 - Generate Pencil wireframes and mapping
+## Step 9.4 - Generate Stitch UI and mapping
 
 For each approved screen group:
 
 1. Read the linked use case excerpts, Screen Contract Lite entries, and Screen Inventory rows from the wireframe input pack.
 2. Read `paths.design_doc` and prefer the compact cache at `paths.design_snapshot` when it exists.
 3. Verify that the wireframe intent matches the same actions, flow steps, required states, and approved design decisions.
-4. Batch 2-4 screens per generation call by flow or navigation adjacency. Do not batch an entire project in one call.
-5. Use `defaults.ui_baseline` only when the design document does not override it.
-6. Create or update one `.pen` artifact per approved screen group.
-7. Create one frame per primary screen and one frame per required supporting state or view.
-8. Validate screenshots against the use cases, Screen Contract Lite, and approved design document.
-9. Record screen-to-artifact-to-frame mapping for every generated artifact.
-10. Save each artifact to `paths.pen_artifact`.
-
-When a Stitch-backed run is used:
-
-- initialize the cache with `ba-kit stitch-state init --slug <slug>`
-- persist screen-level status after each batch with `ba-kit stitch-state upsert ...`
-- use `ba-kit stitch-state show --slug <slug>` to inspect current cache state instead of re-querying the full remote project when local state is sufficient
+4. Batch 1-2 screens per call to `mcp_stitch_generate_screen_from_text` or `mcp_stitch_generate_variants`. Do not batch an entire project in one call.
+5. Create or reference the Stitch Project via `mcp_stitch_create_project`.
+6. Use `defaults.ui_baseline` only when the design document does not override it.
+7. Record screen-to-Stitch_ProjectID-to-Stitch_ScreenID mapping for every generated UI screen.
+8. Initialize the cache with `ba-kit stitch-state init --slug <slug>`.
+9. Persist screen-level status after each batch with `ba-kit stitch-state upsert ...`.
 
 ## Step 9.5 - Export wireframes to PNG
 

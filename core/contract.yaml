@@ -48,7 +48,6 @@
     "compiled_frd": "plans/{slug}-{date}/04_compiled/compiled-frd.html",
     "compiled_srs": "plans/{slug}-{date}/04_compiled/compiled-srs.html",
     "design_doc": "designs/{slug}/DESIGN.md",
-    "pen_artifact": "designs/{slug}/{artifact_name}.pen",
     "png_export": "designs/{slug}/exports/{artifact_name}/{screen_id}.png",
     "stitch_state": "designs/{slug}/stitch-state.json",
     "design_snapshot": "designs/{slug}/.design-snapshot.md"

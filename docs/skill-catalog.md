@@ -8,7 +8,7 @@ This catalog explains the BA-kit workflow skill plus the maintenance skills that
 
 | Skill | When to Use | Related Templates | Related Agents | Typical Output |
 | --- | --- | --- | --- | --- |
-| `ba-start` | Full BA engagement or resumable step-level reruns from raw input to packaged deliverables | `intake-form-template.md`, `requirements-backbone-template.md`, `frd-template.md`, `user-story-template.md`, `srs-template.md`, `design-md-template.md`, `wireframe-input-template.md`, `wireframe-map-template.md` | `requirements-engineer`, `ui-ux-designer`, `ba-documentation-manager`, `ba-researcher` | Intake form, requirements backbone, gated FRD/stories/SRS artifacts, project runtime `DESIGN.md`, wireframe input pack, wireframes, wireframe map, FRD/SRS HTML, quality review, artifact status |
+| `ba-start` | Full BA engagement or resumable step-level reruns from raw input to packaged deliverables | `intake-form-template.md`, `requirements-backbone-template.md`, `frd-template.md`, `user-story-template.md`, `srs-template.md`, `design-md-template.md`, `wireframe-input-template.md`, `wireframe-map-template.md` | `requirements-engineer`, `ui-ux-designer`, `ba-documentation-manager`, `ba-researcher` | Intake form, requirements backbone, gated FRD/stories/SRS artifacts, project runtime `DESIGN.md`, wireframe constraint pack, manual wireframe handoff map, FRD/SRS HTML, quality review, artifact status |
 | `ba-kit-update` | Update the installed BA-kit runtime assets from the registered source repo | None | None | One-command fast-forward update and reinstall |
 | `ba-notion` | Publish an exact BA markdown artifact into Notion via MCP | None | None | Notion page created or updated from BA source content |
 
@@ -23,9 +23,9 @@ This catalog explains the BA-kit workflow skill plus the maintenance skills that
 5. Requirements backbone production
 6. Gated FRD and user story generation
 7. Selective use case and Screen Contract Lite production when needed
-8. Design decision capture and project runtime `DESIGN.md` creation when wireframes are justified
-9. Wireframe generation from the persisted wireframe input pack and approved `DESIGN.md`
-10. Final screen description production with the persisted wireframe map when wireframes are completed
+8. Design decision capture and project runtime `DESIGN.md` creation when wireframe support is justified
+9. Manual wireframe constraint-pack and handoff-map production from the persisted wireframe input pack and approved `DESIGN.md`
+10. Final screen description production with the persisted wireframe constraints and optional manual handoff map
 11. Unified browser-editable HTML packaging and quality review across the emitted artifacts
 
 ## Invocation
@@ -51,7 +51,7 @@ This catalog explains the BA-kit workflow skill plus the maintenance skills that
 | `backbone` | Build the persisted source-of-truth artifact after scope lock | Matching intake artifact |
 | `frd` | Produce the FRD and FRD HTML only when the gate is open | Matching backbone artifact |
 | `stories` | Produce user stories only | Matching backbone artifact |
-| `srs` | Produce grouped SRS artifacts, wireframe input pack, gated wireframes, wireframe map, and merged SRS | Matching backbone and user stories |
+| `srs` | Produce grouped SRS artifacts, wireframe constraint pack, gated wireframe handoff map, and merged SRS | Matching backbone and user stories |
 | `wireframes` | Re-run Step 9 from the persisted wireframe input pack or exact fallback sources | Wireframe input pack plus an approved or refreshable project `DESIGN.md`, or exact Group B + Group C / merged SRS fallback |
 | `package` | Run quality review, validate existing packaged HTML artifacts, and regenerate only the needed packaged outputs | Emitted artifact set and non-missing wireframe state |
 | `status` | Print artifact checklist with dates | Resolved slug and dated set |
@@ -59,7 +59,7 @@ This catalog explains the BA-kit workflow skill plus the maintenance skills that
 Subcommand targeting rules:
 
 - Use `--slug <slug>` first when rerunning an existing project.
-- If exactly one slug exists across `plans/reports/final/` and `plans/reports/drafts/`, BA-kit may use it automatically.
+- If exactly one slug exists in the modular `plans/{slug}-{date}/` tree, BA-kit may use it automatically.
 - If multiple slugs exist, BA-kit should stop and ask the user to choose.
 - If one slug has multiple dated artifact sets, BA-kit should stop and ask which dated set to use.
 
@@ -68,7 +68,7 @@ Subcommand targeting rules:
 | Agent | Role in Workflow |
 | --- | --- |
 | `requirements-engineer` | Backbone, FRD, user stories, use cases, Screen Contract Lite, final screen descriptions |
-| `ui-ux-designer` | Stitch UI generation from use cases, screen contract, and approved `DESIGN.md` |
+| `ui-ux-designer` | Manual wireframe constraint-pack and handoff-map preparation from use cases, screen contract, and approved `DESIGN.md` |
 | `ba-documentation-manager` | Validation pack, quality review, consistency, packaging |
 | `ba-researcher` | Domain research when external context is needed |
 
@@ -81,9 +81,9 @@ For non-trivial delegated work, also create a tracker under `plans/{date}-{slug}
 
 Packaged HTML artifacts are meant to be edited in the browser. Update copy, swap images, and add or remove blocks directly in the rendered HTML instead of hand-editing source HTML.
 
-Wireframe images are constrained to a fit-to-document viewport by default so large exported screens do not overwhelm the page. Clicking or double-clicking a wireframe opens a larger preview. Mermaid diagrams are rendered explicitly after the DOM is ready for more reliable visualization in stakeholder copies.
+If the user manually inserts wireframe images or links into the markdown source, the packaged HTML preserves those references. Mermaid diagrams are rendered explicitly after the DOM is ready for more reliable visualization in stakeholder copies.
 
-`/ba-start status` reports regular artifacts as exists or missing with last-modified dates, including the persisted backbone. Wireframes are reported as `completed`, `skipped`, `not-applicable`, or `missing` from the explicit wireframe-state marker, and completed runs should expose the project runtime `DESIGN.md` together with the persisted wireframe input pack and wireframe map. Delegated slices should also appear from their trackers, with likely stalled slices flagged when heartbeats go stale.
+`/ba-start status` reports regular artifacts as exists or missing with last-modified dates, including the persisted backbone. Wireframe handoff is reported as `completed`, `skipped`, `not-applicable`, or `missing` from the explicit wireframe-state marker, and completed runs should expose the project runtime `DESIGN.md` together with the persisted wireframe input pack and wireframe map. Delegated slices should also appear from their trackers, with likely stalled slices flagged when heartbeats go stale.
 
 ## Expected Quality Bar
 
@@ -92,7 +92,7 @@ Wireframe images are constrained to a fit-to-document viewport by default so lar
 - Every requirement has acceptance criteria
 - Use cases cover primary and alternate flows
 - Screen descriptions use field tables with Display/Behaviour/Validation rules
-- Approved `DESIGN.md` decisions are reflected in AI-generated wireframes
+- Approved `DESIGN.md` decisions are reflected in the wireframe constraint pack and any user-supplied wireframes
 - Every SRS requirement, use case, and screen traces to user stories
 - Diagrams use Mermaid
 - Risks, assumptions, and open questions are visible

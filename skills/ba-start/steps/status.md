@@ -39,12 +39,12 @@ Date set: {date}
 
 [Designs]
 - [ ] designs/{slug}/DESIGN.md — missing
-- [!] wireframes — skipped — 2026-03-26
+- [!] wireframe handoff — skipped — 2026-03-26
 ```
 
 Status rules:
 
 - For regular artifacts, print `exists` or `missing` with the last-modified date when present.
-- For wireframes, print the explicit wireframe state plus the marker date.
-- When wireframes are `completed`, also list the detected runtime design file, input pack, wireframe map, `stitch-state.json`, and export folders under `paths.design_root`.
+- For wireframe handoff, print the explicit wireframe state plus the marker date.
+- When wireframe handoff is `completed`, also list the detected runtime design file, wireframe input pack, and wireframe map.
 - For delegated slices under `paths.delegation_root`, print the tracker state directly and mark `likely stalled` when the last heartbeat exceeds `states.stall_after_minutes`.

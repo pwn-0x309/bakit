@@ -142,7 +142,7 @@ Packet rules:
 
 - Use `states.wireframe` only.
 - `wireframes` is read-only on upstream BA artifacts.
-- It may regenerate only runtime design outputs, wireframe map, wireframe state, and related design cache files under `paths.design_root`.
+- It may regenerate only the runtime `DESIGN.md`, wireframe input pack, wireframe map, and wireframe state.
 
 ## Packaging Behavior
 

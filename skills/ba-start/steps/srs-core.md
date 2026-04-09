@@ -7,7 +7,7 @@ This step requires:
 
 ## Step 8 - Produce SRS core, use cases, and Screen Contract Lite
 
-SRS is the largest artifact. Produce only the slices justified by the selected mode and artifact gates, then keep wireframes ahead of final screen descriptions.
+SRS is the largest artifact. Produce only the slices justified by the selected mode and artifact gates, then prepare the manual wireframe handoff pack before final screen descriptions when UI-backed scope needs design constraints.
 
 SRS preflight execution rules:
 
@@ -63,9 +63,9 @@ Consistency rules:
 - Screen Contract Lite must define screen IDs, entry and exit conditions, key actions, and required states
 - modal, dialog, drawer, and overlay screens with their own interaction logic are primary screens
 
-## Step 8.1 - Build wireframe input pack
+## Step 8.1 - Build wireframe constraint pack
 
-After Group B and Group C are complete, assemble a persisted wireframe input artifact before any design work starts.
+After Group B and Group C are complete, assemble a persisted wireframe constraint artifact before any manual design work starts.
 
 Source inputs:
 
@@ -75,13 +75,14 @@ Source inputs:
 
 Save to `paths.wireframe_input`.
 
-The wireframe input pack must contain:
+The wireframe constraint pack must contain:
 
 - artifact set information and app type
 - target runtime design document path
 - exact use case excerpts needed for each primary screen
 - Screen Contract Lite
 - Screen Inventory
+- full manual-design constraints: navigation, required states, validation cues, supporting states, and non-negotiable labels or actions
 - approved runtime design decision snapshot or explicit gaps that still require user choice
-- proposed artifact grouping plan
+- proposed artifact grouping and handoff plan
 - stop conditions for missing context or overloaded screen sets

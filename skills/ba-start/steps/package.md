@@ -39,7 +39,7 @@ Run a final packaging and quality pass:
 
 ## Step 12.1 - Generate packaged HTML
 
-When the engagement includes multiple modules with FRD or SRS, aggregate and convert them to HTML with wireframe images embedded inline:
+When the engagement includes multiple modules with FRD or SRS, aggregate and convert them to HTML:
 
 ```bash
 python scripts/md-to-html.py plans/{slug}-{date}/03_modules --aggregate
@@ -51,3 +51,5 @@ Output:
 - `paths.compiled_srs`
 
 When the engagement does not include SRS, package only the artifacts that were actually emitted and requested for stakeholder handoff.
+
+If the user later manually inserts wireframe images or links into the markdown source, preserve those references in the packaged HTML instead of trying to regenerate design assets.

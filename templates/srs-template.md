@@ -72,17 +72,17 @@ sequenceDiagram
 > **Quy tắc nhất quán:** Hành động tác nhân trong use case này phải khớp với User Actions của màn hình tương ứng. Phản hồi hệ thống phải khớp với Behaviour Rules của các trường trên màn hình. Nếu use case nói "hệ thống kiểm tra định dạng email", trường email trên màn hình liên kết phải có Validation Rule tương ứng.
 
 ## Hợp đồng màn hình rút gọn (Screen Contract Lite)
-Ghi nhận hợp đồng màn hình tối thiểu cần thiết để tạo wireframe trước khi viết mô tả màn hình chi tiết.
+Ghi nhận hợp đồng màn hình tối thiểu cần thiết để chuẩn bị constraint wireframe trước khi viết mô tả màn hình chi tiết.
 
 | Mã (Screen ID) | Tên (Screen Name) | Phân loại (Classification) | Màn hình cha (Parent Screen) | UC liên kết (Linked Use Cases) | Vào / Ra (Entry / Exit) | Hành động chính (Key Actions) | Trạng thái bắt buộc (Required States) | Mức tài liệu (Documentation Level) |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | SCR-01 | [Màn hình] | Primary screen | [N/A] | [UC-01, UC-02] | [Vào / Ra] | [Submit, Cancel] | [Loading, Empty, Error, Success] | Detailed |
 | SCR-02 | [Modal / Drawer / Dialog] | Primary screen | [SCR-01] | [UC-03] | [Mở từ SCR-01 / trở về SCR-01] | [Confirm, Close] | [Default, Loading, Error] | Detailed |
 
-> Phần này là hợp đồng đầu vào cho wireframe. Đủ để UI/UX agent tạo low-fidelity frames trước khi mô tả màn hình chi tiết được mở rộng.
+> Phần này là hợp đồng đầu vào cho bộ constraint wireframe. Đủ để user hoặc designer bên ngoài tự dựng wireframe/mockup trước hoặc sau khi mô tả màn hình chi tiết được mở rộng.
 
 ## Danh mục màn hình (Screen Inventory)
-Ghi nhận mọi UI frame phải tồn tại trong bộ Cloud Screen (Stitch MCP), bao gồm cả màn hình chính và frame trạng thái hỗ trợ.
+Ghi nhận mọi UI frame hoặc trạng thái cần tồn tại trong phạm vi thiết kế thủ công, bao gồm cả màn hình chính và frame trạng thái hỗ trợ.
 
 | Mã (Screen/Frame ID) | Tên (Screen Name) | Phân loại (Classification) | Màn hình cha (Parent Screen) | Mục đích (Purpose) | Mức tài liệu (Documentation Level) |
 | --- | --- | --- | --- | --- | --- |
@@ -93,15 +93,15 @@ Ghi nhận mọi UI frame phải tồn tại trong bộ Cloud Screen (Stitch MCP
 | SCR-01-TOAST-SUCCESS | [Toast thành công] | Supporting feedback | [SCR-01] | [Xác nhận thành công sau hành động chính] | Inventory-only |
 
 > Mọi modal, dialog, drawer, wizard step, hoặc overlay có display rules, behaviour rules, user actions, hoặc ảnh hưởng luồng riêng đều phải được coi là primary screen và có mục mô tả chi tiết riêng.
-> Supporting frames không bắt buộc phải có mục chi tiết đầy đủ trong SRS HTML cuối cùng. Chúng vẫn phải tồn tại trong project Stitch và được liệt kê ở đây để đảm bảo truy vết bằng Screen ID.
+> Supporting frames không bắt buộc phải có mục chi tiết đầy đủ trong SRS HTML cuối cùng. Chúng vẫn phải được liệt kê ở đây để đảm bảo truy vết bằng Screen ID và để user biết mình cần tự thiết kế hoặc annotate thêm khi cần.
 
 ## Mô tả màn hình (Screen Descriptions)
-Viết mục chi tiết màn hình đầy đủ sau khi có wireframe. Sử dụng use cases, Screen Contract Lite, và wireframe đã tạo cùng nhau để hoàn thiện hành vi màn hình. Mọi primary screen, bao gồm modal hoặc overlay ảnh hưởng luồng người dùng, đều phải có mục chi tiết đầy đủ. Sử dụng liệt kê inventory-only cho supporting frames trừ khi chúng cần tài liệu hành vi độc lập.
+Viết mục chi tiết màn hình đầy đủ từ use cases, Screen Contract Lite, và bộ constraint wireframe. Mọi primary screen, bao gồm modal hoặc overlay ảnh hưởng luồng người dùng, đều phải có mục chi tiết đầy đủ. User có thể tự bổ sung wireframe/mockup thủ công vào tài liệu sau; việc đó không chặn bước mô tả màn hình.
 
 ### Chi tiết màn hình (Screen Detail)
 **Mã màn hình (Screen ID):** [SCR-01]
-**Stitch Project ID:** [ID của project trên Stitch]
-**Stitch Screen ID:** [ID của màn hình sau khi generate]
+**Trạng thái gắn wireframe thủ công (Manual Wireframe Status):** [Chưa gắn | Đã gắn | Không áp dụng]
+**Tham chiếu mockup ngoài (External Mockup Reference):** [Link / file path / ghi chú]
 **Phạm vi artifact (Artifact Scope):** [Single screen / multi-screen flow / module pack]
 **Frame hỗ trợ (Supporting Frames):** [SCR-01-EMPTY - Trạng thái rỗng, SCR-01-ERROR - Lỗi inline, SCR-01-TOAST-SUCCESS - Toast thành công]
 **Tóm tắt bố cục (Layout Summary):** [Các vùng, panel, hoặc section chính]
@@ -109,25 +109,20 @@ Viết mục chi tiết màn hình đầy đủ sau khi có wireframe. Sử dụ
 **UC liên kết (Linked Use Cases):** [UC-01, UC-02]
 **User Stories liên kết (Linked User Stories):** [US-001, US-002]
 
-> **Quy tắc nhất quán:** Màn hình này phải triển khai đúng các tương tác mô tả trong use cases liên kết. Tên trường, nhãn hành động, và trình tự luồng phải khớp giữa các bước UC và trường/hành động trên màn hình. Màn hình Stitch được generate phải phản ánh bảng trường và bố cục của màn hình này.
+> **Quy tắc nhất quán:** Màn hình này phải triển khai đúng các tương tác mô tả trong use cases liên kết. Tên trường, nhãn hành động, và trình tự luồng phải khớp giữa các bước UC và trường/hành động trên màn hình. Nếu user tự gắn wireframe/mockup, hình đó cũng phải phản ánh bảng trường và bố cục của màn hình này.
 >
-> Supporting frames liệt kê ở trên cũng phải tham chiếu đúng bằng Stitch Screen ID khi chúng được ngụ ý bởi trạng thái, validation rules, hành vi bảng/danh sách, hoặc feedback patterns của màn hình.
+> Supporting frames liệt kê ở trên cũng phải được phản ánh bằng mockup, ảnh phụ, hoặc ghi chú tương ứng khi chúng được ngụ ý bởi trạng thái, validation rules, hành vi bảng/danh sách, hoặc feedback patterns của màn hình.
 
-## Tham chiếu Wireframe / Mockup (Wireframe / Mockup Reference)
-- Stitch Project ID: [ID]
-- Stitch Screen ID: [ID]
-- Ảnh xuất: `designs/[initiative-slug]/exports/[artifact-name]/SCR-01-[screen-name].png`
-- File JSON trạng thái: `designs/[initiative-slug]/stitch-state.json`
+## Tham chiếu Wireframe / Mockup thủ công (Manual Wireframe / Mockup Reference)
+- Hình thức tham chiếu: [Ảnh dán trực tiếp | Link Figma | Link Drive | File cục bộ]
+- Đường dẫn / liên kết: [Điền thủ công]
+- Người cập nhật: [Tên]
 - Cập nhật lần cuối: [YYYY-MM-DD]
 
-> Một Project ID trên Stitch có thể chứa nhiều Screen ID. Mỗi màn hình SRS phải lưu đúng cấu trúc ID của nó.
+> User tự chịu trách nhiệm dán ảnh, nhúng link, hoặc thêm ghi chú tham chiếu phù hợp vào mục này sau khi wireframe/mockup được thiết kế.
 
-> Trong bản xuất HTML cuối cùng, ảnh PNG bên dưới được nhúng inline tự động.
-
-![SCR-01 Wireframe](designs/[initiative-slug]/exports/[artifact-name]/SCR-01-[screen-name].png)
-
-## Ý đồ Wireframe (Wireframe Intent)
-Giải thích wireframe đang tối ưu cho điều gì: tốc độ nhập dữ liệu, hoàn thành có hướng dẫn, xem lại trước khi gửi, hoặc quét dashboard.
+## Ý đồ thiết kế màn hình (Screen Design Intent)
+Giải thích màn hình đang tối ưu cho điều gì: tốc độ nhập dữ liệu, hoàn thành có hướng dẫn, xem lại trước khi gửi, hoặc quét dashboard.
 
 ## Vùng màn hình (Screen Regions)
 | Vùng (Region) | Mục đích (Purpose) | Nội dung (Contents) |
@@ -168,8 +163,8 @@ Dùng phần này để chuẩn hóa error message, warning, success message, ba
 | MSG-SUC-01 | Success | [Inline / Toast / Banner / Modal] | [Khi nào hiển thị] | [Nội dung hiển thị cho người dùng] | [Ghi chú] |
 | MSG-INF-01 | Info | [Inline / Toast / Banner / Modal] | [Khi nào hiển thị] | [Nội dung hiển thị cho người dùng] | [Ghi chú] |
 
-## Wireframe Low-Fidelity (Low-Fidelity Wireframe)
-Sử dụng màn hình được tạo từ Stitch (qua ID và PNG xuất) làm wireframe chính. Thêm bản phác thảo text ở đây chỉ khi cải thiện rõ ràng cho reviewer đọc markdown riêng.
+## Hướng dẫn gắn wireframe thủ công (Manual Wireframe Attachment Guide)
+User có thể dán ảnh, thêm link, hoặc để bản phác thảo text ở đây khi việc đó giúp reviewer đọc markdown riêng.
 
 ```text
 +--------------------------------------------------+
@@ -183,6 +178,11 @@ Sử dụng màn hình được tạo từ Stitch (qua ID và PNG xuất) làm w
 | Footer / Trợ giúp / Thông tin kiểm toán          |
 +--------------------------------------------------+
 ```
+
+**Checklist gắn thủ công**
+- [Chèn wireframe/mockup của màn hình này]
+- [Bảo đảm mockup thể hiện đủ action, field, states, và vùng màn hình đã mô tả]
+- [Nếu supporting frames tồn tại, đính kèm thêm hoặc ghi rõ cách tham chiếu]
 
 | Tên trường (Field Name) | Loại trường (Field Type) | Mô tả (Description) |
 | --- | --- | --- |

@@ -7,7 +7,7 @@ This step requires:
 
 ## Step 8.2 - Capture design decisions and persist runtime DESIGN.md
 
-Before any AI agent generates wireframes, ask the user to make or approve the design decisions that define the project-specific runtime `DESIGN.md`.
+Before BA-kit prepares a wireframe handoff pack, ask the user to make or approve the design decisions that define the project-specific runtime `DESIGN.md`.
 
 Decision intake must cover:
 
@@ -47,15 +47,15 @@ Technical slice gate:
 
 - produce Group D only when integrations, NFR exposure, data modelling, API handoff, or vendor/governance needs justify it
 
-## Step 9 - Generate wireframes
+## Step 9 - Prepare manual wireframe handoff
 
 Run the standalone wireframe workflow from [wireframes.md](./wireframes.md), but keep the same slug, date, and module.
 
 Mode defaults inside the SRS pipeline:
 
-- `lite`: skip wireframes unless the user explicitly asks for them
-- `hybrid`: generate critical-screen wireframes first
-- `formal`: generate the full approved screen set
+- `lite`: skip wireframe handoff unless the user explicitly asks for it
+- `hybrid`: prepare critical-screen wireframe constraints first
+- `formal`: prepare the full approved screen set for manual wireframe handoff
 
 ## Step 10 - Produce final screen descriptions
 
@@ -63,12 +63,13 @@ After Step 9 resolves, expand final screen descriptions from:
 
 - Use Case Specifications
 - Screen Contract Lite
-- `paths.wireframe_map` when wireframe state is `completed`
+- `paths.wireframe_input` when the manual wireframe constraint pack exists
+- `paths.wireframe_map` when the manual handoff checklist exists
 - supporting frame inventory
 
-If wireframes are `skipped` or `not-applicable`, expand screen descriptions from use cases and Screen Contract Lite only, and keep Stitch MCP dependencies absent.
+If wireframes are `skipped` or `not-applicable`, expand screen descriptions from use cases and Screen Contract Lite only.
 
-If wireframe state is `completed` but `paths.wireframe_map` is missing, stop and rerun `wireframes` before expanding final screen descriptions.
+Do not block final screen descriptions on the user having already drawn or attached a mockup. Manual wireframe insertion into the final document is an out-of-band user action.
 
 Output: `paths.srs_group` with `group=e`
 

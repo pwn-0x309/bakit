@@ -47,10 +47,7 @@
     "wireframe_state": "plans/{slug}-{date}/03_modules/{module_slug}/wireframe-state.md",
     "compiled_frd": "plans/{slug}-{date}/04_compiled/compiled-frd.html",
     "compiled_srs": "plans/{slug}-{date}/04_compiled/compiled-srs.html",
-    "design_doc": "designs/{slug}/DESIGN.md",
-    "png_export": "designs/{slug}/exports/{artifact_name}/{screen_id}.png",
-    "stitch_state": "designs/{slug}/stitch-state.json",
-    "design_snapshot": "designs/{slug}/.design-snapshot.md"
+    "design_doc": "designs/{slug}/DESIGN.md"
   },
   "patterns": {
     "date_token": "^\\d{6}-\\d{4}$",

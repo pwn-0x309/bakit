@@ -32,8 +32,8 @@ Commands:
   check-prereq    Validate the exact prerequisite artifacts for a BA command.
   template-section  Print only the requested template group from templates/manifest.json.
   source-extract  Extract a source file into staged cache and optionally promote it into 00_source.
-  design-snapshot Generate designs/{slug}/.design-snapshot.md from designs/{slug}/DESIGN.md.
-  stitch-state    Manage designs/{slug}/stitch-state.json for Stitch-backed runs.
+  design-snapshot Legacy utility: generate a compact snapshot from designs/{slug}/DESIGN.md.
+  stitch-state    Legacy utility: manage old Stitch-backed state files.
   chunk-write     Append incoming STDIN safely to <target_file> for large artifact mitigation.
   status          Inspect BA-kit modular artifacts and delegated worker trackers from the registered source repo.
 EOF
@@ -459,14 +459,14 @@ print_wireframe_status_line() {
   local path="$1"
 
   if [[ ! -f "${path}" ]]; then
-    printf -- "- [!] wireframes — missing\n"
+    printf -- "- [!] wireframe handoff — missing\n"
     return
   fi
 
   local state
   state="$(read_md_field "${path}" "State")"
   [[ -n "${state}" ]] || state="unknown"
-  printf -- "- [!] wireframes — %s — %s\n" "${state}" "$(stat_mtime_pretty "${path}")"
+  printf -- "- [!] wireframe handoff — %s — %s\n" "${state}" "$(stat_mtime_pretty "${path}")"
 }
 
 print_json_state_line() {
@@ -843,7 +843,6 @@ doctor_command() {
   fi
   printf '\n'
 
-  doctor_mcp_check "Stitch MCP" "stitch" || warnings=$((warnings + 1))
   doctor_mcp_check "Notion MCP" "notion" || warnings=$((warnings + 1))
   printf '\n'
 
@@ -961,8 +960,6 @@ status_command() {
 
   printf '\n[Designs]\n'
   print_artifact_status_line "${repo}/$(render_contract_path "${repo}" "design_doc" "${slug}")" "designs/${slug}/DESIGN.md"
-  print_artifact_status_line "${repo}/$(render_contract_path "${repo}" "design_snapshot" "${slug}")" "designs/${slug}/.design-snapshot.md"
-  print_json_state_line "${repo}/$(render_contract_path "${repo}" "stitch_state" "${slug}")" "designs/${slug}/stitch-state.json"
   print_delegation_status "${repo}" "${slug}" "${date_token}"
 }
 
@@ -1129,7 +1126,7 @@ next_command() {
   fi
   if [[ -f "${wireframe_input_path}" && ! -f "${wireframe_state_path}" ]]; then
     printf 'Next command: ba-start wireframes --slug %s --module %s\n' "${slug}" "${module}"
-    printf 'Reason: wireframe input exists but wireframe state is missing.\n'
+    printf 'Reason: wireframe constraint pack exists but wireframe handoff state is missing.\n'
     return 0
   fi
   if [[ ! -f "${compiled_frd}" || ! -f "${compiled_srs}" ]]; then
@@ -1280,9 +1277,9 @@ design_snapshot_command() {
   repo="$(resolve_registered_repo)"
   slug="$(require_unique_slug "${repo}" "${slug}")"
   if [[ -z "${design_doc}" ]]; then
-    design_doc="${repo}/$(render_contract_path "${repo}" "design_doc" "${slug}")"
+    design_doc="${repo}/designs/${slug}/DESIGN.md"
   fi
-  output_path="${repo}/$(render_contract_path "${repo}" "design_snapshot" "${slug}")"
+  output_path="${repo}/designs/${slug}/.design-snapshot.md"
   python3 "${repo}/scripts/design-snapshot.py" --design-doc "${design_doc}" --output "${output_path}" --slug "${slug}"
 }
 
@@ -1339,7 +1336,7 @@ stitch_state_command() {
 
   repo="$(resolve_registered_repo)"
   slug="$(require_unique_slug "${repo}" "${slug}")"
-  state_path="${repo}/$(render_contract_path "${repo}" "stitch_state" "${slug}")"
+  state_path="${repo}/designs/${slug}/stitch-state.json"
 
   case "${subcommand}" in
     init)

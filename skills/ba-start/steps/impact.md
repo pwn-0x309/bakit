@@ -25,6 +25,7 @@ Run the change-impact triage path only. Do not mutate artifacts.
   - `paths.wireframe_input`
   - `paths.wireframe_map`
   - `paths.wireframe_state`
+  - `paths.design_doc`
   - `paths.plan` when it adds gate context
 
 ## Decision Rules
@@ -49,7 +50,7 @@ Impact anchors:
 - FRD: feature wording, workflows, business rules, integration points
 - user stories: story intent and acceptance criteria
 - SRS: use cases, Screen Contract Lite, validation rules, screen inventory, final screen descriptions
-- wireframe artifacts: screen-to-frame mapping, runtime `DESIGN.md` assumptions, wireframe state
+- wireframe artifacts: manual wireframe constraint pack, runtime `DESIGN.md` assumptions, handoff checklist, wireframe state
 
 ## Routing Rules
 
@@ -57,7 +58,7 @@ Impact anchors:
 - If the change touches feature scope, FR/NFR intent, actors, or acceptance-criteria intent, route to `backbone` first.
 - If the change stays within existing backbone intent but changes story wording or testable acceptance detail, route to `stories`.
 - If the change stays within existing backbone and story intent but changes use case flow, validation behavior, error states, or screen behavior, route to `srs`.
-- If the change affects screen inventory, state variants, navigation, overlays, or field interactions that wireframes must show, mark `ui-impact` and include `wireframes` after the required upstream rerun.
+- If the change affects screen inventory, state variants, navigation, overlays, or field interactions that manual wireframes must show, mark `ui-impact` and include `wireframes` after the required upstream rerun.
 - Never recommend `package` as the first remediation step after a real requirement change.
 
 ## Output

@@ -34,7 +34,7 @@ For non-trivial BA work, start from `skills/ba-start/SKILL.md` instead of improv
 Use agent roles under `agents/` when delegation improves quality or throughput.
 
 - `requirements-engineer` for backbone, FRD, stories, and selective SRS content
-- `ui-ux-designer` for wireframe generation
+- `ui-ux-designer` for wireframe constraint packs and manual handoff checklists
 - `ba-documentation-manager` for validation, quality review, and packaging
 - `ba-researcher` for domain research
 

@@ -31,10 +31,10 @@
       "E": {
         "headings": [
           "## Mô tả màn hình (Screen Descriptions)",
-          "## Tham chiếu Wireframe / Mockup (Wireframe / Mockup Reference)",
-          "## Ý đồ Wireframe (Wireframe Intent)",
+          "## Tham chiếu Wireframe / Mockup thủ công (Manual Wireframe / Mockup Reference)",
+          "## Ý đồ thiết kế màn hình (Screen Design Intent)",
           "## Vùng màn hình (Screen Regions)",
-          "## Wireframe Low-Fidelity (Low-Fidelity Wireframe)"
+          "## Hướng dẫn gắn wireframe thủ công (Manual Wireframe Attachment Guide)"
         ]
       },
       "F": {
@@ -78,7 +78,7 @@
     "groups": {
       "all": {
         "headings": [
-          "# Gói đầu vào wireframe (Wireframe Input Pack)"
+          "# Gói constraint wireframe (Wireframe Constraint Pack)"
         ]
       }
     }

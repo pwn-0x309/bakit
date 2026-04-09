@@ -17,8 +17,8 @@ BA-kit is optimized for a solo IT BA. The workflow should reduce duplicated writ
 6. Emit downstream artifacts from the backbone only when their gates are met
 7. Produce behavioral specifications only for complex or risky flows
 8. Produce technical specification slices only when integrations, NFR risk, or handoff needs justify them
-9. Capture user-approved design decisions and persist a project `DESIGN.md` before AI wireframe generation
-10. Generate wireframes only for critical or explicitly requested screens
+9. Capture user-approved design decisions and persist a project `DESIGN.md` before preparing any wireframe handoff pack
+10. Produce manual wireframe constraints and handoff checklists only for critical or explicitly requested screens
 11. Run quality review and package only the artifacts actually emitted for the engagement
 
 ## Agent Delegation
@@ -26,7 +26,7 @@ BA-kit is optimized for a solo IT BA. The workflow should reduce duplicated writ
 | Agent | Scope |
 | --- | --- |
 | `requirements-engineer` | Intake refinement, requirements backbone, FRD, user stories, selective SRS content |
-| `ui-ux-designer` | Stitch UI screens from SRS usage |
+| `ui-ux-designer` | Manual wireframe constraint pack and handoff checklist from SRS usage |
 | `ba-documentation-manager` | Validation pack, quality review, packaging, cross-references |
 | `ba-researcher` | Domain research, standards, market context |
 
@@ -66,7 +66,7 @@ BA-kit is optimized for a solo IT BA. The workflow should reduce duplicated writ
 - Delegation trackers for active sub-agent slices belong in `plans/{slug}-{date}/delegation/`.
 - Preserve traceability links between source, analysis, and final outputs.
 - Broken links and stale references must be corrected before handoff.
-- For UI-backed SRS work, persist a project-specific runtime `designs/{slug}/DESIGN.md` before Step 9 wireframe generation.
+- For UI-backed SRS work, persist a project-specific runtime `designs/{slug}/DESIGN.md` before Step 9 wireframe handoff preparation.
 - The `wireframe-input.md` and `wireframe-map.md` artifacts belong inside the specific module folder: `plans/{slug}-{date}/03_modules/{module_slug}/`.
 - Persist the backbone as `plans/{slug}-{date}/02_backbone/backbone.md`. This is the default authoring source for downstream artifact emission.
 - *Breaking Change:* Legacy report filenames (e.g., `plans/reports/final/*` or `002-intake-form.md`) are completely unsupported in the modular architecture. They must be migrated manually.
@@ -81,7 +81,7 @@ BA-kit is optimized for a solo IT BA. The workflow should reduce duplicated writ
 - **SRS (Module):** `.../03_modules/{module_slug}/srs.md`
 - **User stories (Module):** `.../03_modules/{module_slug}/user-stories.md`
 - **Compiled Outputs:** `plans/{slug}-{date}/04_compiled/compiled-frd.html` and `compiled-srs.html`
-- Wireframes: Stitch Project screens plus screen-level mapping in the SRS and exported PNGs
+- Wireframes: a manual wireframe constraint pack plus a handoff checklist for user-supplied mockups
 - Project runtime design system document: `designs/{slug}/DESIGN.md`
 - Supporting wireframe frames: use the parent screen ID prefix plus a stable suffix such as `SCR-01-EMPTY`, `SCR-01-ERROR`, or `SCR-01-TOAST-SUCCESS`
 - Modal/drawer/dialog overlays that affect flow should get their own primary `SCR-xx` IDs, not supporting-state suffix IDs
@@ -103,17 +103,17 @@ BA-kit is optimized for a solo IT BA. The workflow should reduce duplicated writ
 
 - Approve scope before deep analysis.
 - Build and review the backbone before emitting FRD, stories, SRS, or wireframes.
-- Before AI-generated wireframes, ask for or confirm project design decisions and persist them in `designs/{slug}/DESIGN.md`.
+- Before Step 9, ask for or confirm project design decisions and persist them in `designs/{slug}/DESIGN.md`.
 - Approve requirements before downstream production.
 - Once a mutating rerun step is explicitly approved, keep that step locked for the current run; do not reopen generic discovery or ask the user to restate the task unless command, slug, date, or overwrite approval became genuinely ambiguous.
 - `lite` mode should stop at intake + backbone + stories unless the user explicitly asks for more.
-- `hybrid` mode is the default for solo IT BA work: backbone + targeted FRD + stories + selective SRS + critical-screen wireframes when needed.
+- `hybrid` mode is the default for solo IT BA work: backbone + targeted FRD + stories + selective SRS + critical-screen wireframe constraints when needed.
 - `formal` mode should emit the full artifact set only when governance, vendor handoff, or regulatory needs require it.
-- **Cross-artifact consistency check before packaging:** UC steps, screen fields/actions, and wireframe labels must use identical terminology and describe the same behavior.
+- **Cross-artifact consistency check before packaging:** UC steps, screen fields/actions, and wireframe constraints or user-supplied mockup labels must use identical terminology and describe the same behavior.
 - Reusable cross-screen rules and standard messages should be centralized once in the SRS and referenced by code from individual screen descriptions to reduce duplication and drift.
 - Shared SRS codes should follow one convention only: `CR-{TYPE}-{NN}` for rules and `MSG-{TYPE}-{NN}` for messages; do not mix local ad-hoc formats inside the same artifact set.
-- Wireframe linkage must be screen-to-(Stitch)ProjectID and ScreenID. A single Stitch Project may cover multiple screens.
-- Supporting frames that are not expanded into full screen sections must still be captured in the SRS screen inventory and present in the Stitch Project state.
+- Manual wireframe linkage must be screen-to-screen ID and final SRS insertion point or external reference location.
+- Supporting frames that are not expanded into full screen sections must still be captured in the SRS screen inventory and present in the manual handoff checklist.
 - Modal and overlay screens that affect flow must be treated like first-class screens in traceability, not collapsed into supporting-state inventory entries.
 - Verify quality before handoff.
 - **SRS preflight gate:** once slug/date and prerequisites are resolved, start from the exact backbone and user-stories artifacts, and pull the FRD only when it exists or is explicitly required.

@@ -42,11 +42,11 @@ Apply the first matching rule:
 3. backbone exists and FRD is explicitly required but missing -> `ba-start frd --slug <slug>`
 4. backbone exists but user stories are missing -> `ba-start stories --slug <slug>`
 5. SRS is required and missing -> `ba-start srs --slug <slug>`
-6. wireframe-input exists and wireframe-state is missing while wireframes are required -> `ba-start wireframes --slug <slug>`
+6. wireframe-input exists and wireframe-state is missing while wireframe handoff is required -> `ba-start wireframes --slug <slug>`
 7. final markdown exists but required packaged HTML is missing -> `ba-start package --slug <slug>`
 8. everything required already exists -> `ba-start status --slug <slug>`
 
-When FRD/SRS/wireframes gates are unclear, explain the uncertainty and recommend `ba-start status --slug <slug>` instead of guessing.
+When FRD/SRS/wireframe-handoff gates are unclear, explain the uncertainty and recommend `ba-start status --slug <slug>` instead of guessing.
 </step>
 
 <step name="display">

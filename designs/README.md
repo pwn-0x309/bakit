@@ -1,18 +1,28 @@
 # Design Artifacts
 
-Use this directory for project runtime `DESIGN.md` rules and Stitch UI exports that support SRS screen specifications.
+Use this directory for project runtime `DESIGN.md` files.
 
-## Stitch MCP Default
+`DESIGN.md` is the global design-system and UI-governance document for a project. It is not the final mockup itself. BA-kit uses it to lock:
+- visual tone
+- colors and typography
+- layout principles
+- navigation and information architecture
+- shared components such as menu, header, footer, cards, forms, and tables
+- responsive behavior and anti-patterns
 
-Wireframes and UI layouts are generated using **Stitch MCP**. Local `.pen` offline layout files are deprecated.
+## Current flow
 
-- Generate UI variants via Stitch MCP `generate_screen_from_text` or `generate_variants`.
-- Maintain the state locally in `designs/{slug}/stitch-state.json`.
-- Export physical PNGs referencing the generated Screen IDs to `designs/{slug}/exports/{artifact-name}/{screen-id}.png`.
+BA-kit does not generate wireframes directly in the default flow.
+
+Instead:
+- `designs/{slug}/DESIGN.md` defines the global UI direction
+- `wireframe-input.md` defines screen-level constraints
+- `wireframe-map.md` tells the user where to attach the final mockup in the SRS
+- the user creates the actual wireframe/mockup manually or with an external tool
 
 ## Rules
 
-- Link each SRS screen section to the relevant Stitch Project ID and Screen ID.
-- Keep supporting state screen IDs aligned between the SRS screen inventory and Stitch variants (e.g. Empty State, Error State).
-- If a single Stitch Project covers multiple screens, list the covered screen IDs in the SRS and identify the target Screen ID per use-case.
-- Supporting frames may be inventory-only in the SRS, but they should still be present in the Stitch Project Cloud when needed for states such as empty data, errors, confirmations, or feedback messages.
+- Keep one `DESIGN.md` per project slug.
+- Treat `DESIGN.md` as the source of truth for shared UI patterns and global navigation.
+- Do not let module-level artifacts redefine shared components or the overall visual direction.
+- If a user-supplied mockup conflicts with `DESIGN.md`, update the BA artifacts deliberately instead of silently accepting visual drift.

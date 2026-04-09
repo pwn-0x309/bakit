@@ -80,9 +80,9 @@ create_workflow_ki() {
 3. Scope lock → Select mode (lite/hybrid/formal)
 4. Build requirements backbone (source of truth)
 5. Emit downstream artifacts only when gates are open:
-   - FRD, user stories, selective SRS, wireframes
-6. Wireframe generation from persisted input pack
-7. Final screen descriptions with wireframe map
+   - FRD, user stories, selective SRS, wireframe constraints
+6. Manual wireframe handoff preparation from persisted input pack
+7. Final screen descriptions with the wireframe handoff map
 8. Quality review and HTML packaging
 
 ## Prompt Patterns (Antigravity has no slash commands)
@@ -107,7 +107,7 @@ create_workflow_ki() {
 | Agent | Focus | Agent File |
 |-------|-------|------------|
 | requirements-engineer | Backbone, FRD, stories, SRS content | agents/requirements-engineer.md |
-| ui-ux-designer | Wireframe generation | agents/ui-ux-designer.md |
+| ui-ux-designer | Wireframe constraints and handoff checklist | agents/ui-ux-designer.md |
 | ba-documentation-manager | Quality, packaging, consistency | agents/ba-documentation-manager.md |
 | ba-researcher | Domain research | agents/ba-researcher.md |
 

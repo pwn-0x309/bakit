@@ -34,7 +34,7 @@ For non-trivial BA work, read `skills/ba-start/SKILL.md` first, then the contrac
 - `core/` contains the canonical contract and lightweight workflow references
 - `rules/` contains BA workflow and quality rules
 - `templates/` contains structured deliverable templates and template manifest
-- `designs/` contains project runtime `DESIGN.md` files plus `stitch-state.json` Stitch UI instances
+- `designs/` contains project runtime `DESIGN.md` files used as the design constraint source for manual wireframing
 - `agents/` contains BA specialization boundaries for delegation
 
 ## Routing Guide
@@ -53,7 +53,7 @@ When the user provides a short correction statement in an existing project conte
 - Backbone gates explain why each downstream artifact exists or is skipped.
 - Use cases cover primary and alternate flows when SRS exists.
 - Screen descriptions include navigation, validation, states, and traceability when UI exists.
-- Approved runtime `DESIGN.md` decisions are reflected in generated wireframes when UI exists.
+- Approved runtime `DESIGN.md` decisions are reflected in the wireframe constraint pack and any user-supplied wireframes when UI exists.
 - Recommendations tie back to business goals, risks, or value.
 
 ## Notes For Codex

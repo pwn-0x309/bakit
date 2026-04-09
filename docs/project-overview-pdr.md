@@ -11,7 +11,7 @@ Agent coding environments are usually optimized for software implementation. Bus
 - a single persisted source of truth before formal and Agile requirement artifacts are emitted
 - traceability from business goals to test cases
 - reusable templates for recurring deliverables
-- wireframe generation for UI-backed scope
+- wireframe constraint packs for UI-backed scope
 
 BA-kit closes that gap with a BA-first operating model.
 
@@ -32,7 +32,7 @@ BA-kit closes that gap with a BA-first operating model.
 | `agents/` | 4 specialized delegation roles for parallel execution |
 | `rules/` | Workflow and quality standards |
 | `templates/` | BA deliverable structures including the requirements backbone |
-| `designs/` | Stitch wireframe state for SRS screens, with screen ID mapping |
+| `designs/` | Project runtime `DESIGN.md` files that constrain manual wireframing and external design handoff |
 | `AGENTS.md` | Persistent Codex repository instructions |
 | `CLAUDE.md` | Claude Code project instructions |
 
@@ -43,7 +43,7 @@ BA-kit closes that gap with a BA-first operating model.
 - Intake normalization and gap analysis
 - Requirements backbone and gated requirements engineering (FRD, SRS)
 - User story generation
-- Critical-screen-first wireframe generation for UI-backed scope
+- Critical-screen-first wireframe constraint preparation for UI-backed scope
 - Quality review and packaging
 - Template-driven documentation
 

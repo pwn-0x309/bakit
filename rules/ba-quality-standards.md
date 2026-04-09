@@ -22,16 +22,16 @@ Related rules:
 - Cross-references are explicit and easy to follow.
 
 ## Cross-Artifact Consistency
-- Use cases, screen descriptions, and wireframes must describe the **same** behavior using **identical** terminology.
+- Use cases, screen descriptions, wireframe constraints, and any user-supplied wireframes must describe the **same** behavior using **identical** terminology.
 - Every detailed Use Case in the SRS must include a Process Flow (BPMN 2.0 with swimlanes) or Sequence Diagram (using Mermaid).
-- When wireframes are AI-generated, an approved project `DESIGN.md` must exist and the resulting frames must follow it consistently.
-- Screen Contract Lite must be sufficient to generate wireframes before final screen descriptions are written.
+- When wireframe support is requested, an approved project `DESIGN.md` must exist and the resulting manual handoff pack must follow it consistently.
+- Screen Contract Lite must be sufficient to prepare wireframe constraints before final screen descriptions are written.
 - UC actor actions must match screen User Actions — same wording, same sequence.
 - UC system responses must match screen field Behaviour Rules.
 - UC alternate flows must be reflected in screen Error/States.
 - Modal, dialog, drawer, and overlay screens with distinct interaction logic must be modeled as primary screens with their own detailed screen sections.
 - Supporting wireframe frames must reflect the parent screen's defined states and feedback rules, including empty, error, and message variants when applicable.
-- Field names must be identical across UC steps, screen field tables, and wireframe labels.
+- Field names must be identical across UC steps, screen field tables, and wireframe constraint labels or user-supplied mockup labels.
 - Screen field descriptions must separate `Display Rules`, `Behaviour Rules`, and `Validation Rules`.
 - `Display Rules` should capture how the field appears, including label, placeholder, visibility, defaults, formatting, and read-only state when relevant.
 - `Behaviour Rules` should capture what happens when the user interacts with the field, including navigation targets, modal openings, and dependent-field behavior.
@@ -41,16 +41,16 @@ Related rules:
 - `Rule Code` should use the format `CR-{TYPE}-{NN}` where `TYPE` is one of `DIS`, `BEH`, `VAL`, or `MIX`.
 - `Message Code` should use the format `MSG-{TYPE}-{NN}` where `TYPE` is one of `ERR`, `WRN`, `SUC`, or `INF`.
 - `NN` should be a 2-digit sequence that remains unique within the SRS and stable when the same shared rule or message is reused.
-- Each SRS screen must reference the correct Stitch Project ID and the exact Screen ID representing that screen.
-- Inventory-only supporting screens must still be listed in the SRS screen inventory and kept aligned with their Stitch Screen IDs.
+- Each SRS screen must reference the correct manual wireframe status and attachment location when a mockup is supplied.
+- Inventory-only supporting screens must still be listed in the SRS screen inventory and kept aligned with the wireframe handoff checklist.
 - User story acceptance criteria must be covered by UC postconditions and screen Validation Rules.
 - FRD features must be fully traceable through user stories into SRS requirements.
-- Final screen descriptions must be derived from and remain consistent with both the generated wireframes and the upstream use cases.
-- Wireframe styling, density, and component treatment must remain consistent with the approved `designs/{slug}/DESIGN.md`.
+- Final screen descriptions must be derived from and remain consistent with both the wireframe constraint pack and the upstream use cases.
+- Any user-supplied wireframe styling, density, and component treatment must remain consistent with the approved `designs/{slug}/DESIGN.md`.
 - When inconsistency is found, the upstream artifact (user story > use case > screen > wireframe) is the source of truth.
 
 ## Cross-Module Consistency (Teamwork Rules)
-- **Information Architecture (IA) & UX Baseline Conflict:** Để ngăn chặn xung đột logical khi nhiều BA làm wireframe ở các module khác nhau, danh sách Portals, Global Navigation (Menu) và phong cách UX định hướng bắt buộc phải được "khoá" (locked) ở bước chạy cấp hệ thống (System-Level) bên trong `02_backbone/feature-map.md` và file `designs/{slug}/DESIGN.md` tập trung.
+- **Information Architecture (IA) & UX Baseline Conflict:** Để ngăn chặn xung đột logical khi nhiều BA chuẩn bị wireframe handoff ở các module khác nhau, danh sách Portals, Global Navigation (Menu) và phong cách UX định hướng bắt buộc phải được "khoá" (locked) ở bước chạy cấp hệ thống (System-Level) bên trong `02_backbone/feature-map.md` và file `designs/{slug}/DESIGN.md` tập trung.
 - Mọi nhánh thư mục feature (ví dụ `03_modules/payment`) KHÔNG ĐƯỢC tự ý định nghĩa thêm Global Menu hay thay đổi phong cách UX. Mọi yêu cầu thay đổi UX/Menu phải được PR ngược về file `02_backbone` hoặc `DESIGN.md` để cả team review.
 - When working on a module feature branch (e.g., `03_modules/auth`), do not redefine global actors, feature maps, or system-level rules. Reference them strictly from `02_backbone`.
 - `Rule Codes` (`CR-***`) and `Message Codes` (`MSG-***`) must be unique across all modules. If redefining a shared rule, escalate to the `02_backbone` or manage naming boundaries carefully to avoid collisions when modules are compiled together.

@@ -14,7 +14,7 @@
 - Product / flow covered: [Phạm vi]
 - App type: [web-app | mobile-app]
 - Primary audience: [Người dùng chính]
-- This file is the system design document for AI wireframe generation in `designs/{slug}/`.
+- This file is the system design document for manual wireframe creation and external design handoff in `designs/{slug}/`.
 
 ## 1. Visual Theme & Atmosphere
 
@@ -96,10 +96,11 @@
 - Form adaptation: [Rule]
 - Minimum touch/interaction targets: [Rule]
 
-## 10. Agent Prompt Guide
+## 10. Design Handoff Guide
 
-- Use this file as the system design document before generating any wireframe for this project.
+- Use this file as the system design document before creating any manual wireframe or mockup for this project.
 - Follow the approved visual tone, color roles, typography rules, and component styling consistently across all frames.
 - Strictly adhere to the Portals & Navigation architecture. Make sure global menus and sitemaps are present and consistent in all screens of their respective portals.
 - Keep behavior aligned with use cases and Screen Contract Lite. Do not invent flows that are not documented.
 - Use Shadcn UI as the fallback component baseline only when this file leaves a detail unspecified.
+- When the final mockup is ready, the user must manually reference or insert it into the final SRS.

@@ -1,156 +1,182 @@
-# BA-kit - Nền Tảng Phân Tích Nghiệp Vụ Cơ Động (Cho AI Agents)
+# BA-kit
 
-BA-kit là một bộ công cụ phân tích nghiệp vụ (Business Analysis) dành cho môi trường agentic coding. Quên đi việc viết prompt nhắc nhở từng ly từng tí, BA-kit trang bị sẵn cho AI Agent mô hình quy trình chuẩn, các vai trò đặc vụ (agent roles), quy định xuất file (templates), và bộ luật thẩm định chất lượng.
+BA-kit là playbook Business Analysis cho môi trường AI agents như Claude Code, Codex, và Antigravity. Mục tiêu của repo này là biến agent thành một BA có quy trình rõ ràng, artifact có cấu trúc, và handoff đủ chuẩn để không phải “nhắc prompt thủ công” ở mỗi dự án.
 
-Hệ thống được thiết kế hoàn hảo để chạy nguyên bản (native) hoặc tích hợp chéo dự án trên 3 môi trường AI Agents chính: **Claude Code**, **Codex**, và **Antigravity**.
+## Flow hiện tại
 
----
+Lifecycle chuẩn của BA-kit:
 
-## Tính Năng Toàn Diện
+```text
+Raw input
+-> Intake + Gap Analysis
+-> Requirements Backbone
+-> FRD / Stories / SRS Core
+-> DESIGN.md + wireframe-input.md + wireframe-map.md
+-> User tự tạo mockup / wireframe
+-> Final SRS + HTML package
+```
 
-- **Automatic BA Routing**: Agent của bạn giờ đây hiểu ngôn ngữ tự nhiên. Việc của bạn chỉ là ra lệnh (VD: "Phân tích gap con app báo cáo này").
-- **Vòng Đời Hoàn Chỉnh (Lifecycle)**: Intake form $\rightarrow$ Gap analysis $\rightarrow$ Requirements Backbone $\rightarrow$ Stories / FRD $\rightarrow$ SRS $\rightarrow$ Wireframes. Bạn không lo bị thiếu sót luồng công việc.
-- **Triage Impact**: Đang phân tích mà mọc ra rule mới? Hệ thống chặn ngay để đánh giá rủi ro trước khi đè dữ liệu tào lao vào file dự án.
+Điểm quan trọng:
+- `/ba-start wireframes` vẫn giữ nguyên tên command để tương thích ngược.
+- Nhưng Step 9 không còn gọi MCP để generate UI.
+- Step 9 chỉ chuẩn bị bộ handoff cho wireframe thủ công:
+  - `designs/{slug}/DESIGN.md`
+  - `plans/{slug}-{date}/03_modules/{module_slug}/wireframe-input.md`
+  - `plans/{slug}-{date}/03_modules/{module_slug}/wireframe-map.md`
+  - `plans/{slug}-{date}/03_modules/{module_slug}/wireframe-state.md`
 
----
+## Vai trò từng artifact
 
-## Cơ Chế Làm Việc Nhóm (Teamwork & Modular Architecture)
+- `DESIGN.md`
+  Dùng để khóa design tổng thể: visual tone, màu sắc, typography, layout principles, navigation, menu/header/footer, component patterns, responsive rules, anti-patterns.
 
-Nền tảng BA-kit hoàn toàn hỗ trợ **Làm việc nhóm bằng Git** để giải quyết bài toán Framework bị chồng chéo khi có nhiều BA/Agent cùng phân tích một dự án. Hệ thống quản lý tài liệu được chia thành hai cấp độ (Tiers): **System-Level** và **Module-Level**.
+- `wireframe-input.md`
+  Dùng để khóa constraint ở mức màn hình/flow: màn hình nào phải có, state nào phải thể hiện, action/label nào là non-negotiable, layout/navigation constraints cụ thể.
 
-### 1. Phân chia thư mục
+- `wireframe-map.md`
+  Dùng làm checklist handoff: screen nào user phải tự vẽ, supporting states nào cần có, và sau khi vẽ xong thì phải attach hình/link vào đâu trong SRS.
 
-Toàn bộ báo cáo không ghi chung bừa bãi vào một chỗ nữa, mà tuân thủ định dạng module:
+- `SRS`
+  Là nơi chứa Use Case, Screen Contract Lite, Screen Inventory, và phần mô tả màn hình chi tiết. BA-kit/BA viết phần screen descriptions; user chỉ tự attach mockup thủ công vào section tương ứng.
+
+## Ai làm gì
+
+- BA-kit / BA:
+  - viết intake, backbone, FRD, stories, SRS core
+  - sinh `DESIGN.md`, `wireframe-input.md`, `wireframe-map.md`
+  - viết `Screen Descriptions` trong SRS
+
+- User / Designer:
+  - dựa trên `DESIGN.md`, `wireframe-input.md`, Use Case, Screen Contract Lite, Screen Inventory để tự tạo wireframe/mockup
+  - tự dán image/link/mockup vào đúng section trong SRS
+
+Mockup không phải source of truth. Source of truth vẫn là backbone, Use Case, Screen Contract Lite, Screen Inventory, và Screen Descriptions trong SRS.
+
+## Cấu trúc thư mục
+
 ```text
 plans/
   {slug}-{date}/
-    01_intake/      (System-Level: Dùng chung)
-    02_backbone/    (System-Level: Dùng chung)
-    03_modules/     (Module-Level: Sandbox của từng BA)
-      auth-flow/    (FRD, SRS tự do của BA 1)
-      payment-gw/   (FRD, SRS tự do của BA 2)
-    04_compiled/    (HTML Assembly chung)
+    01_intake/
+    02_backbone/
+    03_modules/
+      {module_slug}/
+        frd.md
+        user-stories.md
+        srs.md
+        srs-group-a.md
+        srs-group-b.md
+        srs-group-c.md
+        wireframe-input.md
+        wireframe-map.md
+        wireframe-state.md
+    04_compiled/
+
+designs/
+  {slug}/
+    DESIGN.md
 ```
 
-### 2. Quy Tắc Giao Việc Bằng Git (Branching)
+## Teamwork và modular architecture
 
-* Bắt đầu một Dự án, Lead BA hoặc AI sẽ chạy các bước tạo System-Level trước: `/ba-start intake` và `/ba-start backbone` thẳng trên nhánh `main`.
-* Các BA (hoặc Agents) khác khi bắt đầu làm tính năng nào thì tạo nhánh Git mới `feature/{module_slug}`.
-* Trái tim của cơ chế là tham số **`--module`**. Mọi lệnh thực thi phân tích chi tiết đều phải trỏ vào phân hệ:
-  ```bash
-  /ba-start srs --slug my-app --module auth-flow
-  /ba-start wireframes --slug my-app --module auth-flow
-  ```
+BA-kit hỗ trợ làm việc nhóm bằng Git theo 2 tầng:
+- System-level:
+  - `01_intake/`
+  - `02_backbone/`
+- Module-level:
+  - `03_modules/{module_slug}/`
 
-### 3. Quy Tắc Khoá Logic (System-Lock Rule)
+Quy tắc quan trọng:
+- Các module không được tự định nghĩa global navigation, portal actors, hay UX direction riêng.
+- Những quyết định dùng chung phải được khóa ở `02_backbone` và `designs/{slug}/DESIGN.md`.
+- `/ba-start wireframes --module ...` chỉ chuẩn bị constraint/handoff cho module đó; nó không tự sinh mockup.
 
-**Điều Tối Kỵ:** Khi làm việc chia nhánh, các Module phân hệ tuyệt đối **KHÔNG ĐƯỢC** tự ý sinh ra các Menu Navigation Cấp Toàn Cục (Global), đẻ thêm Portal Actor, hay tự vẽ ra Guideline UX mới (Light mode/Dark mode).
-* Toàn bộ Danh sách Portals, Master Navigation, và định hướng UX/UI Framework bắt buộc phải được quy hoạch ngay từ cấp độ `02_backbone` và file `designs/{slug}/DESIGN.md` trước khi các nhánh module được phép Generate Wireframe.
-* Mọi nhu cầu sinh thêm UX dùng chung đều phải Pull Request ngược về file Hệ thống để cả Team cùng Review. Hệ thống BA-kit sẽ coi `02_backbone` là nguồn duy nhất (Source of truth) khi quét kiểm tra xung đột (Cross-check Audit).
+## Cài đặt nhanh
 
----
+### Claude Code
 
-## Hướng Dẫn Cài Đặt Chi Tiết Cho 3 Môi Trường
+```bash
+git clone https://github.com/anhdam2/bakit.git
+cd bakit
+./install.sh
+```
 
-BA-kit hoạt động tốt nhất khi được gắn đúng cách vào nền tảng bạn sử dụng. Lưu ý, có 2 kiểu sử dụng chung:
-- **Dùng tại chỗ (In-situ):** Mở IDE / Terminal ngay thư mục BA-kit để thao tác thử nghiệm học hỏi.
-- **Tích hợp vào dự án khác (Cross-repo):** Mồi toàn bộ bộ tính năng BA-kit vào một mã nguồn dự án (Codebase) phần mềm có sẵn của công ty, để AI vừa Code vừa làm BA ở đó. (Xem hướng dẫn cụ thể ở bên dưới).
+Sau đó restart Claude Code. Claude sẽ dùng:
+- `CLAUDE.md`
+- `skills/`
+- `rules/`
+- `templates/`
+- shared core trong `~/.claude/ba-kit/`
 
----
+### Codex
 
-### 1. Dành cho Claude Code
+Mở repo này trực tiếp trong Codex là dùng được ngay qua `AGENTS.md`.
 
-Claude Code sở hữu cơ chế lệnh gạch chéo trực tiếp (Native Slash Commands như `/ba-start`). Để có sức mạnh này, bộ cài sẽ "bơm" BA-kit vào lõi `~/.claude/` của hệ thống.
+Nếu muốn cài bundle lâu dài:
 
-**Cách Cài Đặt Chung:**
-1. Tải BA-kit về một thư mục bất kỳ:
-   ```bash
-   git clone https://github.com/anhdam2/bakit.git
-   cd bakit
-   ```
-2. Chạy file installer:
-   ```bash
-   ./install.sh
-   ```
-   *Giải thích: Script sẽ tự động chép các folder `skills/`, `agents/`, `rules/`, `templates/` vào thư mục `~/.claude/` của ứng dụng và cập nhật tiện ích CLI `ba-kit` vào `~/.local/bin`.*
-3. Khởi động lại Claude Code.
-
-**Cách Tích Hợp Để Làm BA Trên Folder Dự Án Khác:**
-Vì toàn bộ công cụ đã được bơm vào máy tính ở bước cài đặt, nên bạn chỉ đem theo chất xám của BA-kit đi khắp nơi.
-1. Khởi chạy IDE và mở folder dự án phần mềm của bạn.
-2. Sao chép riêng tệp `CLAUDE.md` từ kho BA-kit bỏ vào gốc dự án của bạn (Tệp này giúp Claude tại dự án biết cần ứng xử như một BA).
-3. Triển khai lệnh tiếng Việt bình thường:
-   ```text
-   Phân tích yêu cầu quản lý nhân sự từ file docs/yeucau.pdf
-   ```
-   Hoặc gọi trực tiếp thông qua gạch chéo:
-   ```text
-   /ba-start
-   /ba-start backbone --slug hr-app
-   /ba-start status --slug hr-app
-   ```
-
----
-
-### 2. Dành cho Codex
-
-Codex tích hợp Agent tự nhiên dựa trên file bộ não `AGENTS.md` tại cấp độ cài đặt project (Project-level).
-
-**Cách Cài Đặt Chung:**
-Mở thư mục `BA-kit`, Codex sẽ tự nhìn thấy `AGENTS.md` và chạy được ngay.
-Tuy nhiên, nếu muốn Codex lưu mãi mãi vào não nó, hãy cài manifest:
 ```bash
 bash scripts/install-codex-ba-kit.sh
 ```
 
-**Cách Tích Hợp Để Làm BA Trên Folder Dự Án Khác (Cực kỳ quan trọng):**
-Khác với Claude, Codex cần một bộ tài liệu mang tính "di động" ngay trong thư mục đang code.
-1. Từ repo BA-kit gốc, hãy copy toan bộ hệ thư mục: `skills/`, `rules/`, `templates/` và đặc biệt là file `AGENTS.md` vào trực tiếp thư mục dự án của công ty bạn.
-2. Mở dự án đó trong Codex. Bộ định tuyến trong tệp `AGENTS.md` sẽ đánh thức tính năng BA.
-3. Gõ chat giao việc tự do để nó định tuyến:
-   ```text
-   Thêm yêu cầu audit log cho project warehouse-rfp
-   (*Hệ thống Codex lập tức tự tìm file skills và kích hoạt lệnh ba-start impact*)
+### Antigravity
 
-   Chạy xây dựng SRS đầy đủ cho ứng dụng này.
-   ```
-
----
-
-### 3. Dành cho Antigravity (Google DeepMind)
-
-Antigravity là nền tảng tối tân có khái niệm Bộ nhớ Kiến Thức (Knowledge Items - KIs), giúp nó quản lý luồng BA-kit xuyên qua nhiều phiên dự án mượt mà. Nó sử dụng tệp lệnh `GEMINI.md`.
-
-**Cách Cài Đặt Chung:**
-1. Khởi động terminal ở repo BA-kit, chạy lệnh cài đặt để Antigravity ghi bộ KI BA-kit vào não bộ `~/.gemini/antigravity/` của nó:
-   ```bash
-   bash scripts/install-antigravity-ba-kit.sh
-   ```
-2. Lệnh này cũng cài đặt CLI `ba-kit` (giống phần Claude) để bạn dễ nhận update.
-
-**Cách Tích Hợp Để Làm BA Trên Folder Dự Án Khác:**
-1. Nhờ bước ghi KI ở trên, Antigravity đã "nắm luật" BA-kit. 
-2. Mở IDE tại một dự án code mới tinh của bạn.
-3. Chỉ cần sao chép 2 tệp `GEMINI.md` và `AGENTS.md` vào gốc dự án mới này. Sự tồn tại của file `GEMINI.md` đóng vai trò "kích hoạt đánh thức" các KIs BA-kit của Antigravity. Nếu không copy sang, Antigravity sẽ chạy như 1 coder bình thường.
-4. (Nâng cao): Nếu dự án đó cần tùy biến mẫu FRD và SRS biểu mẫu của riêng công ty bạn, hãy copy thêm cụm `templates/` và `skills/` vào dự án đó để Antigravity ưu tiên theo format nội bộ (Workspace override).
-5. Gõ lệnh tự nhiên:
-   ```text
-   Đọc requirements trong docs/baocao.docx và chạy nguyên một quy trình full workflow.
-   ```
-   Hoặc can thiệp luồng:
-   ```text
-   Read skills/ba-start/SKILL.md and run impact cho slug warehouse-rfp.
-   ```
-
----
-
-## Nâng Cấp Hệ Thống
-
-Để dễ dàng nâng cấp bộ kĩ năng / templates từ GitHub theo thời gian:
-Mở terminal và gõ:
 ```bash
-ba-kit update
-ba-kit doctor
+bash scripts/install-antigravity-ba-kit.sh
 ```
 
-*(Lệnh cập nhật sẽ tự động tìm các hệ máy đang cài (Claude/Codex/Antigravity) và refresh chúng, giữ nguyên an toàn cho dữ liệu dự án của bạn).* 
+Script này:
+- cài CLI `ba-kit`
+- ghi installation manifest
+- tạo Knowledge Item workflow cho Antigravity dựa trên flow manual wireframe handoff hiện tại
+
+## Ví dụ sử dụng
+
+### Claude Code
+
+```text
+/ba-start
+/ba-start backbone --slug hr-app
+/ba-start srs --slug hr-app --module auth-flow
+/ba-start wireframes --slug hr-app --module auth-flow
+/ba-start status --slug hr-app
+```
+
+Ý nghĩa của bước `wireframes`:
+- hỏi/chốt `DESIGN.md` nếu cần
+- build `wireframe-input.md`
+- build `wireframe-map.md`
+- đánh dấu `wireframe-state.md`
+- không generate hình UI
+
+### Codex
+
+```text
+Use AGENTS.md and skills/ba-start/SKILL.md.
+Build the requirements backbone first, then emit FRD, stories, SRS core, and manual wireframe handoff artifacts.
+Do not generate wireframes directly. Let the user create and attach the final mockup manually.
+```
+
+### Antigravity
+
+```text
+Read skills/ba-start/SKILL.md and run srs for slug warehouse-rfp module auth-flow.
+Then run wireframes for the same target, but only prepare DESIGN.md, wireframe-input.md, and wireframe-map.md.
+The user will create and attach the mockup manually.
+```
+
+## Nâng cấp
+
+```bash
+ba-kit doctor
+ba-kit update
+```
+
+`ba-kit doctor` kiểm tra runtime readiness và `ba-kit update` sẽ refresh các runtime đã cài mà không đụng vào artifact dự án.
+
+## Tài liệu nên đọc tiếp
+
+- [Getting Started](docs/getting-started.md)
+- [Codex Setup](docs/codex-setup.md)
+- [Skill Catalog](docs/skill-catalog.md)
+- [BA Methodology Guide](docs/ba-methodology-guide.md)
+- [Design Artifacts](designs/README.md)

@@ -10,7 +10,7 @@ BA-kit can work with Codex as a repo-native BA operating guide. The root [AGENTS
 - `skills/` as reference playbooks for BA task types
 - `rules/` as BA quality and workflow constraints
 - `templates/` as deliverable structures
-- `designs/` for project-specific runtime `DESIGN.md` files and Stitch UI states and exported PNGs referenced by SRS screen sections
+- `designs/` for project-specific runtime `DESIGN.md` files used to constrain manual wireframe handoff
 
 ## Codex Conversion Install
 
@@ -62,7 +62,7 @@ Or ask Codex to run:
 1. Start with the business outcome or artifact you need.
 2. For freeform BA requests, use `ba-do` as the router first.
 3. Tell Codex to use the BA playbook for the resolved step.
-4. If UI is involved, point it at the relevant project `DESIGN.md` and Stitch `stitch-state.json` mappings in `designs/`.
+4. If UI is involved, point it at the relevant project `DESIGN.md` and the module `wireframe-input.md` / `wireframe-map.md` artifacts.
 5. Use `/ba-start` for full workflow runs and the matching explicit subcommand for reruns.
 6. For rerun commands, pass `--slug <slug>` when more than one project may exist.
 7. If one slug has multiple dated artifact sets, Codex should stop and ask which date to use instead of silently taking the latest set.
@@ -71,8 +71,8 @@ Or ask Codex to run:
 10. If the user sends only a short correction statement such as `Không có nhóm admin user`, treat it as change evidence for `impact`, not as permission to edit artifacts directly.
 11. Ask for assumptions, open questions, and a draft output.
 12. If you installed the Codex conversion, ask Codex to use `ba-do` from `~/.codex/skills/ba-do/SKILL.md` for freeform routing, `ba-start` from `~/.codex/skills/ba-start/SKILL.md` for explicit lifecycle execution, and the registered BA agents from `~/.codex/agents`.
-13. Unless you explicitly override it, BA-kit should use Shadcn UI as the default component baseline for wireframes and UI handoff.
-14. Before AI wireframes are generated, BA-kit should ask for or confirm the design decisions needed to persist the project runtime artifact `designs/{slug}/DESIGN.md`, then use that file as the system design document.
+13. Unless you explicitly override it, BA-kit should use Shadcn UI as the default component baseline for wireframe constraints and UI handoff.
+14. Before Step 9 is run, BA-kit should ask for or confirm the design decisions needed to persist the project runtime artifact `designs/{slug}/DESIGN.md`, then use that file as the system design document.
 15. Unless you explicitly override it, BA deliverables should be written in Vietnamese.
 16. Treat the dated artifact-set token as `YYMMDD-HHmm` across both report filenames and `plans/{date}-{slug}/plan.md`.
 17. When delegating, pass only narrow artifact slices and exact excerpts, not full upstream documents.
@@ -100,8 +100,8 @@ Use the installed `ba-do` skill from ~/.codex/skills/ba-do/SKILL.md.
 Route this BA request to the correct BA-kit command and then follow that workflow:
 "Parse the requirements in docs/raw/warehouse-rfp.pdf.
 Default to `hybrid` mode for a solo IT BA.
-Build the requirements backbone first, then emit FRD, user stories, use case specifications, Screen Contract Lite, wireframes, final screen descriptions, and FRD/SRS HTML only when each artifact is justified.
-If wireframes are needed, ask me for design decisions and persist `designs/{slug}/DESIGN.md` before Step 9."
+Build the requirements backbone first, then emit FRD, user stories, use case specifications, Screen Contract Lite, manual wireframe handoff artifacts, final screen descriptions, and FRD/SRS HTML only when each artifact is justified.
+If wireframe support is needed, ask me for design decisions and persist `designs/{slug}/DESIGN.md` before Step 9."
 ```
 
 ### Step-Level Rerun
@@ -110,7 +110,7 @@ If wireframes are needed, ask me for design decisions and persist `designs/{slug
 Use AGENTS.md and skills/ba-start/SKILL.md.
 Run the equivalent of `/ba-start wireframes --slug warehouse-rfp`.
 Use the existing Screen Contract Lite artifacts only.
-Reuse the existing `designs/{slug}/DESIGN.md` if it is approved, otherwise ask to refresh it before generating wireframes.
+Reuse the existing `designs/{slug}/DESIGN.md` if it is approved, otherwise ask to refresh it before preparing the manual wireframe handoff pack.
 If more than one dated set exists for `warehouse-rfp`, stop and ask me which date to use.
 Do not regenerate intake, FRD, or user stories.
 ```
@@ -179,7 +179,7 @@ Do not silently choose a slug or dated set by mtime.
 Use the installed ba-start skill from ~/.codex/skills/ba-start/SKILL.md.
 Use the registered Codex BA agents from ~/.codex/agents when the skill delegates work.
 Parse the requirements in docs/raw/warehouse-rfp.pdf.
-Produce an intake form, requirements backbone, gated FRD/stories/SRS artifacts, project runtime `DESIGN.md`, wireframes when justified, final screen descriptions, and the FRD/SRS HTML deliverables required by the selected mode.
+Produce an intake form, requirements backbone, gated FRD/stories/SRS artifacts, project runtime `DESIGN.md`, manual wireframe handoff artifacts when justified, final screen descriptions, and the FRD/SRS HTML deliverables required by the selected mode.
 ```
 
 ### Formal Requirements Only
@@ -188,7 +188,7 @@ Produce an intake form, requirements backbone, gated FRD/stories/SRS artifacts, 
 Use AGENTS.md and skills/ba-start/SKILL.md.
 Draft an SRS from templates/srs-template.md.
 Include use cases, screen descriptions, and linked requirements.
-Reference Stitch generated screens under designs/[initiative-slug]/ and identify the target screen ID for each screen.
+Make room for user-supplied wireframe references under each screen section instead of assuming BA-kit-generated mockups.
 ```
 
 ### Agile Story Breakdown
@@ -208,21 +208,21 @@ That means prompts should explicitly tell Codex which playbook to consult when t
 The root `AGENTS.md` carries the short non-negotiable defaults, but it does not replace the detailed routing and prerequisite logic in `skills/ba-start/SKILL.md`.
 For delegated BA work, resolve the workflow once in the orchestrator, then pass only the minimal handoff packet to each registered agent instead of replaying the entire playbook and merged artifact set every time.
 
-## Stitch For Codex
+## Wireframe Handoff For Codex
 
-Use Stitch only for wireframes in SRS-backed work:
-- persist or reuse `designs/{slug}/DESIGN.md` before generating wireframes
-- store `stitch-state.json` under `designs/` and extract exported PNGs
-- reference generated screen paths and IDs directly from the SRS
-- keep screen IDs aligned across the SRS and Stitch generated properties
+Use the default BA-kit flow for manual wireframe handoff in SRS-backed work:
+- persist or reuse `designs/{slug}/DESIGN.md` before preparing wireframe handoff artifacts
+- build or refresh `wireframe-input.md` and `wireframe-map.md`
+- keep screen IDs aligned across the SRS and the handoff artifacts
+- let the user create the actual wireframe externally and manually attach the result into the SRS
 
 ## HTML Deliverable
 
 The generated HTML set uses one shared BA-kit document shell. Open the packaged artifacts in a browser to update text, replace images, and add or remove blocks without editing the source HTML manually. SRS HTML remains the primary stakeholder handoff, while FRD HTML provides the aligned functional review copy. The `package` step should stay narrow by default: validate any existing packaged HTML artifacts, then regenerate FRD and SRS HTML only when those markdown artifacts exist.
 
-Wireframe images are constrained to a fit-to-document viewport by default so large screen exports remain readable inside the document, and clicking or double-clicking a wireframe opens a larger preview. Mermaid diagrams are bootstrapped explicitly after `DOMContentLoaded` so browser-opened stakeholder copies render them more reliably.
+If the user manually inserts wireframe images or links into the markdown source, the packaged HTML preserves those references. Mermaid diagrams are bootstrapped explicitly after `DOMContentLoaded` so browser-opened stakeholder copies render them more reliably.
 
-`/ba-start status` should report wireframes using the explicit state marker: `completed`, `skipped`, `not-applicable`, or `missing`, plus the persisted wireframe input pack and wireframe map when they exist. It should also surface delegated slice trackers and flag likely stalls from stale heartbeats.
+`/ba-start status` should report wireframe handoff using the explicit state marker: `completed`, `skipped`, `not-applicable`, or `missing`, plus the persisted wireframe input pack and wireframe map when they exist. It should also surface delegated slice trackers and flag likely stalls from stale heartbeats.
 
 ## Good Outcomes
 
@@ -230,4 +230,4 @@ You are set up correctly when Codex can:
 - follow `AGENTS.md` without extra repo explanation
 - read the BA playbook from `skills/ba-start/SKILL.md`
 - draft a structured artifact from `templates/`
-- reference Pencil wireframes from `designs/` at both artifact and frame level
+- reference manual wireframe handoff artifacts and user-supplied mockups consistently from the SRS

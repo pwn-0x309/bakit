@@ -47,7 +47,19 @@
     "wireframe_state": "plans/{slug}-{date}/03_modules/{module_slug}/wireframe-state.md",
     "compiled_frd": "plans/{slug}-{date}/04_compiled/compiled-frd.html",
     "compiled_srs": "plans/{slug}-{date}/04_compiled/compiled-srs.html",
-    "design_doc": "designs/{slug}/DESIGN.md"
+    "design_doc": "designs/{slug}/DESIGN.md",
+    "project_memory": "plans/{slug}-{date}/02_backbone/project-memory.md",
+    "memory_root": "plans/{slug}-{date}/02_backbone/project-memory",
+    "memory_index": "plans/{slug}-{date}/02_backbone/project-memory/index.md",
+    "memory_log": "plans/{slug}-{date}/02_backbone/project-memory/log.md",
+    "memory_hot": "plans/{slug}-{date}/02_backbone/project-memory/hot",
+    "memory_warm": "plans/{slug}-{date}/02_backbone/project-memory/warm",
+    "memory_cold": "plans/{slug}-{date}/02_backbone/project-memory/cold",
+    "memory_hot_vocabulary": "plans/{slug}-{date}/02_backbone/project-memory/hot/canonical-vocabulary.md",
+    "memory_hot_decisions": "plans/{slug}-{date}/02_backbone/project-memory/hot/approved-decisions.md",
+    "memory_hot_pushback": "plans/{slug}-{date}/02_backbone/project-memory/hot/pushback-triggers.md",
+    "memory_module_warm": "plans/{slug}-{date}/02_backbone/project-memory/warm/modules/{module_slug}.md",
+    "packet_root": "plans/{slug}-{date}/delegation/packets"
   },
   "patterns": {
     "date_token": "^\\d{6}-\\d{4}$",
@@ -202,5 +214,54 @@
   },
   "templates": {
     "manifest": "templates/manifest.json"
+  },
+  "memory": {
+    "compact_fallback": "active when only project_memory file exists and memory_root directory is absent",
+    "index_role": "bounded navigator routing to shards and modules; must not become a second monolith",
+    "log_role": "optional append-only chronology support; excluded from normal command reads",
+    "cold_default": "never loaded by default; only via explicit escalation",
+    "shard_tree_optional": true,
+    "migration_scope_excludes_roadmap_dirs": true
+  },
+  "activation": {
+    "levels": ["Base", "Modular", "Program"],
+    "default": "Base",
+    "provisional_until_fixture_validation": true,
+    "thresholds": {
+      "modular": {
+        "module_count_gte": 2,
+        "note": "OR owner_count >= 2"
+      },
+      "program": {
+        "cross_module_dependency": true,
+        "note": "OR delegation_slice_count >= 2, OR owner_count >= 2 AND delegation_slice_count >= 1"
+      }
+    },
+    "signals": {
+      "module_count": {
+        "source": "count module directories under paths.module_root parent",
+        "compact_fallback": 1
+      },
+      "owner_count": {
+        "source": "distinct owners declared in memory index/module metadata",
+        "compact_fallback": 1
+      },
+      "cross_module_dependency": {
+        "source": "explicit flag or listed dependency in memory index",
+        "compact_fallback": false
+      },
+      "delegation_slice_count": {
+        "source": "count active/queued trackers under paths.delegation_root, excluding archive",
+        "compact_fallback": 0
+      }
+    },
+    "lifecycle": {
+      "auto_escalation": true,
+      "auto_downgrade": false,
+      "downgrade_requires": "explicit activation refresh after archival or project simplification",
+      "threshold_locking": "locked only after fixture validation passes and provisional_until_fixture_validation is removed"
+    },
+    "persisted_state_path": "paths.memory_index",
+    "compact_fallback_state_path": "paths.project_memory"
   }
 }

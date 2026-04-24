@@ -5,6 +5,12 @@ This step requires:
 - `core/contract.yaml`
 - `core/contract-behavior.md`
 
+## Memory Read Scope
+
+- **Must read:** `core/contract.yaml`, `core/contract-behavior.md`
+- **May read:** `paths.project_memory` header fields, `paths.memory_index` (activation state + shard freshness)
+- **Must NOT read:** `log.md` (unless `--audit` flag), `warm/` shards, `cold/`
+
 ## Scope
 
 Inspect the selected project set and print a checklist with artifact status, last-modified date, and any active delegated worker slices.

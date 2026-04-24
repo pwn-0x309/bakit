@@ -32,9 +32,11 @@ If a message could match both `impact` and a direct edit, prefer `impact` unless
 - Use exact slug/date/module matching. Never choose by mtime.
 - Default to `hybrid` mode for solo IT BA work.
 - Treat the backbone as the source of truth after intake.
+- Treat `plans/{slug}-{date}/02_backbone/project-memory.md` as the persisted project memory layer (compact mode). In shard mode, navigate via `project-memory/index.md` first, then load only targeted hot/warm shards.
 - Keep module-scoped artifacts inside `plans/{slug}-{date}/03_modules/{module_slug}/`.
 - When UI-backed scope needs wireframe support, prepare a manual wireframe constraint pack and let the user create and attach the actual mockup themselves.
 - Use **incremental section-by-section writes** for large artifacts to avoid output token truncation.
+- Preserve the same HITL guarantees as the other runtimes: granular artifact intervention, active push-back on material ambiguity, and fail-closed routing instead of plausible guessing.
 
 ## Delivery Expectations
 

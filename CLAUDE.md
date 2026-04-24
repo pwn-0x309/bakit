@@ -15,9 +15,11 @@ For non-trivial BA work, start from `skills/ba-start/SKILL.md` instead of improv
 - Write BA deliverables in Vietnamese by default unless the user explicitly requests English.
 - Use exact slug/date/module resolution. Never choose by mtime.
 - Default to `hybrid` mode for solo IT BA work.
+- Treat `plans/{slug}-{date}/02_backbone/project-memory.md` as persisted project memory; do not rely on Claude chat memory as the system of record.
 - Route requirement changes through `impact` before mutating downstream artifacts unless the edit is clearly wording-only.
 - Keep the accepted rerun step locked once the user explicitly approves it.
 - Use **incremental section-by-section writes** for large artifacts to avoid output token truncation.
+- Apply runtime-neutral HITL behavior: granular artifact intervention, active push-back on material ambiguity, and fail-closed routing instead of plausible guessing.
 
 ## Artifact Model
 
@@ -25,9 +27,12 @@ For non-trivial BA work, start from `skills/ba-start/SKILL.md` instead of improv
 - Intake: `01_intake/intake.md`
 - Plan: `01_intake/plan.md`
 - Backbone: `02_backbone/backbone.md`
+- Project memory (compact): `02_backbone/project-memory.md`
+- Project memory (shard tree, optional): `02_backbone/project-memory/` — index, hot shards, warm module shards, cold archive, log
 - Module artifacts: `03_modules/{module_slug}/`
 - Compiled HTML: `04_compiled/`
 - Delegation trackers: `delegation/`
+- Delegation packets: `delegation/packets/`
 
 ## Delegation
 

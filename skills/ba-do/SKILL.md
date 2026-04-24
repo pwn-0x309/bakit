@@ -21,9 +21,7 @@ Use this command when you know what you want to do in a BA workflow but do not k
 ```
 
 <execution_context>
-@$HOME/.claude/ba-kit/workflows/do.md
-@$HOME/.claude/ba-kit/contract.yaml
-@$HOME/.claude/ba-kit/contract-behavior.md
+Read `core/workflows/do.md`, `core/contract.yaml`, `core/contract-behavior.md` from the repo root.
 </execution_context>
 
 <context>
@@ -31,6 +29,6 @@ $ARGUMENTS
 </context>
 
 <process>
-Execute the BA routing workflow from @$HOME/.claude/ba-kit/workflows/do.md end-to-end.
+Execute the BA routing workflow from `core/workflows/do.md` end-to-end.
 Dispatch to `ba-impact`, `ba-next`, `ba-start`, or `ba-notion`.
 </process>

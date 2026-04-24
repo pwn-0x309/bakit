@@ -50,6 +50,52 @@ for template_name, info in manifest.items():
                 )
 PY
 
+python3 - "${ROOT_DIR}/core/contract.yaml" <<'PY'
+import json
+import sys
+from pathlib import Path
+
+contract_path = Path(sys.argv[1])
+contract = json.loads(contract_path.read_text(encoding="utf-8"))
+activation = contract.get("activation", {})
+signals = set(activation.get("signals", {}))
+thresholds = activation.get("thresholds", {})
+operators = {"gte", "equals"}
+
+
+def validate_rule(rule, path):
+    if not isinstance(rule, dict):
+        raise SystemExit(f"Activation threshold rule must be an object: {path}")
+
+    branch_keys = {"any_of", "all_of"} & set(rule)
+    if branch_keys:
+        if len(branch_keys) != 1 or len(rule) != 1:
+            raise SystemExit(f"Activation threshold branch must contain only one branch key: {path}")
+        key = next(iter(branch_keys))
+        children = rule[key]
+        if not isinstance(children, list) or not children:
+            raise SystemExit(f"Activation threshold branch must be a non-empty list: {path}.{key}")
+        for index, child in enumerate(children):
+            validate_rule(child, f"{path}.{key}[{index}]")
+        return
+
+    required = {"signal", "operator", "value"}
+    if set(rule) != required:
+        raise SystemExit(f"Activation threshold leaf must contain exactly signal/operator/value: {path}")
+    if rule["signal"] not in signals:
+        raise SystemExit(f"Activation threshold references unknown signal '{rule['signal']}': {path}")
+    if rule["operator"] not in operators:
+        raise SystemExit(f"Activation threshold uses unsupported operator '{rule['operator']}': {path}")
+    if rule["operator"] == "gte" and (not isinstance(rule["value"], (int, float)) or isinstance(rule["value"], bool)):
+        raise SystemExit(f"Activation threshold gte value must be numeric: {path}")
+
+
+for level in ("modular", "program"):
+    if level not in thresholds:
+        raise SystemExit(f"Missing activation threshold level: {level}")
+    validate_rule(thresholds[level], f"activation.thresholds.{level}")
+PY
+
 python3 -m py_compile \
   "${ROOT_DIR}/scripts/source-extract.py" \
   "${ROOT_DIR}/scripts/design-snapshot.py" \

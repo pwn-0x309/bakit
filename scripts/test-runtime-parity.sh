@@ -13,7 +13,7 @@
 #   2. A replay driver that submits each fixture's Input Command to the runtime
 #   3. A normalizer that maps raw runtime output to the Behavior Envelope table format
 #   4. A diff engine that compares normalized output against the golden file
-# Until those adapters exist, all checks report PENDING.
+# Until those adapters exist, fixture execution reports PENDING.
 
 set -e
 
@@ -32,6 +32,10 @@ f04:f04-explicit-ba-start-step.md:g04-explicit-ba-start-step.md:Explicit ba-star
 f05:f05-compact-fallback-missing-index.md:g05-compact-fallback-missing-index.md:Compact fallback on missing index.md
 "
 
+REGISTRY_FILE="${TMPDIR:-/tmp}/ba-kit-runtime-parity-fixtures.$$"
+trap 'rm -f "$REGISTRY_FILE"' EXIT HUP INT TERM
+printf '%s\n' "$FIXTURES" | sed '/^$/d' > "$REGISTRY_FILE"
+
 usage() {
     cat <<EOF
 Usage: $(basename "$0") [OPTIONS] [fixture-id]
@@ -43,8 +47,9 @@ Options:
   (no args)           Run all fixtures
 
 Exit codes:
-  0  All checks pass (or all PENDING with structure intact)
+  0  All parity checks pass
   1  Structure missing, golden absent, or parity failure detected
+  2  Parity pending because runtime adapters are not implemented
 EOF
 }
 
@@ -66,7 +71,7 @@ check_structure() {
         echo "  OK:   $GOLDENS_DIR"
     fi
 
-    echo "$FIXTURES" | grep -v '^$' | while IFS=: read -r id fixture golden desc; do
+    while IFS=: read -r id fixture golden desc; do
         fpath="$FIXTURES_DIR/$fixture"
         gpath="$GOLDENS_DIR/$golden"
         if [ ! -f "$fpath" ]; then
@@ -81,7 +86,7 @@ check_structure() {
         else
             echo "  OK:   golden $id: $golden"
         fi
-    done
+    done < "$REGISTRY_FILE"
 
     if [ "$failed" -eq 0 ]; then
         echo "Structure OK."
@@ -97,7 +102,7 @@ list_fixtures() {
     echo ""
     printf "  %-6s %-45s %s\n" "ID" "Fixture File" "Description"
     printf "  %-6s %-45s %s\n" "------" "---------------------------------------------" "-----------"
-    echo "$FIXTURES" | grep -v '^$' | while IFS=: read -r id fixture golden desc; do
+    while IFS=: read -r id fixture golden desc; do
         gpath="$GOLDENS_DIR/$golden"
         if [ -f "$gpath" ]; then
             status="golden present"
@@ -105,16 +110,26 @@ list_fixtures() {
             status="GOLDEN MISSING"
         fi
         printf "  %-6s %-45s %s [%s]\n" "$id" "$fixture" "$desc" "$status"
-    done
+    done < "$REGISTRY_FILE"
 }
 
-# Stub runner: checks golden exists, reports PENDING for actual parity.
-# Replace this function body with runtime adapter calls when adapters are ready.
+run_fixture_parity() {
+    # Args: fixture id, fixture description.
+    # Replace this function body with runtime adapter calls when adapters are ready.
+    # The main dispatcher already supports 0=pass, 1=fail, and 2=pending.
+    echo "  Claude Code  : PENDING (runtime adapter not yet implemented)"
+    echo "  Codex        : PENDING (runtime adapter not yet implemented)"
+    echo "  Antigravity  : PENDING (runtime adapter not yet implemented)"
+    return 2
+}
+
+# Checks fixture/golden availability and returns aggregate parity status.
 run_fixture() {
     target_id="$1"
     matched=0
+    status=0
 
-    echo "$FIXTURES" | grep -v '^$' | while IFS=: read -r id fixture golden desc; do
+    while IFS=: read -r id fixture golden desc; do
         if [ "$target_id" != "ALL" ] && [ "$id" != "$target_id" ]; then
             continue
         fi
@@ -128,30 +143,39 @@ run_fixture() {
 
         if [ ! -f "$fpath" ]; then
             echo "  ERROR: fixture file not found: $fpath"
-            exit 1
+            return 1
         fi
 
         if [ ! -f "$gpath" ]; then
             echo "  ERROR: golden file not found: $gpath"
             echo "  Cannot verify parity without a golden contract."
-            exit 1
+            return 1
         fi
 
-        # Actual parity check is PENDING until runtime adapters are implemented.
-        # When adapters exist, this block should:
-        #   1. Submit fixture Input Command to each runtime
-        #   2. Normalize raw output to Behavior Envelope table format
-        #   3. Diff normalized output against golden Behavior Envelope
-        #   4. Report PASS / FAIL per runtime
-        echo "  Claude Code  : PENDING (runtime adapter not yet implemented)"
-        echo "  Codex        : PENDING (runtime adapter not yet implemented)"
-        echo "  Antigravity  : PENDING (runtime adapter not yet implemented)"
-    done
+        if run_fixture_parity "$id" "$desc"; then
+            fixture_status=0
+        else
+            fixture_status=$?
+        fi
+
+        if [ "$fixture_status" -eq 1 ]; then
+            status=1
+        elif [ "$fixture_status" -eq 2 ]; then
+            if [ "$status" -eq 0 ]; then
+                status=2
+            fi
+        elif [ "$fixture_status" -ne 0 ]; then
+            echo "  ERROR: unexpected parity status for $id: $fixture_status"
+            status=1
+        fi
+    done < "$REGISTRY_FILE"
 
     if [ "$matched" -eq 0 ] && [ "$target_id" != "ALL" ]; then
         echo "ERROR: unknown fixture id '$target_id'. Use --list to see available fixtures."
-        exit 1
+        return 1
     fi
+
+    return "$status"
 }
 
 # Main dispatch
@@ -171,16 +195,28 @@ case "${1:-}" in
     "")
         check_structure || exit 1
         echo ""
-        run_fixture ALL
+        if run_fixture ALL; then
+            fixture_status=0
+        else
+            fixture_status=$?
+        fi
         echo ""
-        echo "All fixture checks complete. Status: PENDING (runtime adapters not implemented)."
-        echo "NOTE: Exiting 2 — parity not verified yet. 0=pass, 1=structural error, 2=pending."
-        exit 2
+        if [ "$fixture_status" -eq 0 ]; then
+            echo "All fixture checks complete. Status: PASS."
+        elif [ "$fixture_status" -eq 2 ]; then
+            echo "All fixture checks complete. Status: PENDING (runtime adapters not implemented)."
+            echo "NOTE: Exiting 2 - parity not verified yet. 0=pass, 1=structural error, 2=pending."
+        fi
+        exit "$fixture_status"
         ;;
-    f0[0-9])
+    f[0-9]*)
         check_structure || exit 1
-        run_fixture "$1"
-        exit 2
+        if run_fixture "$1"; then
+            fixture_status=0
+        else
+            fixture_status=$?
+        fi
+        exit "$fixture_status"
         ;;
     *)
         echo "Unknown option: $1"

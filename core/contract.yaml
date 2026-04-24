@@ -230,12 +230,46 @@
     "provisional_until_fixture_validation": true,
     "thresholds": {
       "modular": {
-        "module_count_gte": 2,
-        "note": "OR owner_count >= 2"
+        "any_of": [
+          {
+            "signal": "module_count",
+            "operator": "gte",
+            "value": 2
+          },
+          {
+            "signal": "owner_count",
+            "operator": "gte",
+            "value": 2
+          }
+        ]
       },
       "program": {
-        "cross_module_dependency": true,
-        "note": "OR delegation_slice_count >= 2, OR owner_count >= 2 AND delegation_slice_count >= 1"
+        "any_of": [
+          {
+            "signal": "cross_module_dependency",
+            "operator": "equals",
+            "value": true
+          },
+          {
+            "signal": "delegation_slice_count",
+            "operator": "gte",
+            "value": 2
+          },
+          {
+            "all_of": [
+              {
+                "signal": "owner_count",
+                "operator": "gte",
+                "value": 2
+              },
+              {
+                "signal": "delegation_slice_count",
+                "operator": "gte",
+                "value": 1
+              }
+            ]
+          }
+        ]
       }
     },
     "signals": {

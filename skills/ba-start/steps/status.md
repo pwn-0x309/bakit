@@ -46,6 +46,11 @@ Date set: {date}
 [Designs]
 - [ ] designs/{slug}/DESIGN.md — missing
 - [!] wireframe handoff — skipped — 2026-03-26
+
+[Memory]
+- [x] 02_backbone/project-memory.md — 2026-03-26
+- [x] 02_backbone/project-memory/index.md — 2026-03-26
+- [ ] delegation/packets — not initialized
 ```
 
 Status rules:
@@ -53,4 +58,5 @@ Status rules:
 - For regular artifacts, print `exists` or `missing` with the last-modified date when present.
 - For wireframe handoff, print the explicit wireframe state plus the marker date.
 - When wireframe handoff is `completed`, also list the detected runtime design file, wireframe input pack, and wireframe map.
+- Print compact memory, shard index, activation, owner, freshness, file-back, and packet registry metadata from `paths.project_memory` and `paths.memory_index` only.
 - For delegated slices under `paths.delegation_root`, print the tracker state directly and mark `likely stalled` when the last heartbeat exceeds `states.stall_after_minutes`.

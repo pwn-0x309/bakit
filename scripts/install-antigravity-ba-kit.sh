@@ -123,6 +123,10 @@ create_workflow_ki() {
 | Design system | templates/design-md-template.md |
 | Wireframe input | templates/wireframe-input-template.md |
 | Wireframe map | templates/wireframe-map-template.md |
+| Project memory summary | templates/project-memory-template.md |
+| Project memory index | templates/project-memory-index-template.md |
+| Memory packet | templates/memory-packet-template.md |
+| File-back record | templates/project-memory-fileback-record-template.md |
 
 ## Defaults
 
@@ -131,6 +135,8 @@ create_workflow_ki() {
 - Mode: hybrid
 - UI baseline: Shadcn UI (unless DESIGN.md overrides)
 - Canonical contract: core/contract.yaml + core/contract-behavior.md
+- Memory: compact `project-memory.md` by default; shard mode navigates via `project-memory/index.md` first
+- Delegation: pass bounded packets, not full memory trees or merged artifacts
 KIEOF
 }
 

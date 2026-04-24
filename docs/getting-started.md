@@ -137,10 +137,10 @@ Instead:
 3. For freeform BA requests, tell Codex to use `skills/ba-do/SKILL.md` first
 4. Tell Codex to use `skills/ba-start/SKILL.md` when the lifecycle step is explicit
 5. Point Codex to the correct template under `templates/`
-6. If you have the Codex-converted bundle, run `bash scripts/install-codex-ba-kit.sh` once to copy the skill and agents into `~/.codex` and register Codex agents in `~/.codex/config.toml`
+6. If you have the Codex-converted bundle, run `bash scripts/install-codex-ba-kit.sh` once to copy the skills, agents, templates, and core contract into `~/.codex`, then register Codex agents in `~/.codex/config.toml`
 7. If you use the installer, make sure `node` is available because the registration step runs on Node.js
 8. The installer also records the source repo for the shared update command `ba-kit update`
-9. The Codex installer also copies shared BA workflows and references into `~/.codex/ba-kit/`
+9. The Codex installer also copies shared BA workflows and contract references into `~/.codex/ba-kit/`
 
 ### Codex Example
 

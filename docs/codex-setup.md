@@ -29,6 +29,7 @@ It copies those files into:
 
 - `~/.codex/skills`
 - `~/.codex/agents`
+- `~/.codex/templates`
 - `~/.codex/ba-kit`
 
 It also appends any missing Codex agent registrations into `~/.codex/config.toml` in an idempotent way, so rerunning the script is safe.

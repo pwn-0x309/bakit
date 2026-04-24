@@ -127,10 +127,15 @@ read_md_field() {
 
   awk -v target_field="${field}" '
     BEGIN {
-      target = "- " target_field
+      list_target = "- " target_field ": "
+      bold_target = "**" target_field ":** "
     }
-    index($0, target ": ") == 1 {
-      print substr($0, length(target) + 3)
+    index($0, list_target) == 1 {
+      print substr($0, length(list_target) + 1)
+      exit
+    }
+    index($0, bold_target) == 1 {
+      print substr($0, length(bold_target) + 1)
       exit
     }
   ' "${path}"
@@ -480,6 +485,93 @@ print_json_state_line() {
   fi
 }
 
+print_index_table_section() {
+  local index_path="$1"
+  local heading="$2"
+
+  awk -v heading="${heading}" '
+    $0 == heading {
+      in_section = 1
+      next
+    }
+    in_section && /^## / {
+      exit
+    }
+    in_section && /^\|/ && $0 !~ /^\|[[:space:]-]+\|/ {
+      if (!seen_table) {
+        seen_table = 1
+        next
+      }
+      if ($0 ~ /\[[^]]+\]/) {
+        next
+      }
+      print "  " $0
+    }
+  ' "${index_path}"
+}
+
+print_memory_status() {
+  local repo="$1"
+  local slug="$2"
+  local date_token="$3"
+  local compact_path memory_root index_path packet_root packet_count
+  local activation_level activation_status activation_refresh activation_signals last_runtime last_refresh
+  local owner_rows health_rows fileback_rows packet_rows
+
+  compact_path="${repo}/$(render_contract_path "${repo}" "project_memory" "${slug}" "${date_token}")"
+  memory_root="${repo}/$(render_contract_path "${repo}" "memory_root" "${slug}" "${date_token}")"
+  index_path="${repo}/$(render_contract_path "${repo}" "memory_index" "${slug}" "${date_token}")"
+  packet_root="${repo}/$(render_contract_path "${repo}" "packet_root" "${slug}" "${date_token}")"
+
+  printf '\n[Memory]\n'
+
+  if [[ -f "${compact_path}" ]]; then
+    printf -- "- [x] 02_backbone/project-memory.md — %s\n" "$(stat_mtime_pretty "${compact_path}")"
+    activation_level="$(read_md_field "${compact_path}" "Activation Level")"
+    last_runtime="$(read_md_field "${compact_path}" "Host runtime gần nhất (Last Runtime)")"
+    last_refresh="$(read_md_field "${compact_path}" "Nguồn làm mới gần nhất (Last Refresh Source)")"
+    [[ -n "${activation_level}" ]] && printf -- "  activation: %s\n" "${activation_level}"
+    [[ -n "${last_runtime}" ]] && printf -- "  last runtime: %s\n" "${last_runtime}"
+    [[ -n "${last_refresh}" ]] && printf -- "  last refresh source: %s\n" "${last_refresh}"
+  else
+    printf -- "- [ ] 02_backbone/project-memory.md — missing\n"
+  fi
+
+  if [[ -d "${memory_root}" ]]; then
+    if [[ -f "${index_path}" ]]; then
+      printf -- "- [x] 02_backbone/project-memory/index.md — %s\n" "$(stat_mtime_pretty "${index_path}")"
+      activation_level="$(read_md_field "${index_path}" "Activation Level")"
+      activation_status="$(read_md_field "${index_path}" "Activation Status")"
+      activation_refresh="$(read_md_field "${index_path}" "Last Activation Refresh")"
+      activation_signals="$(read_md_field "${index_path}" "Computed Signals")"
+      [[ -n "${activation_level}" ]] && printf -- "  activation: %s\n" "${activation_level}"
+      [[ -n "${activation_status}" ]] && printf -- "  activation status: %s\n" "${activation_status}"
+      [[ -n "${activation_refresh}" ]] && printf -- "  activation refreshed: %s\n" "${activation_refresh}"
+      [[ -n "${activation_signals}" ]] && printf -- "  signals: %s\n" "${activation_signals}"
+
+      owner_rows="$(print_index_table_section "${index_path}" "## Owner Metadata")"
+      [[ -n "${owner_rows}" ]] && printf -- "  owner metadata:\n%s\n" "${owner_rows}"
+      health_rows="$(print_index_table_section "${index_path}" "## Shard Health")"
+      [[ -n "${health_rows}" ]] && printf -- "  shard freshness:\n%s\n" "${health_rows}"
+      fileback_rows="$(print_index_table_section "${index_path}" "## File-Back Promotions")"
+      [[ -n "${fileback_rows}" ]] && printf -- "  file-back promotions:\n%s\n" "${fileback_rows}"
+      packet_rows="$(print_index_table_section "${index_path}" "## Packet Registry")"
+      [[ -n "${packet_rows}" ]] && printf -- "  packet registry:\n%s\n" "${packet_rows}"
+    else
+      printf -- "- [!] 02_backbone/project-memory/index.md — missing; compact fallback required\n"
+    fi
+  else
+    printf -- "- [ ] 02_backbone/project-memory/ — not initialized\n"
+  fi
+
+  if [[ -d "${packet_root}" ]]; then
+    packet_count="$(find "${packet_root}" -maxdepth 1 -type f -name '*.md' | wc -l | tr -d ' ')"
+    printf -- "- [x] delegation/packets — %s packet(s)\n" "${packet_count}"
+  else
+    printf -- "- [ ] delegation/packets — not initialized\n"
+  fi
+}
+
 delegation_icon() {
   local display_status="$1"
 
@@ -752,6 +844,7 @@ doctor_command() {
   local installations installation_count unique_repos repo_count repo runtime manifest_path source_state
   local local_bin_cli="${HOME}/.local/bin/ba-kit"
   local repo_resolved=0
+  local script_repo source_check_repo
   local update_result update_status update_local_head update_remote_head update_upstream_ref
 
   printf 'BA-kit Doctor\n\n'
@@ -764,10 +857,6 @@ doctor_command() {
 
   doctor_file_check "shared CLI" "${local_bin_cli}" "optional" || failures=$((failures + 1))
   doctor_file_check "installation manifest dir" "${MANIFEST_DIR}" "optional" || failures=$((failures + 1))
-  doctor_file_check "Claude installer" "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/install.sh" "required" || failures=$((failures + 1))
-  doctor_file_check "Codex installer" "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/scripts/install-codex-ba-kit.sh" "required" || failures=$((failures + 1))
-  doctor_file_check "Antigravity installer" "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/scripts/install-antigravity-ba-kit.sh" "required" || failures=$((failures + 1))
-  doctor_file_check "HTML renderer" "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/scripts/md-to-html.py" "required" || failures=$((failures + 1))
   printf '\n'
 
   installations="$(collect_installations)"
@@ -799,6 +888,7 @@ doctor_command() {
     if [[ "${repo_count}" -eq 1 ]]; then
       repo="$(printf '%s\n' "${unique_repos}" | sed '/^$/d' | head -n 1)"
       repo_resolved=1
+      BA_KIT_DOCTOR_REPO="${repo}"
       if git -C "${repo}" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
         doctor_ok "registered source repo is a git worktree: ${repo}"
         source_state="$(git -C "${repo}" status --short || true)"
@@ -819,7 +909,30 @@ doctor_command() {
     fi
   fi
 
+  script_repo="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+  source_check_repo=""
   if [[ "${repo_resolved}" -eq 1 ]]; then
+    source_check_repo="${repo}"
+  elif [[ -f "${script_repo}/core/contract.yaml" ]]; then
+    source_check_repo="${script_repo}"
+    doctor_warn "no registered source repo resolved; checking source files relative to running script"
+    warnings=$((warnings + 1))
+  else
+    doctor_warn "source repo not resolved; skipping installer and renderer file checks"
+    warnings=$((warnings + 1))
+  fi
+
+  if [[ -n "${source_check_repo}" ]]; then
+    doctor_file_check "Claude installer" "${source_check_repo}/install.sh" "required" || failures=$((failures + 1))
+    doctor_file_check "Codex installer" "${source_check_repo}/scripts/install-codex-ba-kit.sh" "required" || failures=$((failures + 1))
+    doctor_file_check "Antigravity installer" "${source_check_repo}/scripts/install-antigravity-ba-kit.sh" "required" || failures=$((failures + 1))
+    doctor_file_check "HTML renderer" "${source_check_repo}/scripts/md-to-html.py" "required" || failures=$((failures + 1))
+  fi
+
+  if [[ "${repo_resolved}" -eq 1 && "${BA_KIT_SKIP_UPDATE_CHECK:-0}" == "1" ]]; then
+    doctor_warn "BA-kit update status check skipped by BA_KIT_SKIP_UPDATE_CHECK"
+    warnings=$((warnings + 1))
+  elif [[ "${repo_resolved}" -eq 1 ]]; then
     update_result="$(resolve_update_status "${repo}" 2>/dev/null || true)"
     if [[ -n "${update_result}" ]]; then
       IFS=$'\t' read -r update_status update_local_head update_remote_head update_upstream_ref <<<"${update_result}"
@@ -936,6 +1049,7 @@ status_command() {
   print_artifact_status_line "${repo}/$(render_contract_path "${repo}" "intake" "${slug}" "${date_token}")" "01_intake/intake.md"
   print_artifact_status_line "${repo}/$(render_contract_path "${repo}" "plan" "${slug}" "${date_token}")" "01_intake/plan.md"
   print_artifact_status_line "${repo}/$(render_contract_path "${repo}" "backbone" "${slug}" "${date_token}")" "02_backbone/backbone.md"
+  print_memory_status "${repo}" "${slug}" "${date_token}"
 
   modules="${module}"
   if [[ -z "${modules}" ]]; then

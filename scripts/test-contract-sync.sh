@@ -99,14 +99,27 @@ PY
 python3 -m py_compile \
   "${ROOT_DIR}/scripts/source-extract.py" \
   "${ROOT_DIR}/scripts/design-snapshot.py" \
-  "${ROOT_DIR}/scripts/stitch-state.py"
+  "${ROOT_DIR}/scripts/stitch-state.py" \
+  "${ROOT_DIR}/scripts/runtime-parity-normalize.py"
 
 bash -n "${ROOT_DIR}/scripts/ba-kit"
 bash -n "${ROOT_DIR}/scripts/check-token-budget.sh"
+bash -n "${ROOT_DIR}/install.sh"
+bash -n "${ROOT_DIR}/scripts/install-codex-ba-kit.sh"
+bash -n "${ROOT_DIR}/scripts/install-antigravity-ba-kit.sh"
+bash -n "${ROOT_DIR}/scripts/generate-codex-assets.sh"
+bash -n "${ROOT_DIR}/scripts/test-activation-thresholds.sh"
+bash -n "${ROOT_DIR}/scripts/test-runtime-parity.sh"
+bash -n "${ROOT_DIR}/scripts/runtime-parity-adapter.sh"
+bash -n "${ROOT_DIR}/scripts/test-runtime-install-smoke.sh"
 bash "${ROOT_DIR}/scripts/check-token-budget.sh" >/dev/null
+bash "${ROOT_DIR}/scripts/test-activation-thresholds.sh" >/dev/null
+bash "${ROOT_DIR}/scripts/test-runtime-parity.sh" --check-structure >/dev/null
+bash "${ROOT_DIR}/scripts/test-runtime-parity.sh" >/dev/null
 
 cp "${ROOT_DIR}/codex/skills/ba-start/SKILL.md" "${TMP_DIR}/ba-start.before"
 bash "${ROOT_DIR}/scripts/generate-codex-assets.sh" >"${TMP_DIR}/generator.log"
 cmp "${TMP_DIR}/ba-start.before" "${ROOT_DIR}/codex/skills/ba-start/SKILL.md" >/dev/null
+bash "${ROOT_DIR}/scripts/test-runtime-install-smoke.sh" >/dev/null
 
 echo "Contract sync checks passed."

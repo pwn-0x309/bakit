@@ -278,7 +278,7 @@ A full `/ba-start` engagement produces final BA deliverables plus runtime artifa
 | Intake form | `intake-form-template.md` | `plans/{slug}-{date}/01_intake/intake.md` |
 | Requirements backbone | `requirements-backbone-template.md` | `plans/{slug}-{date}/02_backbone/backbone.md` |
 | FRD | `frd-template.md` | `plans/{slug}-{date}/03_modules/{module_slug}/frd.md` |
-| FRD HTML | `scripts/md-to-html.py` | `plans/{slug}-{date}/04_compiled/compiled-frd.html` with rendered Mermaid diagrams |
+| FRD HTML | `scripts/md-to-html.py` | `plans/{slug}-{date}/04_compiled/compiled-frd.html` with rendered Mermaid and PlantUML diagrams |
 | SRS | `srs-template.md` | `plans/{slug}-{date}/03_modules/{module_slug}/srs.md` |
 | User stories | `user-story-template.md` | `plans/{slug}-{date}/03_modules/{module_slug}/user-stories.md` |
 | Project runtime DESIGN.md (bán thành phẩm) | `design-md-template.md` | `designs/{slug}/DESIGN.md` |
@@ -293,7 +293,7 @@ If you need a clean read-only stakeholder handoff, generate HTML with:
 python scripts/md-to-html.py --no-editor plans/{slug}-{date}/03_modules/{module_slug}/srs.md
 ```
 
-Packaged HTML keeps Mermaid diagrams visualized in-browser and preserves any wireframe images or links that the user manually inserted into the markdown source.
+Packaged HTML keeps Mermaid diagrams visualized in-browser, renders PlantUML diagrams as linked SVG assets, and preserves any wireframe images or links that the user manually inserted into the markdown source.
 
 ## 8. Know Where To Look
 
@@ -314,5 +314,5 @@ Packaged HTML keeps Mermaid diagrams visualized in-browser and preserves any wir
 - Use `--slug` for rerun commands whenever more than one project may exist
 - Treat `/ba-start status` as the checkpoint view: it prints artifact dates plus wireframe handoff state (`completed`, `skipped`, `not-applicable`, `missing`) and any persisted wireframe input/map artifacts
 - Ask for assumptions and open questions before asking for finalization
-- Use Mermaid diagrams for process or data views
+- Use PlantUML for swimlanes; use Mermaid for sequence, data-flow, ERD, or simpler process views
 - Use `/ba-notion` when the deliverable needs to be published into Notion rather than only packaged as local HTML

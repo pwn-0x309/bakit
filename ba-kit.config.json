@@ -25,7 +25,7 @@
     "All requirements must have acceptance criteria",
     "Use BABOK 3.0 knowledge areas as reference",
     "Always validate requirements against business goals",
-    "Use Mermaid.js for all diagrams",
+    "Use PlantUML for swimlanes and Mermaid.js for other diagrams",
     "SRS is default when UI screens or system interactions are present"
   ]
 }

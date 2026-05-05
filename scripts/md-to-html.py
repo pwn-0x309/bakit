@@ -1,16 +1,17 @@
 #!/usr/bin/env python3
-"""Convert BA markdown documents to unified BA-kit HTML with rendered Mermaid diagrams and embedded images.
+"""Convert BA markdown documents to unified BA-kit HTML with rendered diagrams and embedded images.
 
 Usage:
     python scripts/md-to-html.py plans/reports/frd-260325-project.md
     python scripts/md-to-html.py plans/reports/srs-260325-project.md
 
-Works with any BA-kit document: intake, FRD (Mermaid workflows), user stories,
+Works with any BA-kit document: intake, FRD (Mermaid/PlantUML workflows), user stories,
 SRS (wireframe images + diagrams), or any markdown file.
 
 Supports:
     - Shared BA-kit HTML shell with metadata header and artifact-specific visual variants
     - Mermaid diagrams (rendered client-side via mermaid.js CDN)
+    - PlantUML diagrams (rendered as SVG image links)
     - Inline wireframe images from explicit PNG references in the markdown
     - In-browser editing without touching raw HTML code
     - Page breaks for PDF printing (browser Print → Save as PDF)
@@ -21,6 +22,7 @@ import argparse
 import base64
 import re
 import sys
+import zlib
 from datetime import datetime
 from html import escape
 from pathlib import Path
@@ -31,6 +33,8 @@ from typing import Optional
 
 LIST_ITEM_RE = re.compile(r"^(?P<indent>[ \t]*)(?P<marker>[-*]|\d+\.)\s+(?P<content>.+)$")
 DATE_TOKEN_RE = r"\d{6}-\d{4}"
+PLANTUML_SERVER = "https://www.plantuml.com/plantuml/svg/"
+PLANTUML_ALPHABET = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-_"
 
 ARTIFACT_VARIANTS = {
     "generic": {
@@ -249,6 +253,40 @@ def embed_image(img_path: str, base_dir: Path) -> str:
     )
 
 
+def encode_plantuml(source: str) -> str:
+    """Encode PlantUML text into the compact URL form expected by PlantUML servers."""
+    compressor = zlib.compressobj(level=9, wbits=-15)
+    compressed = compressor.compress(source.encode("utf-8")) + compressor.flush()
+    encoded = []
+    for index in range(0, len(compressed), 3):
+        chunk = compressed[index:index + 3]
+        b1 = chunk[0]
+        b2 = chunk[1] if len(chunk) > 1 else 0
+        b3 = chunk[2] if len(chunk) > 2 else 0
+        for value in (
+            b1 >> 2,
+            ((b1 & 0x03) << 4) | (b2 >> 4),
+            ((b2 & 0x0F) << 2) | (b3 >> 6),
+            b3 & 0x3F,
+        ):
+            encoded.append(PLANTUML_ALPHABET[value & 0x3F])
+    return "".join(encoded)
+
+
+def render_plantuml(source: str) -> str:
+    """Render a PlantUML fenced block as an SVG-backed image container."""
+    diagram = source.strip()
+    if not diagram:
+        return '<pre class="plantuml-render-error">[Empty PlantUML diagram]</pre>\n'
+    encoded = encode_plantuml(diagram)
+    return (
+        '<figure class="plantuml-diagram">'
+        f'<img src="{PLANTUML_SERVER}{encoded}" alt="PlantUML diagram" '
+        'class="plantuml-image" loading="lazy" decoding="async">'
+        "</figure>\n"
+    )
+
+
 def md_to_html(md: str, base_dir: Path) -> str:
     """Convert markdown to HTML with embedded images."""
     lines = md.split("\n")
@@ -257,6 +295,7 @@ def md_to_html(md: str, base_dir: Path) -> str:
     in_code = False
     in_table = False
     code_lang = ""
+    code_lines = []
     table_rows = []
     list_stack = []
 
@@ -320,14 +359,20 @@ def md_to_html(md: str, base_dir: Path) -> str:
             if in_code:
                 if code_lang == "mermaid":
                     html_parts.append("</pre>\n")
+                elif code_lang == "plantuml":
+                    html_parts.append(render_plantuml("".join(code_lines)))
                 else:
                     html_parts.append("</code></pre>\n")
                 in_code = False
+                code_lang = ""
+                code_lines = []
             else:
                 code_lang = line[3:].strip()
                 cls = f' class="language-{code_lang}"' if code_lang else ""
                 if code_lang == "mermaid":
                     html_parts.append(f'<pre class="mermaid">')
+                elif code_lang == "plantuml":
+                    code_lines = []
                 else:
                     html_parts.append(f"<pre><code{cls}>")
                 in_code = True
@@ -335,6 +380,8 @@ def md_to_html(md: str, base_dir: Path) -> str:
         if in_code:
             if code_lang == "mermaid":
                 html_parts.append(line + "\n")
+            elif code_lang == "plantuml":
+                code_lines.append(line + "\n")
             else:
                 html_parts.append(escape(line) + "\n")
             continue
@@ -646,6 +693,26 @@ pre.mermaid,
     color: #92400e;
     background: #fffbeb;
     border-color: rgba(146, 64, 14, 0.24);
+}
+.plantuml-diagram {
+    margin: 1em 0;
+    padding: 20px;
+    border: 1px solid rgba(15, 52, 96, 0.1);
+    border-radius: 14px;
+    background: linear-gradient(180deg, rgba(248, 250, 252, 0.98), rgba(255, 255, 255, 1));
+    overflow-x: auto;
+}
+.plantuml-image {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    margin: 0 auto;
+}
+.plantuml-render-error {
+    color: #92400e;
+    background: #fffbeb;
+    border: 1px solid rgba(146, 64, 14, 0.24);
+    border-radius: 14px;
 }
 img.wireframe {
     display: block;
@@ -1179,7 +1246,7 @@ def aggregate_modules(modules_dir: Path, base_dir: Optional[Path], editor_enable
         print(f"Generated aggregate: {out}")
 
 def main():
-    parser = argparse.ArgumentParser(description="Convert BA markdown to HTML with Mermaid diagrams and embedded images")
+    parser = argparse.ArgumentParser(description="Convert BA markdown to HTML with Mermaid/PlantUML diagrams and embedded images")
     parser.add_argument("input", help="Path to markdown file or 03_modules directory (for aggregate)")
     parser.add_argument(
         "--base-dir",
@@ -1190,6 +1257,13 @@ def main():
         action="store_true",
         help="Generate HTML with the in-browser editing toolbar",
     )
+    parser.add_argument(
+        "--no-editor",
+        dest="with_editor",
+        action="store_false",
+        help="Generate HTML without the in-browser editing toolbar (default)",
+    )
+    parser.set_defaults(with_editor=False)
     parser.add_argument(
         "--aggregate",
         action="store_true",

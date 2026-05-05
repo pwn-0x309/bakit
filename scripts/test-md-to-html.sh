@@ -29,11 +29,20 @@ cat >"$TMP_DIR/frd-260330-1010-demo-portal.md" <<'EOF'
 
 ## Luồng nghiệp vụ
 
-```mermaid
-flowchart TD
-  A[User submits] --> B{Valid?}
-  B -- Yes --> C[Continue]
-  B -- No --> D[Show error]
+```plantuml
+@startuml
+|User|
+start
+:Submit request;
+|System|
+:Validate;
+if (Valid?) then (Yes)
+  :Continue;
+else (No)
+  :Show error;
+endif
+stop
+@enduml
 ```
 EOF
 
@@ -56,7 +65,7 @@ cat >"$TMP_DIR/srs-260330-1010-demo-portal.md" <<'EOF'
 
 - Delivery packaging
   1. Generate stakeholder HTML
-  2. Preserve Mermaid blocks
+  2. Preserve Mermaid blocks and render PlantUML swimlanes
 
 > Stakeholder copy should render without editing controls.
 
@@ -101,6 +110,7 @@ class Probe(HTMLParser):
         self.has_table = False
         self.has_blockquote = False
         self.has_mermaid = False
+        self.has_plantuml = False
         self.has_bash = False
         self.has_nav = False
         self.has_image = False
@@ -124,6 +134,8 @@ class Probe(HTMLParser):
             self.has_nav = True
         elif tag == "img" and attrs.get("src", "").startswith("data:image/png;base64,"):
             self.has_image = True
+        elif tag == "img" and "plantuml.com/plantuml/svg/" in attrs.get("src", ""):
+            self.has_plantuml = True
         elif tag == "pre" and attrs.get("class") == "mermaid":
             self.has_mermaid = True
         elif tag == "code" and attrs.get("class") == "language-bash":
@@ -160,6 +172,9 @@ for html, doc_type in (
     assert "Generated" in html, f"Missing generated metadata row for {doc_type}"
 
 assert "Demo Portal" in frd_html, "Missing FRD project metadata"
+probe = Probe()
+probe.feed(frd_html)
+assert probe.has_plantuml, "Missing PlantUML diagram"
 
 probe = Probe()
 probe.feed(srs_html)

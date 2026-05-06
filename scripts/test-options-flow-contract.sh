@@ -5,6 +5,7 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 python3 - "${ROOT_DIR}" "${ROOT_DIR}/core/contract.yaml" "${ROOT_DIR}/templates/manifest.json" <<'PY'
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -23,13 +24,30 @@ def fail(message):
     raise SystemExit(message)
 
 def normalize(text):
-    return " ".join(text.split())
+    return " ".join(text.split()).lower()
 
 def require_all(text, snippets, message):
     normalized = normalize(text)
     missing = [snippet for snippet in snippets if normalize(snippet) not in normalized]
     if missing:
         fail(f"{message}: missing {missing}")
+
+def require_tokens(text, tokens, message):
+    normalized = normalize(text)
+    missing = [token for token in tokens if normalize(token) not in normalized]
+    if missing:
+        fail(f"{message}: missing {missing}")
+
+def require_regex(text, pattern, message):
+    if not re.search(pattern, text, re.IGNORECASE | re.MULTILINE | re.DOTALL):
+        fail(message)
+
+def extract_section(text, heading):
+    pattern = rf"^##\s+{re.escape(heading)}\s*$([\s\S]*?)(?=^##\s+|\Z)"
+    match = re.search(pattern, text, re.MULTILINE)
+    if not match:
+        fail(f"Missing section: {heading}")
+    return match.group(1)
 
 if "options" not in contract["commands"]:
     fail("Missing commands.options")
@@ -67,56 +85,83 @@ if "`impact` -> `impact.md`" not in generator or "`options` -> `options.md`" not
     fail("Codex asset generator missing options step mapping")
 if "`impact` -> `impact.md`" not in codex_skill or "`options` -> `options.md`" not in codex_skill:
     fail("Generated Codex ba-start asset missing options step mapping")
-if "plan.md" in behavior:
-    fail("contract-behavior should reference paths.plan, not hardcoded plan.md")
 
-require_all(
-    behavior,
-    [
-        "Use one status vocabulary for optioning and Project Home lifecycle guidance:",
-        "`recommended`: should run next, not started",
-        "`in-progress`: active work or decision cycle is open",
-        "`completed`: required work or decision is accepted",
-        "`skipped`: intentionally bypassed with rationale",
-        "`not-needed`: safely unnecessary for this project",
-        "When `paths.options_root` exists as an active decision cycle, treat `paths.plan` as the execution decision ledger.",
-        "Intake may seed only `recommended` or `not-needed`.",
-        "`backbone` must stop when the ledger status is `recommended` or `in-progress`.",
-        "`backbone` may proceed only when the ledger records either `selected option` (`completed`) or `skipped`.",
-        "If intake judged optioning unnecessary, the ledger may remain `not-needed` and point to `backbone` as the next command.",
+status_tokens = [
+    "recommended",
+    "in-progress",
+    "completed",
+    "skipped",
+    "not-needed",
+]
+
+lifecycle_section = extract_section(behavior, "Canonical Lifecycle Status Mapping")
+require_tokens(
+    lifecycle_section,
+    status_tokens + ["todo", "doing", "done"],
+    "contract-behavior lifecycle mapping regressed",
+)
+
+options_gate_section = extract_section(behavior, "Options Decision-Ledger Gate")
+require_tokens(
+    options_gate_section,
+    status_tokens
+    + [
+        "paths.options_root",
+        "paths.plan",
+        "recommend",
+        "strongly recommend",
+        "selected option",
+        "backbone",
+        "options",
     ],
     "contract-behavior options gate guidance regressed",
 )
+if "plan.md" in options_gate_section:
+    fail("Options gate guidance should reference `paths.plan`, not hardcoded plan.md")
 
-require_all(
-    intake_step,
-    [
-        "go direct to `backbone`",
-        "recommend `options`",
-        "strongly recommend `options`",
-        "Use the canonical optioning lifecycle statuses `recommended | in-progress | completed | skipped | not-needed`.",
-        "Keep `recommend` versus `strongly recommend` in the recommendation summary only; do not create extra status values.",
-        "options status: `not-needed` or `recommended`",
-        "expected next command: `backbone` when status is `not-needed`, otherwise `options`",
-    ],
+intake_gate_section = extract_section(intake_step, "Step 4.1 - Recommend direct backbone or optioning")
+require_tokens(
+    intake_gate_section,
+    status_tokens + ["paths.plan", "decision ledger", "backbone", "options", "strongly recommend"],
     "intake recommendation gate contract regressed",
+)
+require_regex(
+    intake_gate_section,
+    r"direct[^\n`]*`backbone`|`backbone`[^\n]*direct",
+    "intake must preserve the direct-to-backbone path",
+)
+require_regex(
+    intake_gate_section,
+    r"recommend[^\n`]*`options`|`options`[^\n]*recommend",
+    "intake must preserve the recommend-options path",
+)
+require_regex(
+    intake_gate_section,
+    r"options status[^\n]*`not-needed`[^\n]*`recommended`",
+    "intake must seed options status with `not-needed` or `recommended`",
+)
+require_regex(
+    intake_gate_section,
+    r"expected next command[^\n]*`backbone`[^\n]*`options`",
+    "intake must map the expected next command to `backbone` or `options`",
 )
 
 if "Todo / Doing / Done" in project_home or "Not needed / Todo / Doing / Done" in project_home:
     fail("Project Home still uses legacy Todo/Doing/Done lifecycle labels")
 
-require_all(
+require_tokens(
     project_home,
-    [
-        "Trạng thái lifecycle chuẩn trong dashboard này:",
-        "`recommended` = nên làm tiếp nhưng chưa bắt đầu",
-        "`in-progress` = đang thực hiện",
-        "`completed` = đã xong/đã chốt",
-        "`skipped` = chủ động bỏ qua có lý do",
-        "`not-needed` = không cần cho dự án này",
-        "| Phương án giải pháp | [recommended | in-progress | completed | skipped | not-needed] |",
-        "Decision ledger cho optioning status, khuyến nghị bước tiếp theo, và artifact cần sinh",
-    ],
+    status_tokens + ["Trạng thái lifecycle chuẩn", "Decision ledger", "optioning status"],
     "Project Home options lifecycle guidance regressed",
+)
+require_regex(
+    project_home,
+    r"^\|\s*Phương án giải pháp\s*\|\s*\[recommended \| in-progress \| completed \| skipped \| not-needed\]\s*\|",
+    "Project Home must keep the solution-option lifecycle row",
+)
+require_regex(
+    project_home,
+    r"`01_intake/plan\.md`[^\n]*Decision ledger",
+    "Project Home must describe `01_intake/plan.md` as the decision ledger",
 )
 PY

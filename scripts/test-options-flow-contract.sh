@@ -80,7 +80,7 @@ if "/ba-start options --slug <slug>" not in source_skill:
 if "| `options` | `steps/options.md` |" not in source_skill:
     fail("Missing ba-start options dispatch row in source skill")
 if not options_step.exists():
-    fail("Missing ba-start options step placeholder")
+    fail("Missing ba-start options step")
 step_body = options_step.read_text(encoding="utf-8")
 if "`impact` -> `impact.md`" not in generator or "`options` -> `options.md`" not in generator:
     fail("Codex asset generator missing options step mapping")

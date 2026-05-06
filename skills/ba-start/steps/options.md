@@ -15,6 +15,7 @@
 ## Generation Rules
 
 - Generate 1-3 option artifacts only
+- Generate or open the option cycle by updating `paths.plan` to `options status: in-progress`
 - Mark each option with `L1`, `L2`, or `L3`
 - Generate `comparison.md` only when more than one viable option exists
 - Keep options as solution briefs, not mini-backbones

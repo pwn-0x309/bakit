@@ -26,12 +26,6 @@ def fail(message):
 def normalize(text):
     return " ".join(text.split()).lower()
 
-def require_all(text, snippets, message):
-    normalized = normalize(text)
-    missing = [snippet for snippet in snippets if normalize(snippet) not in normalized]
-    if missing:
-        fail(f"{message}: missing {missing}")
-
 def require_tokens(text, tokens, message):
     normalized = normalize(text)
     missing = [token for token in tokens if normalize(token) not in normalized]
@@ -149,6 +143,7 @@ require_tokens(
         "skip optioning explicitly",
         "## Generation Rules",
         "Generate 1-3 option artifacts only",
+        "options status: in-progress",
         "Mark each option with `L1`, `L2`, or `L3`",
         "Generate `comparison.md` only when more than one viable option exists",
         "Keep options as solution briefs, not mini-backbones",
@@ -174,6 +169,12 @@ require_regex(
     "contract-behavior must define exact options stop conditions",
 )
 
+generation_section = extract_section(step_body, "Generation Rules")
+require_regex(
+    generation_section,
+    r"Generate or open the option cycle[^\n]*`paths\.plan`[^\n]*`options status: in-progress`",
+    "options step must tie generation/opening the option cycle to `paths.plan` and `in-progress`",
+)
 selection_skip_section = extract_section(step_body, "Selection / Skip Rules")
 require_regex(
     selection_skip_section,
@@ -184,6 +185,11 @@ require_regex(
     selection_skip_section,
     r"`--skip`[^\n]*`paths\.plan`[^\n]*`options status: skipped`",
     "options step must tie skip to `paths.plan` and `skipped`",
+)
+require_regex(
+    options_gate_section,
+    r"move the lifecycle to `in-progress`",
+    "contract-behavior must require the options cycle to move to `in-progress`",
 )
 require_regex(
     options_gate_section,

@@ -39,6 +39,9 @@ f09:f09-activation-freeze-mismatch.md:g09-activation-freeze-mismatch.md:Runtime 
 f10:f10-freeform-router-explicit-fallback.md:g10-freeform-router-explicit-fallback.md:Freeform router mismatch falls back to explicit ba-start
 f11:f11-multiba-governance-conflict.md:g11-multiba-governance-conflict.md:Multi-BA governance conflict escalates instead of mutating
 f12:f12-packet-needs-repartition.md:g12-packet-needs-repartition.md:Underspecified packet returns NEEDS_REPARTITION without broad reads
+f13:f13-options-step.md:g13-options-step.md:Explicit ba-start options generation command
+f14:f14-next-recommends-options.md:g14-next-recommends-options.md:ba-next recommends options after intake recommendation
+f15:f15-backbone-blocked-unresolved-options.md:g15-backbone-blocked-unresolved-options.md:backbone blocked while options decision is unresolved
 "
 
 REGISTRY_FILE="${TMPDIR:-/tmp}/ba-kit-runtime-parity-fixtures.$$"
@@ -116,6 +119,12 @@ check_fixture_contract() {
         require_table_field "$path" "$field" "fixture $id expected outcome" || fixture_failed=1
     done
 
+    case "$id" in
+        f13|f14|f15)
+            require_table_field "$path" "read_scope" "fixture $id expected outcome" || fixture_failed=1
+            ;;
+    esac
+
     if [ "$fixture_failed" -eq 0 ]; then
         echo "  OK:   fixture $id contract fields"
         return 0
@@ -135,6 +144,23 @@ check_golden_contract() {
     for field in resolved_command resolved_slug source_of_truth_artifact read_scope write_target approval_gate activation_level fallback_code; do
         require_table_field "$path" "$field" "golden $id behavior envelope" || golden_failed=1
     done
+
+    case "$id" in
+        f13)
+            for field in option_artifact_count comparison_rule; do
+                require_table_field "$path" "$field" "golden $id behavior envelope" || golden_failed=1
+            done
+            ;;
+        f14)
+            require_table_field "$path" "recommendation_summary" "golden $id behavior envelope" || golden_failed=1
+            ;;
+        f15)
+            for field in visible_warning required_decision; do
+                require_table_field "$path" "$field" "golden $id behavior envelope" || golden_failed=1
+            done
+            require_exact_line "$path" "| required_decision | selected option or skipped |" "golden $id behavior envelope" || golden_failed=1
+            ;;
+    esac
 
     for runtime in "Claude Code" "Codex" "Antigravity"; do
         require_runtime_status_row "$path" "$runtime" "golden $id runtime parity" || golden_failed=1

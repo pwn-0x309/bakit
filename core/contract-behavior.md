@@ -117,14 +117,15 @@ Do not introduce parallel labels such as `todo`, `doing`, or `done` for the same
 
 ## Options Decision-Ledger Gate
 
-When `paths.options_root` exists as an active decision cycle, treat `paths.plan` as the execution decision ledger.
+Treat `paths.plan` as the execution decision ledger whenever intake seeds an `options status`, whether or not `paths.options_root` has been created yet.
 
 - Intake may seed only `recommended` or `not-needed`.
 - The recommendation strength stays in prose (`recommend` or `strongly recommend`), not in a parallel status enum.
 - `options` should move the lifecycle to `in-progress`, then to `completed` once `selected option` is recorded, or to `skipped` when the user explicitly bypasses optioning.
 - `backbone` must stop when the ledger status is `recommended` or `in-progress`.
-- `backbone` may proceed only when the ledger records either `selected option` (`completed`) or `skipped`.
+- `backbone` may proceed only when the ledger records `not-needed`, `selected option` (`completed`), or `skipped`.
 - If intake judged optioning unnecessary, the ledger may remain `not-needed` and point to `backbone` as the next command.
+- `paths.options_root` is evidence that option artifacts exist; it must not be used as the condition that turns backbone gating on or off.
 
 For `options`, allow `--select <option-id>` and `--skip` as mutually exclusive control arguments.
 Stop when:
@@ -332,7 +333,7 @@ Every command has deterministic read scope. Commands must navigate: summary → 
 | Command | Must Read | May Read | Must NOT Read |
 | --- | --- | --- | --- |
 | intake | contract.yaml, contract-behavior.md | paths.project_memory (compact only) | memory shards, log.md, cold/ |
-| backbone | contract.yaml, contract-behavior.md, paths.intake | paths.project_memory, paths.memory_index (nav only), paths.memory_hot_vocabulary, paths.memory_hot_decisions | log.md, cold/, warm/ |
+| backbone | contract.yaml, contract-behavior.md, paths.intake, paths.plan (when exists) | selected option file only when optioning is `completed`; paths.project_memory, paths.memory_index (nav only), paths.memory_hot_vocabulary, paths.memory_hot_decisions | log.md, cold/, warm/ |
 | impact | contract.yaml, contract-behavior.md, paths.intake, paths.backbone | paths.project_memory, paths.memory_index, paths.memory_hot_*, selected warm/ module shard, relevant downstream artifacts; log.md only for explicit audit | cold/ (unless escalated) |
 | frd | contract.yaml, contract-behavior.md, paths.backbone, paths.plan | paths.project_memory or hot vocabulary+decisions shards | log.md, cold/, warm/, unrelated module shards |
 | stories | contract.yaml, contract-behavior.md, paths.backbone | paths.plan, paths.frd (if exists), paths.project_memory or hot shards | log.md, cold/, warm/, unrelated module shards |
@@ -416,7 +417,8 @@ Every filed-back memory item must carry: `source_artifact`, `source_ids`, `promo
 
 Before mutating `backbone`, `frd`, `stories`, `srs`, or `wireframes`:
 1. Verify write authority for the target artifact and its owning memory shard.
-2. Confirm an impact run is completed and approved (skip only for `wording-only`).
+2. Confirm an impact run is completed and approved.
+   Exception: skip the impact requirement for first-pass `backbone` creation when `paths.backbone` does not yet exist, and for explicitly approved `wording-only` reruns.
 3. If either check fails: emit `GOVERNANCE_BLOCK: {reason}` and stop.
 4. After approved mutation: offer to file the change into canonical memory using the trace schema.
 

@@ -6,15 +6,41 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 python3 - "${ROOT_DIR}" "${ROOT_DIR}/core/contract.yaml" "${ROOT_DIR}/templates/manifest.json" <<'PY'
 import json
 import re
+import subprocess
 import sys
 from pathlib import Path
 
 root_dir = Path(sys.argv[1])
-contract = json.loads(Path(sys.argv[2]).read_text(encoding="utf-8"))
-manifest = json.loads(Path(sys.argv[3]).read_text(encoding="utf-8"))
+
+def load_structured(path_str):
+    path = Path(path_str)
+    raw = path.read_text(encoding="utf-8")
+    try:
+        return json.loads(raw)
+    except json.JSONDecodeError:
+        ruby = subprocess.run(
+            [
+                "ruby",
+                "-rjson",
+                "-ryaml",
+                "-e",
+                "print JSON.generate(YAML.load_file(ARGV[0]))",
+                str(path),
+            ],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        return json.loads(ruby.stdout)
+
+contract = load_structured(sys.argv[2])
+manifest = load_structured(sys.argv[3])
 source_skill = (root_dir / "skills/ba-start/SKILL.md").read_text(encoding="utf-8")
 options_step = root_dir / "skills/ba-start/steps/options.md"
 behavior = (root_dir / "core/contract-behavior.md").read_text(encoding="utf-8")
+do_workflow = (root_dir / "core/workflows/do.md").read_text(encoding="utf-8")
+next_workflow = (root_dir / "core/workflows/next.md").read_text(encoding="utf-8")
+backbone_step = (root_dir / "skills/ba-start/steps/backbone.md").read_text(encoding="utf-8")
 intake_step = (root_dir / "skills/ba-start/steps/intake.md").read_text(encoding="utf-8")
 project_home = (root_dir / "templates/project-home-template.md").read_text(encoding="utf-8")
 generator = (root_dir / "scripts/generate-codex-assets.sh").read_text(encoding="utf-8")
@@ -42,6 +68,14 @@ def extract_section(text, heading):
     if not match:
         fail(f"Missing section: {heading}")
     return match.group(1)
+
+def require_in_order(text, snippets, message):
+    cursor = 0
+    for snippet in snippets:
+        idx = text.find(snippet, cursor)
+        if idx == -1:
+            fail(f"{message}: missing ordered snippet {snippet!r}")
+        cursor = idx + len(snippet)
 
 if "options" not in contract["commands"]:
     fail("Missing commands.options")
@@ -198,8 +232,8 @@ require_regex(
 )
 require_regex(
     options_gate_section,
-    r"records either `selected option` \(`completed`\) or `skipped`",
-    "contract-behavior must tie backbone gate to `selected option` or `skipped`",
+    r"`backbone` may proceed only when the ledger records `not-needed`, `selected option` \(`completed`\), or `skipped`",
+    "contract-behavior must tie the backbone proceed rule to `not-needed`, `selected option`, or `skipped`",
 )
 
 require_tokens(
@@ -284,5 +318,98 @@ require_regex(
     project_home,
     r"`01_intake/plan\.md`[^\n]*Decision ledger",
     "Project Home must describe `01_intake/plan.md` as the decision ledger",
+)
+
+require_regex(
+    do_workflow,
+    r"\|\s*asking to brainstorm solution options, create multiple solution directions, compare solution approaches, choose an option, or skip optioning\s*\|\s*`ba-start options`\s*\|",
+    "ba-do must route optioning intent via `ba-start options`",
+)
+require_in_order(
+    do_workflow,
+    [
+        "asking to brainstorm solution options, create multiple solution directions, compare solution approaches, choose an option, or skip optioning",
+        "directly generating or rerunning intake/options/backbone/frd/stories/srs/wireframes/package",
+    ],
+    "ba-do must prioritize optioning intent above the generic direct-step route",
+)
+require_tokens(
+    next_workflow,
+    [
+        "when the next exact command would be module-scoped (`frd`, `stories`, `srs`, or `wireframes`), resolve the module using the contract rules before emitting the command",
+        "if multiple module directories exist, stop and ask instead of emitting an incomplete module-scoped command",
+        "plan",
+        "options index",
+        "option files",
+        "comparison file",
+        "ba-start options --slug <slug>",
+        "recommended",
+        "in-progress",
+        "skipped",
+        "completed",
+        "not-needed",
+        "selected option",
+        "ba-start backbone --slug <slug>",
+        "ba-start status --slug <slug>",
+        "ba-start frd --slug <slug> --module <module_slug>",
+        "ba-start stories --slug <slug> --module <module_slug>",
+        "ba-start srs --slug <slug> --module <module_slug>",
+        "ba-start wireframes --slug <slug> --module <module_slug>",
+    ],
+    "ba-next options inspection or recommendation regressed",
+)
+require_regex(
+    do_workflow,
+    r"directly generating or rerunning intake/options/backbone/frd/stories/srs/wireframes/package",
+    "ba-do generic direct-step route must include options",
+)
+require_regex(
+    next_workflow,
+    r"intake exists and `paths\.plan` says options are `recommended` or `in-progress` -> `ba-start options --slug <slug>`",
+    "ba-next must recommend `ba-start options --slug <slug>` when optioning is recommended or in-progress",
+)
+require_regex(
+    next_workflow,
+    r"intake exists and `paths\.plan` is missing, invalid, or says `completed` without `selected option` -> `ba-start status --slug <slug>`",
+    "ba-next must fail closed when the options decision ledger is missing or invalid",
+)
+require_regex(
+    next_workflow,
+    r"intake exists, `paths\.plan` says options are `not-needed`, and no backbone -> `ba-start backbone --slug <slug>`",
+    "ba-next must preserve the direct-to-backbone path when optioning is not needed",
+)
+require_regex(
+    next_workflow,
+    r"intake exists, `paths\.plan` says options are `skipped`, or `completed` with `selected option` recorded in `paths\.plan`, and no backbone -> `ba-start backbone --slug <slug>`",
+    "ba-next must gate backbone on resolved optioning with an explicit selected option for completed status",
+)
+require_tokens(
+    backbone_step,
+    [
+        "Always verify write authority for the target artifact and its owning memory shard",
+        "For first-pass creation (when `paths.backbone` does not yet exist), skip only the impact-run requirement",
+        "For reruns (artifact already exists): confirm an approved impact run",
+        "**Must read when it exists:** `paths.plan`",
+        "read `paths.plan` when it exists",
+        "when `paths.plan` records `options status: recommended` or `options status: in-progress`, stop because optioning is unresolved",
+        "when `paths.plan` records `options status: completed` or `options status: skipped`, treat that as the backbone decision gate",
+        "require `paths.plan` to state either `options status: skipped`, `options status: completed`, or `options status: not-needed` before proceeding",
+        "if completed, require a `selected option`",
+        "read only the selected option file as the decision overlay",
+        "never require `paths.options_root` to exist before honoring the decision-ledger gate",
+        "promote only the selected option's portal/module/actor/constraint decisions",
+        "do not import rejected options or the full comparison into `backbone.md`",
+    ],
+    "backbone options fail-closed gating regressed",
+)
+require_tokens(
+    behavior,
+    [
+        "Treat `paths.plan` as the execution decision ledger whenever intake seeds an `options status`, whether or not `paths.options_root` has been created yet.",
+        "`paths.options_root` is evidence that option artifacts exist; it must not be used as the condition that turns backbone gating on or off.",
+        "| backbone | contract.yaml, contract-behavior.md, paths.intake, paths.plan (when exists) | selected option file only when optioning is `completed`; paths.project_memory, paths.memory_index (nav only), paths.memory_hot_vocabulary, paths.memory_hot_decisions | log.md, cold/, warm/ |",
+        "Exception: skip the impact requirement for first-pass `backbone` creation when `paths.backbone` does not yet exist, and for explicitly approved `wording-only` reruns.",
+    ],
+    "contract-behavior must keep backbone read scope and governance aligned with the options decision gate",
 )
 PY

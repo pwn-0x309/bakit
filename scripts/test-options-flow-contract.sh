@@ -127,9 +127,11 @@ if "plan.md" in options_gate_section:
 require_tokens(
     source_skill,
     [
+        "argument-hint: \"[intake|impact|options|backbone|frd|stories|srs|wireframes|package|status|next]",
         "/ba-start options --slug <slug>",
         "/ba-start options --slug <slug> --select option-02",
         "/ba-start options --slug <slug> --skip",
+        "/ba-start next --slug <slug>",
     ],
     "ba-start options invocation examples regressed",
 )
@@ -152,6 +154,7 @@ require_tokens(
         "Keep options as solution briefs, not mini-backbones",
         "## Selection / Skip Rules",
         "--select option-02",
+        "selected option",
         "options status: completed",
         "--skip",
         "options status: skipped",
@@ -169,6 +172,28 @@ require_regex(
     behavior,
     r"Stop when:\s*-\s*the requested option file does not exist\s*-\s*multiple options exist but no explicit selection/skip has been approved\s*-\s*a selection request names an unknown option id",
     "contract-behavior must define exact options stop conditions",
+)
+
+selection_skip_section = extract_section(step_body, "Selection / Skip Rules")
+require_regex(
+    selection_skip_section,
+    r"`--select option-02`[^\n]*`selected option`[^\n]*`paths\.plan`[^\n]*`options status: completed`",
+    "options step must tie selection to both `selected option` and `completed` in `paths.plan`",
+)
+require_regex(
+    selection_skip_section,
+    r"`--skip`[^\n]*`paths\.plan`[^\n]*`options status: skipped`",
+    "options step must tie skip to `paths.plan` and `skipped`",
+)
+require_regex(
+    options_gate_section,
+    r"`completed` once `selected option` is recorded",
+    "contract-behavior must tie `completed` to recorded `selected option`",
+)
+require_regex(
+    options_gate_section,
+    r"records either `selected option` \(`completed`\) or `skipped`",
+    "contract-behavior must tie backbone gate to `selected option` or `skipped`",
 )
 
 require_tokens(

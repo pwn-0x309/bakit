@@ -20,7 +20,7 @@ Xuất gói bàn giao cho stakeholder
 
 Agent sẽ map intent sang workflow an toàn:
 
-- Lifecycle BA: intake, backbone, stories, FRD, SRS, wireframe handoff, package.
+- Lifecycle BA: intake, options khi cần, backbone, stories, FRD, SRS, wireframe handoff, package.
 - Collaboration BA: claim module, check conflict, create review packet, optional GitHub PR handoff.
 - Git/GitHub là implementation detail; commit, push, PR, merge chỉ chạy khi user approve rõ.
 
@@ -30,6 +30,7 @@ Agent sẽ map intent sang workflow an toàn:
 Raw input
 -> Intake + Gap Analysis
 -> PROJECT-HOME.md
+-> Option pack + comparison khi intake cần nhiều hướng solution
 -> Requirements Backbone
 -> Module artifacts: FRD / Stories / SRS / Screen Contract Plus
 -> DESIGN.md + wireframe-input.md + wireframe-map.md
@@ -57,6 +58,7 @@ Lead BA chia module
 | `PROJECT-HOME.md` | Dashboard BA-facing: trạng thái, bước tiếp theo, câu hỏi cần chốt, prompt nhanh cho runtime |
 | `01_intake/intake.md` | Input đã chuẩn hóa, gap analysis, câu hỏi mở |
 | `01_intake/plan.md` | Kế hoạch artifact sẽ sinh theo mode/gate |
+| `01_intake/options/*` | Bộ phương án solution và bảng so sánh trước backbone |
 | `02_backbone/backbone.md` | Source of truth sau scope lock |
 | `02_backbone/project-memory.md` | Bộ nhớ dự án: thuật ngữ, quyết định, assumptions, corrections |
 | `COLLAB-HOME.md` | Dashboard cộng tác: ai làm module nào, review status, blocker |
@@ -82,6 +84,12 @@ plans/
     01_intake/
       intake.md
       plan.md
+      options/
+        index.md
+        option-01.md
+        option-02.md
+        option-03.md
+        comparison.md
     02_backbone/
       backbone.md
       project-memory.md
@@ -153,6 +161,9 @@ Command-level fallback:
 
 ```text
 /ba-start
+/ba-start options --slug warehouse-rfp
+/ba-start options --slug warehouse-rfp --select option-02
+/ba-start options --slug warehouse-rfp --skip
 /ba-start backbone --slug warehouse-rfp
 /ba-start srs --slug warehouse-rfp --module auth-flow
 /ba-start wireframes --slug warehouse-rfp --module auth-flow
@@ -161,6 +172,8 @@ Command-level fallback:
 /ba-collab Tôi nhận module auth-flow
 /ba-collab Gửi module auth-flow cho Lead BA review
 ```
+
+Dùng `options` khi intake cho thấy cần 1-3 hướng solution trước khi viết `backbone.md`. Step này tạo option pack + comparison dưới `01_intake/options/*`, rồi chốt `--select` hoặc `--skip` rõ ràng trước khi sang backbone.
 
 CLI helper:
 

@@ -11,6 +11,10 @@ import sys
 from pathlib import Path
 
 root_dir = Path(sys.argv[1])
+readme = (root_dir / "README.md").read_text(encoding="utf-8")
+getting_started = (root_dir / "docs/getting-started.md").read_text(encoding="utf-8")
+codex_setup = (root_dir / "docs/codex-setup.md").read_text(encoding="utf-8")
+skill_catalog = (root_dir / "docs/skill-catalog.md").read_text(encoding="utf-8")
 
 def load_structured(path_str):
     path = Path(path_str)
@@ -151,6 +155,68 @@ require_tokens(
 )
 if "plan.md" in options_gate_section:
     fail("Options gate guidance should reference `paths.plan`, not hardcoded plan.md")
+
+require_tokens(
+    readme,
+    [
+        "/ba-start options --slug warehouse-rfp",
+        "/ba-start options --slug warehouse-rfp --select option-02",
+        "/ba-start options --slug warehouse-rfp --skip",
+        "01_intake/options/*",
+    ],
+    "README must document the options command surface and artifacts",
+)
+require_tokens(
+    getting_started,
+    [
+        "/ba-start options --slug warehouse-rfp",
+        "/ba-start options --slug warehouse-rfp --select option-02",
+        "/ba-start options --slug warehouse-rfp --skip",
+        "plans/{slug}-{date}/01_intake/options/",
+        "/ba-start frd --slug warehouse-rfp --module auth-flow",
+        "/ba-start stories --slug warehouse-rfp --module auth-flow",
+        "/ba-start srs --slug warehouse-rfp --module auth-flow",
+        "/ba-start wireframes --slug warehouse-rfp --module auth-flow",
+        "plans/{slug}-{date}/01_intake/plan.md",
+    ],
+    "Getting started must document options commands and artifacts",
+)
+require_tokens(
+    codex_setup,
+    [
+        "/ba-start options --slug warehouse-rfp",
+        "/ba-start options --slug warehouse-rfp --select option-02",
+        "/ba-start options --slug warehouse-rfp --skip",
+        "plans/{slug}-{date}/01_intake/options/",
+        "/ba-start wireframes --slug warehouse-rfp --module auth-flow",
+        "plans/{slug}-{date}/01_intake/plan.md",
+    ],
+    "Codex setup must mention the options flow command surface and artifacts",
+)
+require_tokens(
+    skill_catalog,
+    [
+        "option pack + comparison",
+        "/ba-start options --slug <slug>",
+        "/ba-start options --slug <slug> --select option-02",
+        "/ba-start options --slug <slug> --skip",
+        "/ba-start frd --slug <slug> --module <module_slug>",
+        "/ba-start stories --slug <slug> --module <module_slug>",
+        "/ba-start srs --slug <slug> --module <module_slug>",
+        "/ba-start wireframes --slug <slug> --module <module_slug>",
+        "| `options` |",
+        "| `srs` | Produce grouped SRS artifacts, the persisted wireframe input pack, and merged SRS |",
+        "| `wireframes` | Re-run Step 9 from the persisted wireframe input pack or exact fallback sources |",
+    ],
+    "Skill catalog must document options deliverables and explicit command surface",
+)
+for path_label, doc_text in (
+    ("docs/getting-started.md", getting_started),
+    ("docs/codex-setup.md", codex_setup),
+    ("docs/skill-catalog.md", skill_catalog),
+):
+    if re.search(r"plans/\{date\}-\{slug\}", doc_text):
+        fail(f"{path_label} must use canonical plans/{{slug}}-{{date}} paths")
 
 require_tokens(
     source_skill,

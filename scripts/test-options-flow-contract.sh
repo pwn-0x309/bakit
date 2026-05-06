@@ -13,6 +13,9 @@ contract = json.loads(Path(sys.argv[2]).read_text(encoding="utf-8"))
 manifest = json.loads(Path(sys.argv[3]).read_text(encoding="utf-8"))
 source_skill = (root_dir / "skills/ba-start/SKILL.md").read_text(encoding="utf-8")
 options_step = root_dir / "skills/ba-start/steps/options.md"
+behavior = (root_dir / "core/contract-behavior.md").read_text(encoding="utf-8")
+intake_step = (root_dir / "skills/ba-start/steps/intake.md").read_text(encoding="utf-8")
+project_home = (root_dir / "templates/project-home-template.md").read_text(encoding="utf-8")
 generator = (root_dir / "scripts/generate-codex-assets.sh").read_text(encoding="utf-8")
 codex_skill = (root_dir / "codex/skills/ba-start/SKILL.md").read_text(encoding="utf-8")
 
@@ -55,4 +58,10 @@ if "`impact` -> `impact.md`" not in generator or "`options` -> `options.md`" not
     fail("Codex asset generator missing options step mapping")
 if "`impact` -> `impact.md`" not in codex_skill or "`options` -> `options.md`" not in codex_skill:
     fail("Generated Codex ba-start asset missing options step mapping")
+if "options" not in behavior:
+    fail("contract-behavior must mention options")
+if "recommendation gate" not in intake_step.lower() and "options" not in intake_step:
+    fail("intake step must mention options recommendation")
+if "Phương án giải pháp" not in project_home:
+    fail("Project Home must expose options status")
 PY

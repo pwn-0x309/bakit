@@ -85,9 +85,27 @@ Present the identified gaps to the user as 3-8 targeted questions. Focus on:
 
 Incorporate the answers back into the intake form.
 
-## Step 4.1 - Generate work plan
+## Step 4.1 - Recommend direct backbone or optioning
 
-Produce a scoped work plan and save it to `paths.plan`.
+After scope lock, evaluate whether the intake should:
+
+- go direct to `backbone`
+- recommend `options`
+- strongly recommend `options`
+
+The recommendation must cite signals:
+
+- multiple plausible solution directions
+- unresolved solution shape
+- meaningful trade-offs across effort, value, and difficulty
+- portal/module partitioning ambiguity
+- stakeholder decision need
+
+Write `paths.plan` as a decision ledger skeleton with:
+
+- options status: `not-needed` or `recommended`
+- recommendation summary
+- expected next command
 
 Also create or refresh `paths.project_home` using [../../../templates/project-home-template.md](../../../templates/project-home-template.md).
 

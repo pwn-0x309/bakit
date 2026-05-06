@@ -32,6 +32,7 @@ Parse arguments before doing any work.
 3. The first remaining lifecycle token is the subcommand:
    - `intake`
    - `impact`
+   - `options`
    - `backbone`
    - `frd`
    - `stories`
@@ -40,7 +41,7 @@ Parse arguments before doing any work.
    - `package`
    - `status`
    - `next`
-4. Friendly aliases may be translated before execution: "continue/resume" -> `next`, "đánh giá thay đổi" -> `impact`, "chuẩn bị handoff UI" -> `wireframes`, "xuất gói bàn giao" -> `package`, "kiểm tra trạng thái" -> `status`.
+4. Friendly aliases may be translated before execution: "continue/resume" -> `next`, "đánh giá thay đổi" -> `impact`, "brainstorm phương án" -> `options`, "chốt option" -> `options`, "chuẩn bị handoff UI" -> `wireframes`, "xuất gói bàn giao" -> `package`, "kiểm tra trạng thái" -> `status`.
 5. If no subcommand is present, run the full lifecycle from intake.
 6. For `intake`, allow one free argument as the source path hint.
 7. For `impact`, allow one free argument as the change file path hint.
@@ -100,6 +101,10 @@ Use the resolution order from `resolution.*`.
 - If any required artifact is missing, print the exact missing path, the exact prior command to run, and stop.
 - For `package`, block only when wireframe state is `missing`.
 - If no wireframe-state marker exists, treat it as `not-applicable` only when the SRS set has no UI-backed screens or Screen Contract Plus section. Otherwise treat it as `missing`.
+
+## Options Decision-Ledger Gate
+
+When `paths.options_root` exists as an active decision cycle, treat `plan.md` as the execution decision ledger. `backbone` must not proceed until the ledger records either `selected option` or `skipped`.
 
 ## Overwrite Behavior
 

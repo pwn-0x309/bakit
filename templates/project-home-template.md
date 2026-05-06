@@ -14,6 +14,7 @@
 | Hạng mục | Trạng thái | Ý nghĩa cho BA |
 | --- | --- | --- |
 | Tiếp nhận yêu cầu | [Todo / Doing / Done] | Đã gom và chuẩn hóa thông tin đầu vào chưa |
+| Phương án giải pháp | [Not needed / Todo / Doing / Done] | Đã cần brainstorm và chốt hướng solution trước backbone chưa |
 | Khung yêu cầu đã chốt | [Todo / Doing / Done] | Đã có source of truth để sinh tài liệu chưa |
 | User stories | [Not needed / Todo / Doing / Done] | Có cần bàn giao cho team Agile không |
 | FRD | [Not needed / Todo / Doing / Done] | Có cần tài liệu yêu cầu chức năng chi tiết không |
@@ -44,6 +45,7 @@
 | Trang điều phối dự án | `PROJECT-HOME.md` | Xem trạng thái, bước tiếp theo, câu hỏi cần chốt |
 | Phiếu tiếp nhận yêu cầu | `01_intake/intake.md` | Lưu input đã chuẩn hóa và gap |
 | Kế hoạch xử lý | `01_intake/plan.md` | Chọn artifact nào cần sinh |
+| Bộ phương án giải pháp | `01_intake/options/*` | Xem các option solution và bảng so sánh trước khi chốt backbone |
 | Khung yêu cầu đã chốt | `02_backbone/backbone.md` | Source of truth sau scope lock |
 | Bộ nhớ dự án | `02_backbone/project-memory.md` | Thuật ngữ, quyết định, giả định đã chốt |
 | Tài liệu module | `03_modules/{module}/...` | FRD, stories, SRS, UI handoff theo phân hệ |
@@ -76,6 +78,7 @@ Use AGENTS.md. Read PROJECT-HOME.md for the BA-facing state, then use the BA-kit
 | --- | --- |
 | Tạo dự án mới / phân tích tài liệu mới | `intake` hoặc full lifecycle |
 | Tiếp tục dự án | `ba-next` rồi step được khuyến nghị |
+| Brainstorm phương án / chốt option | `options` |
 | Khung yêu cầu đã chốt | `backbone` |
 | Đánh giá thay đổi | `impact` |
 | Chuẩn bị handoff UI | `wireframes` |

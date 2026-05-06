@@ -166,6 +166,7 @@ CLI helper:
 
 ```bash
 ba-kit doctor
+ba-kit install-plantuml
 ba-kit update
 ba-kit status --slug warehouse-rfp
 ba-kit collab status --slug warehouse-rfp
@@ -208,10 +209,11 @@ User hoặc designer tự tạo mockup/wireframe rồi attach vào đúng sectio
 
 ```bash
 ba-kit doctor
+ba-kit install-plantuml
 ba-kit update
 ```
 
-`ba-kit doctor` kiểm tra runtime readiness. `ba-kit update` fast-forward source repo và reinstall các runtime đã cài.
+`ba-kit doctor` kiểm tra runtime readiness. `ba-kit install-plantuml` auto cài PlantUML local bằng package manager phù hợp để HTML packaging ưu tiên render diagram tại máy. `ba-kit update` fast-forward source repo và reinstall các runtime đã cài.
 
 ## Đọc Tiếp
 

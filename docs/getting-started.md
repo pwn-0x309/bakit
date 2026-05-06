@@ -41,6 +41,7 @@ To update later, run one command:
 
 ```bash
 ba-kit doctor
+ba-kit install-plantuml
 ba-kit update
 ba-kit status --slug warehouse-rfp
 ```
@@ -48,6 +49,7 @@ ba-kit status --slug warehouse-rfp
 This checks the registered BA-kit source repo, blocks when the repo has local changes or unfinished merge/rebase state, runs `git pull --ff-only`, then reruns the installers for any previously installed runtimes.
 `ba-kit status` reads the registered source repo, prints the current artifact set, and flags likely stalled delegated slices from stale tracker heartbeats.
 `ba-kit doctor` checks runtime readiness: install manifests, registered repo health, required local tools, and optional MCP hints for Notion.
+`ba-kit install-plantuml` attempts to install PlantUML locally through a supported package manager so HTML packaging can render swimlanes without sending diagrams to a remote service.
 Both commands also surface update availability when the registered upstream has newer commits.
 
 ## 4. Use BA-kit In Claude Code
@@ -278,7 +280,7 @@ A full `/ba-start` engagement produces final BA deliverables plus runtime artifa
 | Intake form | `intake-form-template.md` | `plans/{slug}-{date}/01_intake/intake.md` |
 | Requirements backbone | `requirements-backbone-template.md` | `plans/{slug}-{date}/02_backbone/backbone.md` |
 | FRD | `frd-template.md` | `plans/{slug}-{date}/03_modules/{module_slug}/frd.md` |
-| FRD HTML | `scripts/md-to-html.py` | `plans/{slug}-{date}/04_compiled/compiled-frd.html` with rendered Mermaid and PlantUML diagrams |
+| FRD HTML | `scripts/md-to-html.py` | `plans/{slug}-{date}/04_compiled/compiled-frd.html` with rendered Mermaid and safely handled PlantUML diagrams |
 | SRS | `srs-template.md` | `plans/{slug}-{date}/03_modules/{module_slug}/srs.md` |
 | User stories | `user-story-template.md` | `plans/{slug}-{date}/03_modules/{module_slug}/user-stories.md` |
 | Project runtime DESIGN.md (bán thành phẩm) | `design-md-template.md` | `designs/{slug}/DESIGN.md` |
@@ -293,7 +295,31 @@ If you need a clean read-only stakeholder handoff, generate HTML with:
 python scripts/md-to-html.py --no-editor plans/{slug}-{date}/03_modules/{module_slug}/srs.md
 ```
 
-Packaged HTML keeps Mermaid diagrams visualized in-browser, renders PlantUML diagrams as linked SVG assets, and preserves any wireframe images or links that the user manually inserted into the markdown source.
+If `plantuml` is not installed yet, install it locally first:
+
+```bash
+ba-kit install-plantuml
+```
+
+If you want the packaging script to attempt local installation automatically before rendering, use:
+
+```bash
+python scripts/md-to-html.py \
+  --no-editor \
+  --auto-install-plantuml \
+  plans/{slug}-{date}/03_modules/{module_slug}/srs.md
+```
+
+Only when local rendering is unavailable should you fall back to a self-hosted or otherwise approved PlantUML service:
+
+```bash
+python scripts/md-to-html.py \
+  --no-editor \
+  --plantuml-server https://plantuml.internal/plantuml/svg/ \
+  plans/{slug}-{date}/03_modules/{module_slug}/srs.md
+```
+
+Packaged HTML keeps Mermaid diagrams visualized in-browser, always prefers local PlantUML rendering, can auto-install PlantUML locally when requested, and falls back to a configured server only when local rendering is unavailable. Wireframe images or links inserted into the markdown source are preserved only when those asset paths stay inside the allowed base directory.
 
 ## 8. Know Where To Look
 

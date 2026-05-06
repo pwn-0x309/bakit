@@ -83,7 +83,7 @@ For non-trivial delegated work, also create a tracker under `plans/{date}-{slug}
 
 Packaged HTML artifacts are meant to be edited in the browser. Update copy, swap images, and add or remove blocks directly in the rendered HTML instead of hand-editing source HTML.
 
-If the user manually inserts wireframe images or links into the markdown source, the packaged HTML preserves those references. Mermaid diagrams are rendered explicitly after the DOM is ready, and PlantUML diagrams are emitted as SVG-backed images for reliable stakeholder copies.
+If the user manually inserts wireframe images or links into the markdown source, the packaged HTML preserves those references only when the asset path stays inside the allowed base directory. Mermaid diagrams are rendered explicitly after the DOM is ready, and PlantUML diagrams always prefer local rendering. Use `ba-kit install-plantuml` or the renderer's `--auto-install-plantuml` option before falling back to a configured server.
 
 `/ba-start status` reports `PROJECT-HOME.md` first as the BA-facing dashboard, then regular artifacts as exists or missing with last-modified dates, including the persisted backbone. Wireframe handoff is reported as `completed`, `skipped`, `not-applicable`, or `missing` from the explicit wireframe-state marker, and completed runs should expose the project runtime `DESIGN.md` together with the persisted wireframe input pack and wireframe map. Delegated slices should also appear from their trackers, with likely stalled slices flagged when heartbeats go stale.
 

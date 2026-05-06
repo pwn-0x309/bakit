@@ -1,7 +1,7 @@
 ---
 name: ba-start
 description: Lifecycle engine for BA-kit. Accepts raw requirements, normalizes them, locks scope, builds a requirements backbone, emits only the necessary downstream artifacts, and packages deliverables.
-argument-hint: "[intake|impact|options|backbone|frd|stories|srs|wireframes|package|status|next] [file|--slug|--date|--module|--mode]"
+argument-hint: "[intake|impact|options|backbone|frd|stories|srs|wireframes|package|status|next] [file|--slug|--date|--module|--mode|--select|--skip]"
 ---
 
 # BA Start

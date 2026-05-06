@@ -127,7 +127,7 @@ if "plan.md" in options_gate_section:
 require_tokens(
     source_skill,
     [
-        "argument-hint: \"[intake|impact|options|backbone|frd|stories|srs|wireframes|package|status|next]",
+        "argument-hint: \"[intake|impact|options|backbone|frd|stories|srs|wireframes|package|status|next] [file|--slug|--date|--module|--mode|--select|--skip]\"",
         "/ba-start options --slug <slug>",
         "/ba-start options --slug <slug> --select option-02",
         "/ba-start options --slug <slug> --skip",
@@ -199,8 +199,12 @@ require_regex(
 require_tokens(
     options_index_template,
     [
+        "Trạng thái optioning",
+        "Trạng thái từng option",
         "Difference Level",
         "draft/reviewing/selected/rejected/skipped",
+        "lifecycle cấp dự án",
+        "trạng thái của từng phương án",
         "Recommended option:",
         "Selected option:",
         "Comparison file:",

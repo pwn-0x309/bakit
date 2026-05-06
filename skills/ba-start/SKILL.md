@@ -23,6 +23,8 @@ Use this skill when the BA lifecycle step is explicit. Treat `ba-do` as the free
 /ba-start intake <file>
 /ba-start impact --slug <slug> [change-file]
 /ba-start options --slug <slug>
+/ba-start options --slug <slug> --select option-02
+/ba-start options --slug <slug> --skip
 /ba-start backbone --slug <slug>
 /ba-start frd --slug <slug> --module <module_slug>
 /ba-start stories --slug <slug> --module <module_slug>

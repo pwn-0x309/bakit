@@ -12,6 +12,11 @@
 | --- | --- | --- | --- | --- |
 | option-01 | | L1/L2/L3 | draft/reviewing/selected/rejected/skipped | |
 
+Gợi ý vận hành:
+- Chỉ tạo 1-3 phương án trong một vòng optioning.
+- `Difference Level` phải dùng `L1`, `L2`, hoặc `L3`.
+- Chỉ tạo `comparison.md` khi có hơn một phương án khả thi.
+
 ## Quyết định hiện tại
 
 - Recommended option:

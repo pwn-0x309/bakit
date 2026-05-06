@@ -81,10 +81,15 @@ if "| `options` | `steps/options.md` |" not in source_skill:
     fail("Missing ba-start options dispatch row in source skill")
 if not options_step.exists():
     fail("Missing ba-start options step placeholder")
+step_body = options_step.read_text(encoding="utf-8")
 if "`impact` -> `impact.md`" not in generator or "`options` -> `options.md`" not in generator:
     fail("Codex asset generator missing options step mapping")
 if "`impact` -> `impact.md`" not in codex_skill or "`options` -> `options.md`" not in codex_skill:
     fail("Generated Codex ba-start asset missing options step mapping")
+
+options_index_template = (root_dir / "templates/options-index-template.md").read_text(encoding="utf-8")
+solution_option_template = (root_dir / "templates/solution-option-template.md").read_text(encoding="utf-8")
+options_comparison_template = (root_dir / "templates/options-comparison-template.md").read_text(encoding="utf-8")
 
 status_tokens = [
     "recommended",
@@ -118,6 +123,87 @@ require_tokens(
 )
 if "plan.md" in options_gate_section:
     fail("Options gate guidance should reference `paths.plan`, not hardcoded plan.md")
+
+require_tokens(
+    source_skill,
+    [
+        "/ba-start options --slug <slug>",
+        "/ba-start options --slug <slug> --select option-02",
+        "/ba-start options --slug <slug> --skip",
+    ],
+    "ba-start options invocation examples regressed",
+)
+
+require_tokens(
+    step_body,
+    [
+        "## Prerequisites",
+        "Resolve slug and date using the shared contract",
+        "Require `paths.intake`",
+        "Read `paths.plan` when it exists",
+        "## Supported Intents",
+        "generate option pack from intake",
+        "select an existing option",
+        "skip optioning explicitly",
+        "## Generation Rules",
+        "Generate 1-3 option artifacts only",
+        "Mark each option with `L1`, `L2`, or `L3`",
+        "Generate `comparison.md` only when more than one viable option exists",
+        "Keep options as solution briefs, not mini-backbones",
+        "## Selection / Skip Rules",
+        "--select option-02",
+        "options status: completed",
+        "--skip",
+        "options status: skipped",
+        "refresh `paths.project_home`",
+    ],
+    "options step contract regressed",
+)
+
+require_regex(
+    behavior,
+    r"For `options`, allow `--select <option-id>` and `--skip` as mutually exclusive control arguments\.",
+    "contract-behavior must define options control arguments",
+)
+require_regex(
+    behavior,
+    r"Stop when:\s*-\s*the requested option file does not exist\s*-\s*multiple options exist but no explicit selection/skip has been approved\s*-\s*a selection request names an unknown option id",
+    "contract-behavior must define exact options stop conditions",
+)
+
+require_tokens(
+    options_index_template,
+    [
+        "Difference Level",
+        "draft/reviewing/selected/rejected/skipped",
+        "Recommended option:",
+        "Selected option:",
+        "Comparison file:",
+    ],
+    "options index template regressed",
+)
+require_tokens(
+    solution_option_template,
+    [
+        "## 1. Option Summary",
+        "## 2. Business Intent",
+        "## 3. Scope Shape",
+        "## 4. Interaction View",
+        "## 5. Key Constraints And Gaps",
+        "## 6. Pros And Cons",
+        "## 7. Indicative Assessment",
+    ],
+    "solution option template regressed",
+)
+require_tokens(
+    options_comparison_template,
+    [
+        "Difference Level",
+        "Time-to-Clarity",
+        "Recommended When",
+    ],
+    "options comparison template regressed",
+)
 
 intake_gate_section = extract_section(intake_step, "Step 4.1 - Recommend direct backbone or optioning")
 require_tokens(

@@ -45,8 +45,9 @@ Parse arguments before doing any work.
 5. If no subcommand is present, run the full lifecycle from intake.
 6. For `intake`, allow one free argument as the source path hint.
 7. For `impact`, allow one free argument as the change file path hint.
-8. For `frd`, `stories`, `srs`, and `wireframes`, enforce `commands.<name>.module_required`.
-9. Reject unknown subcommands and unexpected free arguments instead of guessing.
+8. For `options`, allow `--select <option-id>` and `--skip` as mutually exclusive control arguments.
+9. For `frd`, `stories`, `srs`, and `wireframes`, enforce `commands.<name>.module_required`.
+10. Reject unknown subcommands and unexpected free arguments instead of guessing.
 
 ## Natural-Language Routing
 
@@ -124,6 +125,12 @@ When `paths.options_root` exists as an active decision cycle, treat `paths.plan`
 - `backbone` must stop when the ledger status is `recommended` or `in-progress`.
 - `backbone` may proceed only when the ledger records either `selected option` (`completed`) or `skipped`.
 - If intake judged optioning unnecessary, the ledger may remain `not-needed` and point to `backbone` as the next command.
+
+For `options`, allow `--select <option-id>` and `--skip` as mutually exclusive control arguments.
+Stop when:
+- the requested option file does not exist
+- multiple options exist but no explicit selection/skip has been approved
+- a selection request names an unknown option id
 
 ## Overwrite Behavior
 

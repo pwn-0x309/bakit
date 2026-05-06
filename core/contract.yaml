@@ -7,20 +7,8 @@
     "ui_baseline": "Shadcn UI"
   },
   "states": {
-    "wireframe": [
-      "completed",
-      "skipped",
-      "not-applicable",
-      "missing"
-    ],
-    "delegation": [
-      "queued",
-      "running",
-      "completed",
-      "needs-repartition",
-      "blocked",
-      "failed"
-    ],
+    "wireframe": ["completed", "skipped", "not-applicable", "missing"],
+    "delegation": ["queued", "running", "completed", "needs-repartition", "blocked", "failed"],
     "heartbeat_minutes": 5,
     "stall_after_minutes": 10
   },
@@ -40,6 +28,10 @@
     "review_packet": "plans/{slug}-{date}/delegation/review-packets/{module_slug}.md",
     "intake": "plans/{slug}-{date}/01_intake/intake.md",
     "plan": "plans/{slug}-{date}/01_intake/plan.md",
+    "options_root": "plans/{slug}-{date}/01_intake/options",
+    "options_index": "plans/{slug}-{date}/01_intake/options/index.md",
+    "option_item": "plans/{slug}-{date}/01_intake/options/option-{option}.md",
+    "options_comparison": "plans/{slug}-{date}/01_intake/options/comparison.md",
     "backbone": "plans/{slug}-{date}/02_backbone/backbone.md",
     "module_root": "plans/{slug}-{date}/03_modules/{module_slug}",
     "frd": "plans/{slug}-{date}/03_modules/{module_slug}/frd.md",
@@ -70,118 +62,70 @@
     "project_dir": "^(.+)-(\\d{6}-\\d{4})$"
   },
   "resolution": {
-    "slug_sources": [
-      "explicit",
-      "project_directories"
-    ],
-    "date_sources": [
-      "explicit",
-      "project_directory"
-    ],
-    "module_sources": [
-      "explicit",
-      "single_module_only"
-    ],
+    "slug_sources": ["explicit", "project_directories"],
+    "date_sources": ["explicit", "project_directory"],
+    "module_sources": ["explicit", "single_module_only"],
     "strict_exact_match": true,
     "never_use_mtime": true
   },
   "legacy": {
-    "roots": [
-      "plans/reports",
-      "plans/reports/final",
-      "plans/reports/drafts"
-    ],
-    "blocked_patterns": [
-      "plans/reports/002-intake-form.md",
-      "plans/reports/002-gap-analysis.md",
-      "plans/reports/002-*.md",
-      "plans/reports/final/*",
-      "plans/reports/drafts/*"
-    ]
+    "roots": ["plans/reports", "plans/reports/final", "plans/reports/drafts"],
+    "blocked_patterns": ["plans/reports/002-intake-form.md", "plans/reports/002-gap-analysis.md", "plans/reports/002-*.md", "plans/reports/final/*", "plans/reports/drafts/*"]
   },
   "commands": {
     "intake": {
       "module_required": false,
       "mutable": true,
       "requires": [],
-      "outputs": [
-        "project_home",
-        "intake",
-        "plan"
-      ]
+      "outputs": ["project_home", "intake", "plan"]
     },
     "impact": {
       "module_required": false,
       "mutable": false,
-      "requires": [
-        "intake"
-      ],
+      "requires": ["intake"],
       "outputs": []
+    },
+    "options": {
+      "module_required": false,
+      "mutable": true,
+      "requires": ["intake"],
+      "outputs": ["project_home", "plan", "options_index", "options_comparison"]
     },
     "backbone": {
       "module_required": false,
       "mutable": true,
-      "requires": [
-        "intake"
-      ],
-      "outputs": [
-        "project_home",
-        "backbone",
-        "project_memory"
-      ]
+      "requires": ["intake"],
+      "outputs": ["project_home", "backbone", "project_memory"]
     },
     "frd": {
       "module_required": true,
       "mutable": true,
-      "requires": [
-        "backbone"
-      ],
-      "outputs": [
-        "frd"
-      ]
+      "requires": ["backbone"],
+      "outputs": ["frd"]
     },
     "stories": {
       "module_required": true,
       "mutable": true,
-      "requires": [
-        "backbone"
-      ],
-      "outputs": [
-        "stories"
-      ]
+      "requires": ["backbone"],
+      "outputs": ["stories"]
     },
     "srs": {
       "module_required": true,
       "mutable": true,
-      "requires": [
-        "backbone",
-        "stories"
-      ],
-      "outputs": [
-        "srs",
-        "wireframe_input"
-      ]
+      "requires": ["backbone", "stories"],
+      "outputs": ["srs", "wireframe_input"]
     },
     "wireframes": {
       "module_required": true,
       "mutable": true,
-      "requires": [
-        "wireframe_input"
-      ],
-      "outputs": [
-        "design_doc",
-        "wireframe_map",
-        "wireframe_state"
-      ]
+      "requires": ["wireframe_input"],
+      "outputs": ["design_doc", "wireframe_map", "wireframe_state"]
     },
     "package": {
       "module_required": false,
       "mutable": true,
       "requires": [],
-      "outputs": [
-        "compiled_frd",
-        "compiled_srs"
-      ]
+      "outputs": ["compiled_frd", "compiled_srs"]
     },
     "status": {
       "module_required": false,
@@ -196,20 +140,8 @@
       "outputs": []
     }
   },
-  "source_of_truth_order": [
-    "backbone",
-    "intake"
-  ],
-  "next_step_order": [
-    "intake",
-    "backbone",
-    "frd",
-    "stories",
-    "srs",
-    "wireframes",
-    "package",
-    "status"
-  ],
+  "source_of_truth_order": ["backbone", "intake"],
+  "next_step_order": ["intake", "options", "backbone", "frd", "stories", "srs", "wireframes", "package", "status"],
   "routing": {
     "impact": {
       "scope_lock_change": "intake",

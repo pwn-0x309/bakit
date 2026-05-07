@@ -13,6 +13,7 @@ usage() {
   cat <<'EOF'
 Usage:
   ba-kit doctor
+  ba-kit install-plantuml
   ba-kit update
   ba-kit resolve [--slug <slug>] [--date <YYMMDD-HHmm>] [--module <module_slug>]
   ba-kit next [--slug <slug>] [--date <YYMMDD-HHmm>] [--module <module_slug>]
@@ -27,6 +28,7 @@ Usage:
 
 Commands:
   doctor          Check BA-kit runtime readiness, installed manifests, and optional MCP/tool dependencies.
+  install-plantuml  Install PlantUML locally using a supported package manager.
   update          Fast-forward pull the installed BA-kit source repo and rerun installed runtime installers.
   resolve         Resolve the exact slug/date/module target from the modular tree.
   next            Recommend the next BA-kit command for the resolved modular artifact set.
@@ -727,6 +729,22 @@ doctor_command_check() {
   return 0
 }
 
+run_repo_helper_script() {
+  local script_name="$1"
+  local script_repo=""
+  local script_path=""
+
+  if [[ -n "${BA_KIT_DOCTOR_REPO:-}" ]]; then
+    script_repo="${BA_KIT_DOCTOR_REPO}"
+  else
+    script_repo="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+  fi
+
+  script_path="${script_repo}/scripts/${script_name}"
+  [[ -f "${script_path}" ]] || fail "Missing helper script: ${script_path}"
+  bash "${script_path}"
+}
+
 doctor_file_check() {
   local label="$1"
   local path="$2"
@@ -983,6 +1001,7 @@ doctor_command() {
     doctor_file_check "Claude installer" "${source_check_repo}/install.sh" "required" || failures=$((failures + 1))
     doctor_file_check "Codex installer" "${source_check_repo}/scripts/install-codex-ba-kit.sh" "required" || failures=$((failures + 1))
     doctor_file_check "Antigravity installer" "${source_check_repo}/scripts/install-antigravity-ba-kit.sh" "required" || failures=$((failures + 1))
+    doctor_file_check "PlantUML installer" "${source_check_repo}/scripts/install-plantuml.sh" "required" || failures=$((failures + 1))
     doctor_file_check "HTML renderer" "${source_check_repo}/scripts/md-to-html.py" "required" || failures=$((failures + 1))
   fi
 
@@ -1014,6 +1033,13 @@ doctor_command() {
   printf '\n'
 
   doctor_mcp_check "Notion MCP" "notion" || warnings=$((warnings + 1))
+  printf '\n'
+
+  doctor_command_check "PlantUML" "plantuml" "optional" || true
+  if ! command -v plantuml >/dev/null 2>&1; then
+    doctor_warn "PlantUML missing; run 'ba-kit install-plantuml' for local diagram rendering before HTML packaging"
+    warnings=$((warnings + 1))
+  fi
   printf '\n'
 
   if [[ -d "${HOME}/.codex" ]]; then
@@ -1596,6 +1622,11 @@ chunk_write_command() {
   printf "Successfully chunk-appended to %s\\n" "${target_file}"
 }
 
+install_plantuml_command() {
+  [[ "$#" -eq 0 ]] || fail "Unsupported arguments for 'install-plantuml'"
+  run_repo_helper_script "install-plantuml.sh"
+}
+
 main() {
   local command="${1:-}"
   shift || true
@@ -1603,6 +1634,9 @@ main() {
   case "${command}" in
     doctor)
       doctor_command "$@"
+      ;;
+    install-plantuml)
+      install_plantuml_command "$@"
       ;;
     update)
       [[ "$#" -eq 0 ]] || fail "Unsupported arguments for 'update'"

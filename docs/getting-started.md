@@ -37,10 +37,11 @@ What this installs:
 
 Then restart Claude Code if it is already open.
 
-To update later, run one command:
+To update later, use these maintenance commands as needed:
 
 ```bash
 ba-kit doctor
+ba-kit install-plantuml
 ba-kit update
 ba-kit status --slug warehouse-rfp
 ```
@@ -48,6 +49,7 @@ ba-kit status --slug warehouse-rfp
 This checks the registered BA-kit source repo, blocks when the repo has local changes or unfinished merge/rebase state, runs `git pull --ff-only`, then reruns the installers for any previously installed runtimes.
 `ba-kit status` reads the registered source repo, prints the current artifact set, and flags likely stalled delegated slices from stale tracker heartbeats.
 `ba-kit doctor` checks runtime readiness: install manifests, registered repo health, required local tools, and optional MCP hints for Notion.
+`ba-kit install-plantuml` attempts to install PlantUML locally through a supported package manager so HTML packaging can render swimlanes without sending diagrams to a remote service.
 Both commands also surface update availability when the registered upstream has newer commits.
 
 ## 4. Use BA-kit In Claude Code
@@ -83,11 +85,14 @@ Step-level reruns:
 ```text
 /ba-start intake docs/raw/warehouse-rfp.pdf
 /ba-start impact --slug warehouse-rfp
+/ba-start options --slug warehouse-rfp
+/ba-start options --slug warehouse-rfp --select option-02
+/ba-start options --slug warehouse-rfp --skip
 /ba-start backbone --slug warehouse-rfp
-/ba-start frd --slug warehouse-rfp
-/ba-start stories --slug warehouse-rfp
-/ba-start srs --slug warehouse-rfp
-/ba-start wireframes --slug warehouse-rfp
+/ba-start frd --slug warehouse-rfp --module auth-flow
+/ba-start stories --slug warehouse-rfp --module auth-flow
+/ba-start srs --slug warehouse-rfp --module auth-flow
+/ba-start wireframes --slug warehouse-rfp --module auth-flow
 /ba-start package --slug warehouse-rfp
 /ba-start status --slug warehouse-rfp
 /ba-notion srs --slug warehouse-rfp --page https://www.notion.so/... --mode overwrite
@@ -102,17 +107,20 @@ Router and deterministic helpers:
 /ba-collab Tôi nhận module auth-flow
 ```
 
+Use `options` when intake needs multiple solution directions before the backbone is written. The pre-backbone option pack and comparison live under `plans/{slug}-{date}/01_intake/options/`.
+
 Default `/ba-start` handles the full BA lifecycle once routing is already clear:
 1. Parse raw input into an intake form
 2. Gap analysis and clarifying questions
 3. Scope lock and mode selection
-4. Requirements backbone production
-5. Gated FRD and user story generation
-6. Selective SRS production
-7. Design decision capture and project runtime `DESIGN.md` creation when wireframe support is justified
-8. Wireframe constraint-pack and manual handoff-map production from the use cases, Screen Contract Plus, locked IA snapshot, and approved `DESIGN.md`
-9. Final screen description production as an enrich pass
-10. HTML packaging for the emitted artifact set
+4. Option pack + comparison when intake needs multiple solution directions
+5. Requirements backbone production
+6. Gated FRD and user story generation
+7. Selective SRS production
+8. Design decision capture and project runtime `DESIGN.md` creation when wireframe support is justified
+9. Wireframe constraint-pack and manual handoff-map production from the use cases, Screen Contract Plus, locked IA snapshot, and approved `DESIGN.md`
+10. Final screen description production as an enrich pass
+11. HTML packaging for the emitted artifact set
 
 ### Claude Example
 
@@ -127,7 +135,8 @@ When prompted, provide the file path or paste your requirements text. The skill 
 3. Ask 3-8 clarifying questions
 4. Generate `PROJECT-HOME.md` so the BA can resume from a plain-language dashboard
 5. Generate a scoped work plan
-6. Produce a requirements backbone, then emit FRD, user stories, use cases, Screen Contract Plus, project runtime `DESIGN.md`, wireframe handoff artifacts, final screen descriptions, and FRD/SRS HTML output only when their gates are open
+6. Open an option pack + comparison first when intake recommends multiple solution directions; otherwise proceed directly to the requirements backbone
+7. Emit FRD, user stories, use cases, Screen Contract Plus, project runtime `DESIGN.md`, wireframe handoff artifacts, final screen descriptions, and FRD/SRS HTML output only when their gates are open
 
 For rerun commands:
 - pass `--slug <slug>` when more than one project exists
@@ -139,7 +148,7 @@ For rerun commands:
 - for `srs`, start from the exact resolved backbone and user-stories artifacts, and pull the FRD only when it exists or is required, instead of rereading the whole `plans/reports/final/` and `plans/reports/drafts/` directories
 - for `frd` and `stories`, start from the exact resolved backbone artifact instead of rereading the whole `plans/reports/final/` directory
 - if you only have old reports named like `002-intake-form.md`, treat them as a legacy suite and rerun or migrate them before expecting the current `/ba-start` contract to resume from them
-- for non-trivial delegated work, expect BA-kit to create trackers under `plans/{date}-{slug}/delegation/`
+- for non-trivial delegated work, expect BA-kit to create trackers under `plans/{slug}-{date}/delegation/`
 - treat a delegation tracker with no heartbeat for more than 10 minutes as likely stalled and inspect or rerun that slice instead of waiting blindly
 - once you explicitly approve a mutating rerun step, BA-kit should continue that step instead of reverting to generic prompts about what to do with the document
 
@@ -209,12 +218,12 @@ See [codex-setup.md](./codex-setup.md) for more prompt patterns.
 
 Runtime defaults for both Claude Code and Codex:
 - BA deliverables are written in Vietnamese by default unless the user explicitly requests English
-- the dated artifact-set token is `YYMMDD-HHmm` across report filenames and `plans/{date}-{slug}/plan.md`
+- the dated artifact-set token is `YYMMDD-HHmm` across report filenames and `plans/{slug}-{date}/01_intake/plan.md`
 - Shadcn UI is the default wireframe constraint baseline unless explicitly overridden by the approved project `DESIGN.md`
 
 `plans/` is a local runtime workspace. BA-kit writes generated plans and report artifacts there during an engagement, but those files are not meant to stay version-controlled in the toolkit repository.
 
-## 5.1 Update BA-kit In One Command
+## 5.1 Update BA-kit
 
 Once you have installed BA-kit for Claude Code, Codex, or both, update it with:
 
@@ -278,7 +287,7 @@ A full `/ba-start` engagement produces final BA deliverables plus runtime artifa
 | Intake form | `intake-form-template.md` | `plans/{slug}-{date}/01_intake/intake.md` |
 | Requirements backbone | `requirements-backbone-template.md` | `plans/{slug}-{date}/02_backbone/backbone.md` |
 | FRD | `frd-template.md` | `plans/{slug}-{date}/03_modules/{module_slug}/frd.md` |
-| FRD HTML | `scripts/md-to-html.py` | `plans/{slug}-{date}/04_compiled/compiled-frd.html` with rendered Mermaid diagrams |
+| FRD HTML | `scripts/md-to-html.py` | `plans/{slug}-{date}/04_compiled/compiled-frd.html` with rendered Mermaid and safely handled PlantUML diagrams |
 | SRS | `srs-template.md` | `plans/{slug}-{date}/03_modules/{module_slug}/srs.md` |
 | User stories | `user-story-template.md` | `plans/{slug}-{date}/03_modules/{module_slug}/user-stories.md` |
 | Project runtime DESIGN.md (bán thành phẩm) | `design-md-template.md` | `designs/{slug}/DESIGN.md` |
@@ -293,7 +302,31 @@ If you need a clean read-only stakeholder handoff, generate HTML with:
 python scripts/md-to-html.py --no-editor plans/{slug}-{date}/03_modules/{module_slug}/srs.md
 ```
 
-Packaged HTML keeps Mermaid diagrams visualized in-browser and preserves any wireframe images or links that the user manually inserted into the markdown source.
+If `plantuml` is not installed yet, install it locally first:
+
+```bash
+ba-kit install-plantuml
+```
+
+If you want the packaging script to attempt local installation automatically before rendering, use:
+
+```bash
+python scripts/md-to-html.py \
+  --no-editor \
+  --auto-install-plantuml \
+  plans/{slug}-{date}/03_modules/{module_slug}/srs.md
+```
+
+Only when local rendering is unavailable should you fall back to a self-hosted or otherwise approved PlantUML service:
+
+```bash
+python scripts/md-to-html.py \
+  --no-editor \
+  --plantuml-server https://plantuml.internal/plantuml/svg/ \
+  plans/{slug}-{date}/03_modules/{module_slug}/srs.md
+```
+
+Packaged HTML keeps Mermaid diagrams visualized in-browser, always prefers local PlantUML rendering, can auto-install PlantUML locally when requested, and falls back to a configured server only when local rendering is unavailable. Wireframe images or links inserted into the markdown source are preserved only when those asset paths stay inside the allowed base directory.
 
 ## 8. Know Where To Look
 
@@ -314,5 +347,5 @@ Packaged HTML keeps Mermaid diagrams visualized in-browser and preserves any wir
 - Use `--slug` for rerun commands whenever more than one project may exist
 - Treat `/ba-start status` as the checkpoint view: it prints artifact dates plus wireframe handoff state (`completed`, `skipped`, `not-applicable`, `missing`) and any persisted wireframe input/map artifacts
 - Ask for assumptions and open questions before asking for finalization
-- Use Mermaid diagrams for process or data views
+- Use PlantUML for swimlanes; use Mermaid for sequence, data-flow, ERD, or simpler process views
 - Use `/ba-notion` when the deliverable needs to be published into Notion rather than only packaged as local HTML

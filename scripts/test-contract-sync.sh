@@ -107,6 +107,7 @@ bash -n "${ROOT_DIR}/scripts/check-token-budget.sh"
 bash -n "${ROOT_DIR}/install.sh"
 bash -n "${ROOT_DIR}/scripts/install-codex-ba-kit.sh"
 bash -n "${ROOT_DIR}/scripts/install-antigravity-ba-kit.sh"
+bash -n "${ROOT_DIR}/scripts/install-plantuml.sh"
 bash -n "${ROOT_DIR}/scripts/generate-codex-assets.sh"
 bash -n "${ROOT_DIR}/scripts/test-activation-thresholds.sh"
 bash -n "${ROOT_DIR}/scripts/test-runtime-parity.sh"
@@ -114,6 +115,7 @@ bash -n "${ROOT_DIR}/scripts/runtime-parity-adapter.sh"
 bash -n "${ROOT_DIR}/scripts/test-runtime-install-smoke.sh"
 bash "${ROOT_DIR}/scripts/check-token-budget.sh" >/dev/null
 bash "${ROOT_DIR}/scripts/test-activation-thresholds.sh" >/dev/null
+bash "${ROOT_DIR}/scripts/test-options-flow-contract.sh" >/dev/null
 bash "${ROOT_DIR}/scripts/test-runtime-parity.sh" --check-structure >/dev/null
 bash "${ROOT_DIR}/scripts/test-runtime-parity.sh" >/dev/null
 

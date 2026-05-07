@@ -5,7 +5,7 @@
 - Keep BA-kit practical and reusable.
 - Prefer template-backed workflows over ad hoc prose.
 - Preserve traceability between goals, requirements, and outputs.
-- Use Mermaid for diagrams.
+- Use PlantUML for swimlanes and Mermaid for other diagrams.
 
 ## Change Areas
 
